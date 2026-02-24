@@ -1,3 +1,27 @@
+@import "tailwindcss";
+
+
+@theme {
+  --color-gym-dark: #0a0a0a;
+  --color-iron-gold: #facc15;
+  --color-neon-accent: #eab308;
+}
+@theme {
+  /* 5s für ein ruhiges Atmen, 8s für extrem dezenten Glow */
+  --animate-coach-breathe: coach-breathe 7s ease-in-out infinite;
+
+  @keyframes coach-breathe {
+    0%, 100% { 
+      opacity: 1; 
+      filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.8)); 
+    }
+    50% { 
+      opacity: 0.85; /* Nur ganz leichter Abfall der Sichtbarkeit */
+      filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.3)); 
+    }
+  }
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -28,6 +52,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  @apply bg-gym-dark text-white font-sans; 
 }
 
 h1 {

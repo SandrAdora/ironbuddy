@@ -1,16 +1,75 @@
-# React + Vite
+# 🏋️‍♂️ IRONBUDDY — AI-Powered Fitness Coach
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+IronBuddy is a next-generation AI fitness coaching web application. It delivers highly personalized workout plans, nutrition guidance, and post-workout recovery strategies by combining **Large Language Models (AI)** with **Strict Local Safety Logic**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Overview
+IronBuddy adapts to your progress, equipment, and physical limitations. Designed with a **Dark Gym Aesthetic**, it features high-contrast neon accents and a mobile-first interface to keep you motivated during every session.
 
-## React Compiler
+### Key Pillars:
+- **Hybrid AI Approach:** Uses OpenAI (or similar) for creative content generation while enforcing safety and structure via local validation.
+- **Privacy First:** All user data, workout history, and meal plans are stored in **localStorage** (no external databases required for MVP).
+- **Adaptive Coaching:** The system learns from your feedback ("Too easy", "Too hard") to refine future routines.
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+---
 
-## Expanding the ESLint configuration
+## ✨ Features
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 1. Smart Onboarding
+A multi-step, energetic flow collecting:
+- Biometrics (Age, Height, Weight, Gender)
+- Fitness Goals & Experience Level
+- Available Equipment (Bodyweight, Dumbbells, Full Gym)
+- Medical Constraints (Injuries, Allergies, Kidney/Heart issues)
+
+### 2. AI Workout & Nutrition
+- **Dynamic Workouts:** Weekly and daily plans covering Strength, HIIT, Cardio, and Stretching.
+- **Smart Meals:** Personalized recipes based on dietary preferences (Vegan, Keto, etc.) and calorie targets.
+- **Interactive Content:** Embedded YouTube demonstrations for every exercise.
+
+### 3. The Recovery Zone
+Post-workout recommendations including:
+- Intensity-based meal suggestions.
+- **Safe Supplementation:** Automated safety filters (e.g., no creatine for reported kidney issues).
+- Hydration tracking and motivational voice coaching.
+
+### 4. Dashboard & Analytics
+- Progress visualization (Calories, Streaks, Weight changes).
+- Daily motivational quotes.
+- Dark Mode by default for that "Iron" feel.
+
+---
+
+## 🛠 Tech Stack
+
+- **Frontend:** React (Vite)
+- **Styling:** Tailwind CSS v4 (Dark Gym Theme)
+- **State Management:** React Context API & LocalStorage
+- **AI Integration:** OpenAI API / LangChain
+- **Visuals:** Chart.js (Progress) & YouTube API (Exercises)
+- **Deployment:** Netlify
+
+---
+
+## 🛡 Safety & AI Logic
+
+IronBuddy implements a **Safety-First Wrapper** around AI responses:
+- **JSON Schema Enforcement:** Ensures AI responses always match the app's UI structure.
+- **Medical Hard-Filters:** Local logic overrides AI suggestions if they conflict with user-reported health risks (e.g., heart conditions or pregnancy).
+- **Offline Resilience:** Cached plans allow training even without an internet connection.
+
+---
+
+## 🛠 Installation & Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com
+   cd ironbuddy
+   ```
+
+
+
+# 📜 Disclaimer
+IronBuddy is an AI-powered tool and does not replace professional medical advice. Always consult a physician before starting a new training or supplement program.
