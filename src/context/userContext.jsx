@@ -1,44 +1,36 @@
-/* This program stores all the onboarding questions to successfully
-register a new user to the Iron Buddy application *
-*/
+import { createContext, useContext, useState, useEffect } from "react";
 
-import { createContext, useContext, useState, useEffect} from 'react';
+const UserContext = createContext();
 
-const UserContext = createContext(); 
-
-export const UserProvider = ( { children }) => {
-    // load data from the local storage  or use insial values 
-    const [profile, setProfile] = useState(() => {
-        const savedValues = localStorage.getItem('ironbuddy_profile');
-        return savedValues ? JSON.parse(savedValues) : {
-            onboarded: false, 
-            name: '',
-            age: null,
-            weight: null,
-            fitnessGoals: '', // weight loss, muscle gain, endurance, etc
-            experienceLevel: '', // beginner, intermediate, advanced, unsure
-            equipments: [],
-            allergies: [],
-            injuries: [],
-            email: '',
-            password: '',
-
+export const UserProvider = ({ children }) => {
+  const [profile, setProfile] = useState(() => {
+    const saved = localStorage.getItem("ironbuddy_profile");
+    return saved
+      ? JSON.parse(saved)
+      : {
+          onboarded: false,   // wichtig: Onboarding soll starten
+          name: "",
+          age: null,
+          weight: null,
+          fitnessGoals: "",
+          experienceLevel: "",
+          equipments: [],
+          allergies: [],
+          injuries: [],
+          email: "",
+          password: "",
         };
-    });
+  });
 
-    // store every change in local storage 
-    useEffect(() =>{
-        localStorage.setItem('ironbuddy_profile', JSON.stringify(profile));
-    
-    }, [profile]);
+  useEffect(() => {
+    localStorage.setItem("ironbuddy_profile", JSON.stringify(profile));
+  }, [profile]);
 
-    return (
-        <UserContext.Provider value={{ profile, setProfile}}>
-            {children}
-        </UserContext.Provider>
-    );
+  return (
+    <UserContext.Provider value={{ profile, setProfile }}>
+      {children}
+    </UserContext.Provider>
+  );
 };
 
-
-// export user 
-export const userUser =  () => useContext(UserContext);
+export const useUser = () => useContext(UserContext);
