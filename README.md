@@ -65,7 +65,7 @@ IronBuddy implements a **Safety-First Wrapper** around AI responses:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com
+   git clone https://github.com/SandrAdora/ironbuddy.git
    cd ironbuddy
    ```
 
