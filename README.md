@@ -12,7 +12,6 @@ IronBuddy adapts to your progress, equipment, and physical limitations. Designed
 - **Privacy First:** All user data, workout history, and meal plans are stored in **localStorage** (no external databases required for MVP).
 - **Adaptive Coaching:** The system learns from your feedback ("Too easy", "Too hard") to refine future routines.
 
----
 
 ## ✨ Features
 
