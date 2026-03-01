@@ -5,7 +5,7 @@ IronBuddy is a next-generation AI fitness coaching web application. It delivers 
 ---
 
 ## 🚀 Overview
-IronBuddy adapts to your progress, equipment, and physical limitations. Designed with a **Dark Gym Aesthetic**, it features high-contrast neon accents and a mobile-first interface to keep you motivated during every session.
+IronBuddy adapts to your progress, equipment, and physical limitations. Designed with **tailwindcss** a **Dark Gym Aesthetic**, it features high-contrast neon accents and a mobile-first interface to keep you motivated during every session.
 
 ### Key Pillars:
 - **Hybrid AI Approach:** Uses OpenAI (or similar) for creative content generation while enforcing safety and structure via local validation.
