@@ -2,23 +2,12 @@ import { useEffect, useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { useUser } from '../context/userContext';
+import { Link } from "react-router-dom";
 
 export default function OnboardingForm() {
 
-  // setup dynamic text 
-  const fulltext = "Welcome to Iron Buddy! I'm your AI fitness coach, here to guide you on your fitness journey. To create a personalized workout plan, I need to know a bit about you. Let's start with some basic information and your fitness goals. Don't worry, the more details you provide, the better I can tailor your workouts to your needs. Ready to get started? Let's go!"
-  const [displayText, setDisplayText] = useState(''); 
-
-  useEffect(() =>{
-    let i = 0;
-    const timer = setInterval(()=> {
-      setDisplayText(fulltext.substring(0, i));
-      i++;
-      if (i > fulltext.length) {
-        clearInterval(timer);
-      }
-    })
-  })
+ 
+  
   const { setProfile } = useUser();
   const [step, setStep] = useState(1); // Steuert den aktuellen Schritt
 
