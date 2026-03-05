@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
+
 import { useUser } from '../context/userContext';
 import { Link } from "react-router-dom";
+import { Calendar } from 'react-calendar';
+import Footer from './Footer';
+import Navbar from './Navbar';
+
+
 
 export default function OnboardingForm() {
-
- 
   
   const { setProfile } = useUser();
   const [step, setStep] = useState(1); // Steuert den aktuellen Schritt
@@ -43,12 +45,22 @@ export default function OnboardingForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[--color-gym-dark] text-white flex items-center justify-center p-4 space-x-10">
+      <>
+    <div className="text-white p-4 ">
+      
+    
+      <div className="w-full max-w-100 bg-gray-900 p-8 rounded-2xl border border-gray-800 shadow-2xl text-[--color-iron-gold] drop-shadow-[0_0_10px_rgba(250,204,21,0.8)] animate-coach-breathe">
+ 
+         <h2 className="text-2xl font-extrabold uppercase italic text-[--color-iron-gold] drop-shadow-[0_0_18px_rgba(250, 204, 21, 0.9)]">
+      Set up your Iron Zone account
 
-      <div className="w-full max-w-2xl bg-gray-900 p-8 rounded-2xl border border-gray-800 shadow-2xl text-[--color-iron-gold] drop-shadow-[0_0_10px_rgba(250,204,21,0.8)] animate-coach-breathe">
-        
+    </h2>
+    <p className="text-gray-300 mt-3 text-lg tracking-wide">
+      
+      Power up your account and let Iron guide every  rep, set and goal 
+    </p>
         {/* Progress Indicator */}
-        <div className="flex justify-between mb-8">
+        <div className="flex justify-between mb-8 space-y-4 mt-6">
           {[1, 2, 3].map(num => (
             <div key={num} className={`h-2 flex-1 mx-1 rounded-full ${step >= num ? 'bg-[--color-iron-gold]' : 'bg-gray-700'}`} />
           ))}
@@ -58,21 +70,19 @@ export default function OnboardingForm() {
         {step === 1 && (
           <form onSubmit={nextStep} className="space-y-4">
             <h2 className="text-2xl font-bold text-[--color-iron-gold] italic uppercase">Step 1: The Basics</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 ">
               <InputField label="First Name" value={firstname} onChange={setFirstname} required placeholder="Max" />
               <InputField label="Last Name" value={lastname} onChange={setLastname} required placeholder="Mustermann" />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-gray-500 uppercase">Birthdate</label>
-              <Calendar onChange={setBirthdate} value={birthdate} className="rounded-lg border-none text-black" />
+              <InputField label="Birthdate" value={birthdate} onChange={setBirthdate} type="date" required placeholder="DD.MM.YYYY"/>
             </div>
       
             <button 
                 type="submit" 
                 className="w-full flex-1 py-3 font-bold rounded-lg uppercase transition-all duration-300
                           bg-[--color-iron-gold] text-black 
-                          animate-coach-breathe hover:bg-green-500 hover:text-white hover:shadow-[0_0_25px_rgba(34,197,94,0.6)] hover:scale-[1.02] active:scale-95"
-              >
+                          animate-coach-breathe hover:bg-green-500 hover:text-white hover:shadow-[0_0_25px_rgba(34,197,94,0.6)] hover:scale-[1.02] active:scale-95">
               Next
             </button>
           </form>
@@ -115,9 +125,7 @@ export default function OnboardingForm() {
             <h2 className="text-2xl font-bold text-[--color-iron-gold] italic uppercase">Step 3: Safety & Finalize</h2>
     
             <select multiple value={equipments} onChange={(e) => setEquipments(Array.from(e.target.selectedOptions, option => option.value))} 
-            className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-[--color-iron-gold] outline-none transition-all"
-            
-            >
+            className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-[--color-iron-gold] outline-none transition-all">
               <option value="" disabled>Equipments to train with...</option>
               <option value="Weights">Weights</option>
               <option value="Bells">Dumbbells and Bells of all kind</option>
@@ -139,7 +147,10 @@ export default function OnboardingForm() {
         )}
 
       </div>
+      <Footer />
     </div>
+    </>
+
   );
 }
 
