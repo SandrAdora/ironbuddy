@@ -5,8 +5,9 @@ import Navbar from '../Navbar';
 import { Link } from "react-router-dom";
 import Modal from '../Modal';
 import Footer from '../Footer';
+
 // create the hompage component 
-export default function HomePage() {
+export default function Home() {
 
     // initialize global state user 
     const { profile, setProfile } = useUser();
@@ -20,7 +21,8 @@ export default function HomePage() {
         e.preventDefault(); // prevent page reload 
 
         // check if user already exists in the local state 
-        if (email === profile.email && password === profile.password){
+        // email === profile.email && password === profile.password
+        if (email === "email@example.com" && password === "password123") {
             alert(`Welcome Back! ${profile.name}`); // welcome message
             // is user exists set onbboard true 
             setProfile({ 
@@ -36,9 +38,9 @@ export default function HomePage() {
     return (
         <div>   
             
-            <Navbar />
+         
             <section className="grid gap-8 md:grid-cols-2">
-                <div className="bg-[--color-gm-dark] text-white justify-center items-center px-10"> 
+                <div className="mt-20 bg-[--color-gm-dark] text-white justify-center items-center px-10 "> 
                     <span className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">
                         AI COACH
                     </span>
@@ -54,7 +56,7 @@ export default function HomePage() {
                     </span>
                     <br />
                 </div>
-                <div className="bg-gray-900 p-8 rounded-2xl border border-gray-800 shadow-2xl max-w-100 m-8">
+                <div className="bg-gray-900 p-8 rounded-2xl border border-gray-800 shadow-2xl max-w-100 m-6 text-[--color-iron-gold] drop-shadow-[0_0_10px_rgba(250,204,21,0.8)] animate-coach-breathe">
                     <h2 className="text-2xl font-bold text-[--color-iron-gold] italic uppercase decoration-[--color-iron-gold]/30">
                     Sign In 
                     </h2>
@@ -66,14 +68,14 @@ export default function HomePage() {
                             onChange={setEmail} 
                             type="email"
                             required 
-                            placeholder="Enter your email" />
+                            placeholder="email@example.com" />
                         <InputField 
                             label="Password" 
                             value={password} 
                             onChange={setPassword} 
                             type="password" 
                             required 
-                            placeholder="Enter your password" />
+                            placeholder="password123" />
                         <button 
                             type="submit" 
                             className="w-full py-4 font-black rounded-lg uppercase transition-all duration-300
@@ -83,7 +85,7 @@ export default function HomePage() {
                     </form>
                     <p className="text-gray-400 text-sm mt-4 text-center">
                         No Account yet?{" "}
-                        <Link to="/register" 
+                        <Link to="/signup" 
                         className="text-[--color-iron-gold] hover:underline transition-colors duration-300 font-bold">
                             Sign Up Here
                         </Link>

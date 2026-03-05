@@ -1,3 +1,4 @@
+//userContext.jsx
 import { createContext, useContext, useState, useEffect } from "react";
 
 const UserContext = createContext();
@@ -14,7 +15,7 @@ export const UserProvider = ({ children }) => {
           weight: null,
           fitnessGoals: "",
           experienceLevel: "",
-          equipments: [],
+          equipments:"",
           allergies: [],
           injuries: [],
           email: "",
