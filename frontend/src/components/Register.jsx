@@ -6,7 +6,7 @@ import { Calendar } from 'react-calendar';
 import Footer from './Footer';
 import Navbar from './Navbar';
 
-
+import "../index.css"
 
 export default function OnboardingForm() {
   
@@ -101,6 +101,7 @@ export default function OnboardingForm() {
               <option value="Muscle Gain">Muscle Gain</option>
               <option value="Endurance">Endurance</option>
               <option value="General Fitness">General Fitness</option>
+              
             </select>
             <select value={experienceLevel} onChange={(e) => setExperienceLevel(e.target.value)} placeholder="Beginner..."
              required className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-[--color-iron-gold] outline-none transition-all">
@@ -123,15 +124,15 @@ export default function OnboardingForm() {
         {step === 3 && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <h2 className="text-2xl font-bold text-[--color-iron-gold] italic uppercase">Step 3: Safety & Finalize</h2>
+            <h3 className="text-2xl text-white">Trainings with...</h3>
     
-            <select multiple value={equipments} onChange={(e) => setEquipments(Array.from(e.target.selectedOptions, option => option.value))} 
-            className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-[--color-iron-gold] outline-none transition-all">
-              <option value="" disabled>Equipments to train with...</option>
-              <option value="Weights">Weights</option>
-              <option value="Bells">Dumbbells and Bells of all kind</option>
-              <option value="Resistance_Bands">Resistance Bands</option>
-              <option value="Bodyweight">Bodyweight</option>
-            </select>
+              <RadioButton  label="Equipments" value="Equipments" selected={equipments} onChange={setEquipments} /><br/>
+              <RadioButton label="Resistance Bands" value="Resistance Bands" selected={equipments} onChange={setEquipments}/><br/>
+              <RadioButton label="No Equipments" value="No Equipments" selected={equipments} onChange={setEquipments}/><br/>
+              <br/>
+
+            
+            
             <InputField label="Allergies" value={allergies} onChange={setAllergies} placeholder="Peanuts..." />
             <InputField label="Injuries" value={injuries} onChange={setInjuries} placeholder="Back pain..." />
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-800">
@@ -162,8 +163,23 @@ function InputField({ label, value, onChange, type = "text", placeholder, requir
       <input 
         type={type} value={value} required={required} placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-[--color-iron-gold] outline-none transition-all"
+        className=" col-sp0an-2 p-3 w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-[--color-iron-gold] outline-none transition-all"
       />
     </div>
+  );
+}
+function RadioButton({ label, value, selected, onChange}){
+
+  return (
+    <label>
+      <input 
+        type="radio"
+        value={value}
+        checked={selected === value}
+        onChange={() => onChange(value)}
+        className="h-5 w-6 text-[--color-iron-gold]  focus:ring-[--color-iron-gold]"
+      />
+      <span className="text-sm">{label}</span>
+    </label>
   );
 }
