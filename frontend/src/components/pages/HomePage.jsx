@@ -36,11 +36,10 @@ export default function Home() {
     };
     // return the homepage layout 
     return (
-        <div>   
-            
-         
+        <div className='mt-20 bg-[--color-gm-dark] text-white'>   
+
             <section className="grid gap-8 md:grid-cols-2">
-                <div className="mt-20 bg-[--color-gm-dark] text-white justify-center items-center px-10 "> 
+                <div className=" justify-center items-center px-10 "> 
                     <span className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">
                         AI COACH
                     </span>
