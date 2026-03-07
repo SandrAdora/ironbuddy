@@ -11,7 +11,7 @@ export const UserProvider = ({ children }) => {
       : {
           onboarded: false,   // wichtig: Onboarding soll starten
           name: "",
-          age: null,
+          birthdate: null,
           weight: null,
           fitnessGoals: "",
           experienceLevel: "",
