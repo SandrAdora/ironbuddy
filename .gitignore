@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.env/
+backend/.iron/
+documentation/key_steps.md

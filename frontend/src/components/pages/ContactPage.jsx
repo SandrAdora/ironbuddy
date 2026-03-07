@@ -2,7 +2,7 @@
 export default function Contact() {
   return (
     <div className="min-h-screen flex flex-col bg-[--color-gm-dark] text-white"> 
-    <main className="flex-grow w-full">
+    <main className="flex-grow w-full mt-32">
       <div className=" text-[--color-iron-gold] drop-shadow-[0_0_10px_rgba(250,204,21,0.8)] animate-coach-breathe">
         <div className="bg-gray-900 p-8 rounded-lg shadow-lg">
           <h1 className="text-3xl font-bold mb-4">Contact Us</h1>
