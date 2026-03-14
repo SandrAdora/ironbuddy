@@ -17,6 +17,8 @@ export default function Signup(): JSX.Element {
   }, []);
 
   function handleAccept(): void {
+    const timestamp = new Date().toISOString();
+    localStorage.setItem("ironbuddy_disclaimer_accepted_at", timestamp);
     localStorage.setItem("ironbuddy_disclaimer", "accepted");
     setShowModal(false);
   }
@@ -26,7 +28,7 @@ export default function Signup(): JSX.Element {
       <AnimatePresence>
         {showModal && <Modal onClose={handleAccept} />}
       </AnimatePresence>
-      <div className="flex justify-center mt-8 px-6">
+      <div className="flex justify-center mt-8 px-6 pb-16">
         <OnboardingForm />
       </div>
     </div>

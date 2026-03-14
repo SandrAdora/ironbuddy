@@ -11,6 +11,8 @@ import Home from "./components/pages/HomePage";
 import About from './components/pages/AboutPage';
 import Contact from './components/pages/ContactPage';
 import Signup from './components/pages/SignupPage';
+import UserProfile from './components/UserProfile';
+import ResetPasswordPage from './components/pages/ResetPasswordPage';
 
 
 function AnimatedRoutes(){
@@ -31,6 +33,14 @@ function AnimatedRoutes(){
         <Route path="/signup" element={
           <PageWrapper>
             <Signup />
+          </PageWrapper>} />
+        <Route path="/user" element={
+          <PageWrapper>
+            <UserProfile />
+          </PageWrapper>} />
+        <Route path="/reset-password" element={
+          <PageWrapper>
+            <ResetPasswordPage />
           </PageWrapper>} />
       </Routes>
     </AnimatePresence>
