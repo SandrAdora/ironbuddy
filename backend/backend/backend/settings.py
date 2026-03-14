@@ -14,12 +14,17 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 import os
-load_dotenv()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-g!o=k_o5!q3+f46a)(g@5!##5ca&_^qgt-kgy^=((a5wsp8181'
+# Load from organised .env/backend.env, fall back to local .env
+_env_file = BASE_DIR.parent.parent.parent / '.env' / 'backend.env'
+if _env_file.exists():
+    load_dotenv(_env_file)
+else:
+    load_dotenv()
+
+SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-insecure-key-change-me')
 
 DEBUG = True
 
@@ -138,6 +143,15 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD="django.db.models.BigAutoField"
 
-CORS_ALLOW_ALL_ORIGINS=True 
-CORS_ALLOWS_CREDENTIALS=True  
+CORS_ALLOW_ALL_ORIGINS=True
+CORS_ALLOWS_CREDENTIALS=True
+
+# Email — Gmail SMTP
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = f'IronBuddy <{os.environ.get("EMAIL_HOST_USER", "")}>'
 
