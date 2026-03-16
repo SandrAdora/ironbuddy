@@ -169,6 +169,7 @@ export interface CustomMeal {
   kcal: string;
   icon: string;
   recipe_url: string;
+  ingredients: string[];
   created_at: string;
 }
 
@@ -468,6 +469,26 @@ export async function apiConfirmPasswordReset(uid: string, token: string, passwo
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error ?? 'Reset failed');
+}
+
+export async function apiDeleteAccount(token: string, password: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/account/delete/`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ password }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error ?? 'Failed to delete account');
+}
+
+export async function apiDeactivateAccount(token: string, password: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/account/deactivate/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ password }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error ?? 'Failed to deactivate account');
 }
 
 export async function apiChangePassword(token: string, currentPassword: string, newPassword: string): Promise<void> {

@@ -37,6 +37,7 @@ export default function OnboardingForm() {
   const [fitnessGoals, setFitnessGoals] = useState<string>('');
   const [experienceLevel, setExperienceLevel] = useState<string>('');
   const [equipments, setEquipments] = useState<string[]>([]);
+  const [communityVisible, setCommunityVisible] = useState<boolean>(false);
   const [allergies, setAllergies] = useState<string>('');
   const [injuries, setInjuries] = useState<string>('');
   const [email, setEmail] = useState<string>('');
@@ -68,6 +69,7 @@ export default function OnboardingForm() {
         equipments: equipments.join(', '),
         allergies: allergies.split(',').map((item) => item.trim()).filter(Boolean),
         injuries: injuries.split(',').map((item) => item.trim()).filter(Boolean),
+        communityVisible,
         disclaimerAcceptedAt: localStorage.getItem("ironbuddy_disclaimer_accepted_at") || new Date().toISOString(),
       };
       // 1. Create the Django user account
@@ -272,6 +274,20 @@ export default function OnboardingForm() {
                 onChange={setInjuries}
                 placeholder="Injuries or None..."
               />
+              {/* Community visibility toggle */}
+              <div
+                className="flex items-center justify-between p-3 rounded-xl border border-white/10 bg-white/5 cursor-pointer"
+                onClick={() => setCommunityVisible((v) => !v)}
+              >
+                <div>
+                  <p className="text-sm font-bold text-white">👥 Community Visibility</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Show me in the community tab so others can message me</p>
+                </div>
+                <div className={`w-11 h-6 rounded-full transition-colors duration-200 flex items-center px-1 shrink-0 ml-4 ${communityVisible ? 'bg-yellow-300' : 'bg-white/10'}`}>
+                  <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${communityVisible ? 'translate-x-5' : 'translate-x-0'}`} />
+                </div>
+              </div>
+
               <div className="flex flex-col gap-4 pt-4 border-t border-gray-800">
                 <InputField
                   label="Email"

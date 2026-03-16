@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiChat, apiCreateCustomMeal, type ChatMessage, type SavePrompt } from '../api';
 import type { UserProfile } from '../context/userContext';
@@ -35,14 +35,31 @@ const SAVE_META: Record<string, { icon: string; tab: string; color: string }> = 
 
 function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: string; onSaved: () => void }) {
   const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'declined'>('idle');
+  const [savedAsRecipe, setSavedAsRecipe] = useState(false);
   const meta = SAVE_META[prompt.type];
+  const d = prompt.data as Record<string, unknown>;
+
+  // Editable ingredients state for meal type
+  const rawIngredients = Array.isArray(d.ingredients) ? (d.ingredients as string[]) : [];
+  const [ingredients, setIngredients] = useState<string[]>(rawIngredients);
+  const [newIngredient, setNewIngredient] = useState('');
+
+  const addIngredient = useCallback(() => {
+    const val = newIngredient.trim();
+    if (!val) return;
+    setIngredients((prev) => [...prev, val]);
+    setNewIngredient('');
+  }, [newIngredient]);
+
+  const removeIngredient = useCallback((idx: number) => {
+    setIngredients((prev) => prev.filter((_, i) => i !== idx));
+  }, []);
 
   const handleSave = async () => {
     if (!token || state !== 'idle') return;
     setState('saving');
     try {
       if (prompt.type === 'workout') {
-        const d = prompt.data as Record<string, unknown>;
         saveWorkoutToStorage(token, {
           name: String(d.name || prompt.label),
           description: String(d.description || ''),
@@ -58,14 +75,13 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
             : [],
         });
       } else {
-        // meal or supplement
-        const d = prompt.data as Record<string, unknown>;
         await apiCreateCustomMeal(token, {
           name: String(d.name || prompt.label),
           description: String(d.description || ''),
           kcal: String(d.kcal || '0 kcal'),
           icon: String(d.icon || meta.icon),
           recipe_url: '',
+          ingredients,
         });
       }
       setState('saved');
@@ -73,6 +89,31 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
     } catch {
       setState('idle');
     }
+  };
+
+  const handleSaveAsRecipe = () => {
+    if (!token || savedAsRecipe) return;
+    try {
+      const userId = getUserId(token);
+      const key = `ironbuddy_custom_recipes_${userId}`;
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      const steps = Array.isArray(d.steps) ? (d.steps as string[]) : [];
+      const entry = {
+        id: Date.now(),
+        name: String(d.name || prompt.label),
+        description: String(d.description || ''),
+        icon: String(d.icon || meta.icon),
+        prepTime: '',
+        cookTime: '',
+        servings: '',
+        kcal: String(d.kcal || ''),
+        ingredients,
+        steps,
+        created_at: new Date().toISOString(),
+      };
+      localStorage.setItem(key, JSON.stringify([entry, ...existing]));
+      setSavedAsRecipe(true);
+    } catch { /* ignore */ }
   };
 
   if (state === 'declined') return null;
@@ -86,18 +127,70 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
       <p className="font-black uppercase tracking-wide">
         {meta.icon} Save "{prompt.label}" to {meta.tab}?
       </p>
-      {state === 'saved' ? (
-        <p className="font-bold text-green-400">✓ Saved successfully!</p>
+
+      {/* Editable ingredients for meal type */}
+      {prompt.type === 'meal' && state === 'idle' && (
+        <div className="flex flex-col gap-2">
+          <p className="text-[10px] uppercase tracking-wide opacity-70 font-bold">Ingredients</p>
+          <div className="flex flex-wrap gap-1.5">
+            {ingredients.map((ing, idx) => (
+              <span
+                key={idx}
+                className="flex items-center gap-1 bg-white/10 border border-white/15 rounded-full px-2.5 py-0.5 text-[11px]"
+              >
+                {ing}
+                <button
+                  onClick={() => removeIngredient(idx)}
+                  className="text-gray-400 hover:text-red-400 transition-colors ml-0.5 leading-none"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-1.5">
+            <input
+              type="text"
+              value={newIngredient}
+              onChange={(e) => setNewIngredient(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addIngredient(); } }}
+              placeholder="Add ingredient…"
+              className="flex-1 bg-black/30 border border-white/15 rounded-lg px-2.5 py-1 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-green-400/50"
+            />
+            <button
+              onClick={addIngredient}
+              className="px-2.5 py-1 bg-white/10 border border-white/15 rounded-lg text-[11px] hover:bg-white/20 transition-all font-bold"
+            >
+              +
+            </button>
+          </div>
+        </div>
+      )}
+
+      {state === 'saved' && !savedAsRecipe ? (
+        <p className="font-bold text-green-400">✓ Saved to {meta.tab}!</p>
+      ) : state === 'saved' && savedAsRecipe ? (
+        <p className="font-bold text-green-400">✓ Saved to {meta.tab} & My Recipes!</p>
       ) : (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             disabled={state === 'saving'}
             onClick={handleSave}
             className="px-4 py-1.5 bg-yellow-300 text-black font-black rounded-lg uppercase text-[10px] tracking-wide
               hover:bg-yellow-200 active:scale-95 transition-all disabled:opacity-50"
           >
-            {state === 'saving' ? 'Saving…' : '💾 Yes, Save'}
+            {state === 'saving' ? 'Saving…' : '💾 Save to My Meals'}
           </button>
+          {prompt.type === 'meal' && (
+            <button
+              disabled={savedAsRecipe}
+              onClick={handleSaveAsRecipe}
+              className="px-4 py-1.5 bg-orange-400/80 text-black font-black rounded-lg uppercase text-[10px] tracking-wide
+                hover:bg-orange-300 active:scale-95 transition-all disabled:opacity-40"
+            >
+              {savedAsRecipe ? '✓ Added to Recipes' : '👨‍🍳 Add to My Recipes'}
+            </button>
+          )}
           <button
             onClick={() => setState('declined')}
             className="px-4 py-1.5 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-lg uppercase text-[10px] tracking-wide
@@ -126,7 +219,11 @@ export default function CoachChat({ profile, token }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    try { localStorage.setItem(storageKey, JSON.stringify(messages)); } catch { /* ignore */ }
+    try {
+      // Strip save_prompt before persisting — the banner is one-time only
+      const toStore = messages.map(({ save_prompt: _sp, ...m }) => m);
+      localStorage.setItem(storageKey, JSON.stringify(toStore));
+    } catch { /* ignore */ }
   }, [messages, storageKey]);
 
   useEffect(() => {

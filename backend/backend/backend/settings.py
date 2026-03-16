@@ -17,8 +17,10 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load from organised .env/backend.env, fall back to local .env
-_env_file = BASE_DIR.parent.parent.parent / '.env' / 'backend.env'
+# Load from backend/backend.env, fall back to organised .env/backend.env, then local .env
+_env_file = BASE_DIR.parent / 'backend.env'
+if not _env_file.exists():
+    _env_file = BASE_DIR.parent.parent / '.env' / 'backend.env'
 if _env_file.exists():
     load_dotenv(_env_file)
 else:

@@ -18,6 +18,9 @@ class UserProfile(models.Model):
     injuries = models.JSONField(default=list, blank=True)
     disclaimer_accepted_at = models.DateTimeField(auto_now_add=True)
     profile_picture = models.URLField(blank=True)
+    community_visible = models.BooleanField(default=False)
+    preferred_ingredients = models.JSONField(default=list, blank=True)
+    excluded_ingredients = models.JSONField(default=list, blank=True)
 
     def __str__(self):
         return f"{self.user.username} – {self.name or 'no name'}"
@@ -44,6 +47,7 @@ class CustomMeal(models.Model):
     kcal = models.CharField(max_length=50, blank=True)
     icon = models.CharField(max_length=10, default='🍽️')
     recipe_url = models.URLField(blank=True)
+    ingredients = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
