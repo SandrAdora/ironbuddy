@@ -620,6 +620,35 @@ class DeleteAccountView(APIView):
         return Response({'message': 'Account deleted successfully'}, status=200)
 
 
+class ContactView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        name    = request.data.get('name', '').strip()
+        email   = request.data.get('email', '').strip()
+        message = request.data.get('message', '').strip()
+
+        if not name or not email or not message:
+            return Response({'error': 'All fields are required.'}, status=400)
+
+        contact_email = os.environ.get('CONTACT_EMAIL') or os.environ.get('EMAIL_HOST_USER', '')
+        if not contact_email:
+            return Response({'error': 'Contact email not configured.'}, status=500)
+
+        try:
+            send_mail(
+                subject=f'IronBuddy Contact — {name}',
+                message=f'From: {name} <{email}>\n\n{message}',
+                from_email=None,
+                recipient_list=[contact_email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+        return Response({'message': 'Your message has been sent!'})
+
+
 class DeactivateAccountView(APIView):
     permission_classes = [IsAuthenticated]
 

@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from api.views import CreateUserView, CoachChatView, WorkoutPlanView, AIMealPlanView, UserProfileView, CustomWorkoutListView, CustomWorkoutDetailView, CustomMealListView, CustomMealDetailView, UserRecipeListView, UserRecipeDetailView, WorkoutVideoListView, WorkoutVideoDetailView, UserListView, UserSearchView, UserDetailView, ConversationListView, ConversationDetailView, MessageListView, MessageDetailView, WorkoutSessionListView, WorkoutSessionDetailView, PasswordResetRequestView, PasswordResetConfirmView, PasswordChangeView, MessageReactionView, WeightLogListView, WeightLogDetailView, DeleteAccountView, DeactivateAccountView, ReactivatingTokenView
+from api.views import CreateUserView, CoachChatView, WorkoutPlanView, AIMealPlanView, UserProfileView, CustomWorkoutListView, CustomWorkoutDetailView, CustomMealListView, CustomMealDetailView, UserRecipeListView, UserRecipeDetailView, WorkoutVideoListView, WorkoutVideoDetailView, UserListView, UserSearchView, UserDetailView, ConversationListView, ConversationDetailView, MessageListView, MessageDetailView, WorkoutSessionListView, WorkoutSessionDetailView, PasswordResetRequestView, PasswordResetConfirmView, PasswordChangeView, MessageReactionView, WeightLogListView, WeightLogDetailView, DeleteAccountView, DeactivateAccountView, ReactivatingTokenView, ContactView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
@@ -56,4 +56,5 @@ urlpatterns = [
     path("api/weight-log/<int:pk>/", WeightLogDetailView.as_view(), name="weight_log_detail"),
     path("api/account/delete/", DeleteAccountView.as_view(), name="delete_account"),
     path("api/account/deactivate/", DeactivateAccountView.as_view(), name="deactivate_account"),
+    path("api/contact/", ContactView.as_view(), name="contact"),
 ]
