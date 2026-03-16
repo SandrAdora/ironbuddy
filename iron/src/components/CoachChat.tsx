@@ -179,7 +179,7 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
             className="px-4 py-1.5 bg-yellow-300 text-black font-black rounded-lg uppercase text-[10px] tracking-wide
               hover:bg-yellow-200 active:scale-95 transition-all disabled:opacity-50"
           >
-            {state === 'saving' ? 'Saving…' : '💾 Save to My Meals'}
+            {state === 'saving' ? 'Saving…' : `💾 Save to ${meta.tab}`}
           </button>
           {prompt.type === 'meal' && (
             <button

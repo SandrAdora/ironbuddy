@@ -2,9 +2,30 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import tailwindcss from '@tailwindcss/vite';
 import basicSsl from '@vitejs/plugin-basic-ssl';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
+function parseEnvFile(filePath: string): Record<string, string> {
+  try {
+    return Object.fromEntries(
+      readFileSync(filePath, 'utf-8')
+        .split('\n')
+        .filter((l) => l.includes('=') && !l.startsWith('#'))
+        .map((l) => {
+          const idx = l.indexOf('=');
+          return [l.slice(0, idx).trim(), l.slice(idx + 1).trim()];
+        })
+    );
+  } catch { return {}; }
+}
+
+const frontendEnv = parseEnvFile(resolve(__dirname, '../.env/frontend.env'));
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_I18NEXUS_API_KEY': JSON.stringify(frontendEnv.VITE_I18NEXUS_API_KEY ?? ''),
+  },
   plugins: [react(), tailwindcss(), basicSsl()],
 
   server: {

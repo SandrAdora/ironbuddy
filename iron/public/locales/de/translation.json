@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "coach": "KI-Coach",
+    "goals": "Ziele",
+    "meals": "KI-Mahlzeiten",
+    "workouts": "Trainings",
+    "community": "Community",
+    "progress": "Fortschritt",
+    "settings": "Einstellungen"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "sub": "Konto & Sicherheit",
+    "tabs": {
+      "account": "Konto",
+      "account_desc": "Profil & Sichtbarkeit",
+      "password": "Passwort",
+      "password_desc": "Zugangsdaten ändern",
+      "legal": "Rechtliches",
+      "legal_desc": "Haftungsausschluss & AGB",
+      "languages": "Sprache",
+      "languages_desc": "App & Coach-Sprache",
+      "danger": "Gefahrenzone",
+      "danger_desc": "Deaktivieren oder löschen"
+    }
+  },
+  "language": {
+    "title": "Sprache",
+    "subtitle": "App & KI-Coach",
+    "app_language": "App-Sprache",
+    "app_language_desc": "Ändert die Oberflächensprache der gesamten App.",
+    "coach_language": "KI-Coach-Sprache",
+    "coach_language_desc": "IRON antwortet immer in deiner gewählten Sprache.",
+    "coach_language_note": "Die Coach-Sprache wird automatisch mit der App-Sprache synchronisiert.",
+    "current": "Aktuell",
+    "languages": {
+      "en": "English",
+      "de": "Deutsch",
+      "fr": "Français",
+      "es": "Español",
+      "hu": "Magyar"
+    },
+    "flags": {
+      "en": "🇬🇧",
+      "de": "🇩🇪",
+      "fr": "🇫🇷",
+      "es": "🇪🇸",
+      "hu": "🇭🇺"
+    }
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "loading": "Laden…",
+    "saving": "Speichern…",
+    "update": "Aktualisieren",
+    "confirm": "Bestätigen",
+    "not_now": "Nicht jetzt",
+    "add": "Hinzufügen",
+    "close": "Schließen"
+  },
+  "coach": {
+    "title": "KI-Coach",
+    "placeholder": "Frag deinen Coach alles…",
+    "send": "Senden",
+    "clear": "Leeren",
+    "typing": "IRON denkt nach…",
+    "save_workout": "In Meine Trainings speichern",
+    "save_meal": "In Meine Mahlzeiten speichern",
+    "add_recipe": "Zu Meinen Rezepten hinzufügen"
+  },
+  "meals": {
+    "title": "KI-Ernährungsplan",
+    "regenerate": "Neu generieren",
+    "generating": "Generiere…",
+    "breakfast": "Frühstück",
+    "lunch": "Mittagessen",
+    "dinner": "Abendessen",
+    "snacks": "Snacks",
+    "servings": "Portionen",
+    "ingredients": "Zutaten",
+    "add_ingredient": "Zutat hinzufügen…",
+    "save_meal": "In Meine Mahlzeiten speichern",
+    "add_recipe": "Zu Meinen Rezepten hinzufügen",
+    "saved_meal": "In Mahlzeiten gespeichert",
+    "saved_recipe": "In Rezepten gespeichert"
+  },
+  "workouts": {
+    "title": "Trainings",
+    "ai_plan": "KI-Trainingsplan",
+    "my_workouts": "Meine Trainings",
+    "videos": "Videos"
+  }
+}

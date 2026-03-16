@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "coach": "AI Coach",
+    "goals": "Goals",
+    "meals": "AI Meals",
+    "workouts": "Workouts",
+    "community": "Community",
+    "progress": "Progress",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "sub": "Account & Security",
+    "tabs": {
+      "account": "Account",
+      "account_desc": "Profile & visibility",
+      "password": "Password",
+      "password_desc": "Change credentials",
+      "legal": "Legal",
+      "legal_desc": "Disclaimer & terms",
+      "languages": "Language",
+      "languages_desc": "App & Coach language",
+      "danger": "Danger Zone",
+      "danger_desc": "Deactivate or delete"
+    }
+  },
+  "language": {
+    "title": "Language",
+    "subtitle": "App & AI Coach",
+    "app_language": "App Language",
+    "app_language_desc": "Changes the interface language for the entire app.",
+    "coach_language": "AI Coach Language",
+    "coach_language_desc": "IRON will always respond in your selected language.",
+    "coach_language_note": "The coach language is automatically synced to your app language.",
+    "current": "Current",
+    "languages": {
+      "en": "English",
+      "de": "Deutsch",
+      "fr": "Français",
+      "es": "Español",
+      "hu": "Magyar"
+    },
+    "flags": {
+      "en": "🇬🇧",
+      "de": "🇩🇪",
+      "fr": "🇫🇷",
+      "es": "🇪🇸",
+      "hu": "🇭🇺"
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "update": "Update",
+    "confirm": "Confirm",
+    "not_now": "Not Now",
+    "add": "Add",
+    "close": "Close"
+  },
+  "coach": {
+    "title": "AI Coach",
+    "placeholder": "Ask your coach anything...",
+    "send": "Send",
+    "clear": "Clear",
+    "typing": "IRON is thinking…",
+    "save_workout": "Save to My Workouts",
+    "save_meal": "Save to My Meals",
+    "add_recipe": "Add to My Recipes"
+  },
+  "meals": {
+    "title": "AI Meal Plan",
+    "regenerate": "Regenerate",
+    "generating": "Generating…",
+    "breakfast": "Breakfast",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "snacks": "Snacks",
+    "servings": "Servings",
+    "ingredients": "Ingredients",
+    "add_ingredient": "Add ingredient…",
+    "save_meal": "Save to My Meals",
+    "add_recipe": "Add to My Recipes",
+    "saved_meal": "Saved to My Meals",
+    "saved_recipe": "Saved to My Recipes"
+  },
+  "workouts": {
+    "title": "Workouts",
+    "ai_plan": "AI Workout Plan",
+    "my_workouts": "My Workouts",
+    "videos": "Videos"
+  }
+}
