@@ -157,6 +157,7 @@ export default function UserProfile() {
   const [viewingAvatar, setViewingAvatar] = useState(false);
   const [mealServings, setMealServings] = useState<Record<string, number>>({});
   const [savedMeals, setSavedMeals] = useState<Record<string, boolean>>({});
+  const [savedAsRecipes, setSavedAsRecipes] = useState<Record<string, boolean>>({});
   const getSrv = (name: string) => mealServings[name] ?? 1;
   const setSrv = (name: string, n: number) =>
     setMealServings((p) => ({ ...p, [name]: Math.max(1, Math.min(10, n)) }));
@@ -933,28 +934,60 @@ export default function UserProfile() {
                                   </div>
                                   {m.steps && m.steps.length > 0 && <MealSteps steps={m.steps} />}
                                   {token && (
-                                    <button
-                                      disabled={!!savedMeals[m.meal]}
-                                      onClick={async () => {
-                                        try {
-                                          await apiCreateCustomMeal(token, {
+                                    <div className="flex flex-col gap-2">
+                                      <button
+                                        disabled={!!savedMeals[m.meal]}
+                                        onClick={async () => {
+                                          try {
+                                            await apiCreateCustomMeal(token, {
+                                              name: m.meal,
+                                              icon: m.icon,
+                                              kcal: scaleKcal(m.kcal, getSrv(m.meal)),
+                                              description: m.desc,
+                                              recipe_url: '',
+                                            });
+                                            setSavedMeals(prev => ({ ...prev, [m.meal]: true }));
+                                          } catch { /* ignore */ }
+                                        }}
+                                        className={`w-full py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200
+                                          ${savedMeals[m.meal]
+                                            ? 'bg-green-500/20 text-green-400 border border-green-500/30 cursor-default'
+                                            : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-yellow-300/10 hover:text-yellow-300 hover:border-yellow-300/30 active:scale-95'
+                                          }`}
+                                      >
+                                        {savedMeals[m.meal] ? '✓ Saved to My Meals' : '💾 Save to My Meals'}
+                                      </button>
+                                      <button
+                                        disabled={!!savedAsRecipes[m.meal]}
+                                        onClick={() => {
+                                          const key = `ironbuddy_custom_recipes_${userId}`;
+                                          const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                                          const entry = {
+                                            id: Date.now(),
                                             name: m.meal,
-                                            icon: m.icon,
-                                            kcal: scaleKcal(m.kcal, getSrv(m.meal)),
                                             description: m.desc,
-                                            recipe_url: '',
-                                          });
-                                          setSavedMeals(prev => ({ ...prev, [m.meal]: true }));
-                                        } catch { /* ignore */ }
-                                      }}
-                                      className={`w-full py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200
-                                        ${savedMeals[m.meal]
-                                          ? 'bg-green-500/20 text-green-400 border border-green-500/30 cursor-default'
-                                          : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-yellow-300/10 hover:text-yellow-300 hover:border-yellow-300/30 active:scale-95'
-                                        }`}
-                                    >
-                                      {savedMeals[m.meal] ? '✓ Saved to My Meals' : '💾 Save to My Meals'}
-                                    </button>
+                                            icon: m.icon,
+                                            prepTime: '',
+                                            cookTime: '',
+                                            servings: m.servings ?? String(getSrv(m.meal)),
+                                            kcal: scaleKcal(m.kcal, getSrv(m.meal)),
+                                            ingredients: getMealIngredients(m),
+                                            steps: Array.isArray(m.steps) ? m.steps : [],
+                                            created_at: new Date().toISOString(),
+                                          };
+                                          localStorage.setItem(key, JSON.stringify([entry, ...existing]));
+                                          setSavedAsRecipes(prev => ({ ...prev, [m.meal]: true }));
+                                          setMealTab('custom');
+                                        }}
+                                        className={`w-full py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200
+                                          ${savedAsRecipes[m.meal]
+                                            ? 'bg-green-500/20 text-green-400 border border-green-500/30 cursor-default'
+                                            : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-yellow-300/10 hover:text-yellow-300 hover:border-yellow-300/30 active:scale-95'
+                                          }`}
+                                      >
+                                        {savedAsRecipes[m.meal] ? '✓ Saved to My Recipes' : '👨‍🍳 Add to My Recipes'}
+                                      </button>
+                                    </div>
                                   )}
                                 </motion.div>
                               );
