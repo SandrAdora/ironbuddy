@@ -16,12 +16,12 @@ import ResetPasswordPage from './components/pages/ResetPasswordPage';
 
 
 function AnimatedRoutes(){
-  const location = useLocation(); // get information about current url
+  const location = useLocation();
 
-  // animate transitions
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+
         <Route path="/" element={
           <PageWrapper><Home /></PageWrapper>} />
         <Route path="/about" element={<PageWrapper><About /></PageWrapper>} />
@@ -47,30 +47,35 @@ function AnimatedRoutes(){
   )
 }
 function PageWrapper({ children }: { children: React.ReactNode }){
-  // animation
   return (
-    <motion.div 
-      initial={{ opacity: 0, y:20 }} // starting state for the anmiation 
-      animate={{ opacity: 1, y: 0 }} // 
-      exit={{ opacity: 0, y: -20}}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5 }}
-
+      style={{ position: 'relative' }}
     >
       {children}
     </motion.div>
   );
+}
 
+function AppInner() {
+  const location = useLocation();
+  const isDashboard = location.pathname === '/user';
+  return (
+    <>
+      <Navbar />
+      <AnimatedRoutes />
+      {!isDashboard && <Footer />}
+    </>
+  );
 }
 
 export default function App() {
   return (
-    
     <BrowserRouter>
-    <Navbar />
-      
-        <AnimatedRoutes />
-        <Footer />
-      
+      <AppInner />
     </BrowserRouter>
   );
 }

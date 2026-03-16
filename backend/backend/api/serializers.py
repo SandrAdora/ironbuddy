@@ -103,6 +103,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
     experienceLevel = serializers.CharField(source='experience_level', allow_blank=True, required=False)
     disclaimerAcceptedAt = serializers.DateTimeField(source='disclaimer_accepted_at', allow_null=True, required=False)
     profilePicture = serializers.URLField(source='profile_picture', allow_blank=True, required=False)
+    communityVisible = serializers.BooleanField(source='community_visible', required=False)
+    preferredIngredients = serializers.JSONField(source='preferred_ingredients', required=False)
+    excludedIngredients = serializers.JSONField(source='excluded_ingredients', required=False)
 
     class Meta:
         model = UserProfile
@@ -110,6 +113,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'name', 'birthdate', 'gender', 'weight', 'height',
             'fitnessGoals', 'experienceLevel', 'equipments',
             'allergies', 'injuries', 'disclaimerAcceptedAt', 'profilePicture',
+            'communityVisible', 'preferredIngredients', 'excludedIngredients',
         ]
         extra_kwargs = {
             'name': {'allow_blank': True, 'required': False},
@@ -136,7 +140,7 @@ from .models import CustomMeal
 class CustomMealSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomMeal
-        fields = ['id', 'name', 'description', 'kcal', 'icon', 'recipe_url', 'created_at']
+        fields = ['id', 'name', 'description', 'kcal', 'icon', 'recipe_url', 'ingredients', 'created_at']
         read_only_fields = ['id', 'created_at']
 
 

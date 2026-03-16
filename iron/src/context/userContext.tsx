@@ -18,6 +18,9 @@ export interface UserProfile {
   injuries: string[];
   disclaimerAcceptedAt: string | null;
   profilePicture: string;
+  communityVisible: boolean;
+  preferredIngredients: string[];
+  excludedIngredients: string[];
   email: string;
   password: string;
 }
@@ -49,6 +52,9 @@ const defaultProfile: UserProfile = {
   injuries: [],
   disclaimerAcceptedAt: null,
   profilePicture: "",
+  communityVisible: false,
+  preferredIngredients: [],
+  excludedIngredients: [],
   email: "",
   password: "",
 };

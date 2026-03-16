@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/userContext';
-import { apiUploadFile, apiChangePassword, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, type AIMealItem, type AIMealPlan, type WorkoutSession } from '../api';
+import { apiUploadFile, apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, type AIMealItem, type AIMealPlan, type WorkoutSession } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import CoachChat from './CoachChat';
@@ -147,8 +147,8 @@ export default function UserProfile() {
   const [active, setActive] = useState('dashboard');
   const [communityUnread, setCommunityUnread] = useState(0);
   const [workoutTab, setWorkoutTab] = useState<'ai' | 'my' | 'videos'>('ai');
-  const [mealTab, setMealTab] = useState<'ai' | 'my' | 'recipes' | 'custom'>('ai');
-  const [settingsTab, setSettingsTab] = useState<'account' | 'password' | 'legal'>('account');
+  const [mealTab, setMealTab] = useState<'ai' | 'my' | 'recipes' | 'custom' | 'ingredients'>('ai');
+  const [settingsTab, setSettingsTab] = useState<'account' | 'password' | 'legal' | 'delete_account' | 'languages'>('account');
   const [editingWeight, setEditingWeight] = useState(false);
   const [weightInput, setWeightInput] = useState(String(profile.weight ?? ''));
   const [editingGoal, setEditingGoal] = useState(false);
@@ -208,6 +208,26 @@ export default function UserProfile() {
   const [pwSaving, setPwSaving] = useState(false);
   const [pwError, setPwError] = useState('');
   const [pwSuccess, setPwSuccess] = useState(false);
+
+  // Danger zone state
+  const [dangerPassword, setDangerPassword] = useState('');
+  const [dangerAction, setDangerAction] = useState<'deactivate' | 'delete' | null>(null);
+  const [dangerLoading, setDangerLoading] = useState(false);
+  const [dangerError, setDangerError] = useState('');
+
+  // Community visibility toggle
+  const [visibilityLoading, setVisibilityLoading] = useState(false);
+
+  // Editable ingredients in AI Meals
+  const [editedIngredients, setEditedIngredients] = useState<Record<string, string[]>>({});
+  const [newIngInputs, setNewIngInputs] = useState<Record<string, string>>({});
+
+  function getMealIngredients(meal: AIMealItem): string[] {
+    return editedIngredients[meal.meal] ?? meal.ingredients;
+  }
+
+  // Preferred ingredients tab
+  const [prefIngNew, setPrefIngNew] = useState('');
 
   const userId = getUserIdFromToken(token ?? '');
 
@@ -745,6 +765,7 @@ export default function UserProfile() {
                   { id: 'my', label: '🍽️ My Meals' },
                   { id: 'custom', label: '👨‍🍳 My Recipes' },
                   { id: 'recipes', label: '🎬 Recipe Videos' },
+                  { id: 'ingredients', label: '🧂 Preferences' },
                 ] as const).map((tab) => (
                   <button
                     key={tab.id}
@@ -868,12 +889,47 @@ export default function UserProfile() {
                                   </div>
                                   <div className="border-t border-white/10 pt-3 space-y-1.5">
                                     <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">🛒 Ingredients</p>
-                                    {m.ingredients.map((ing, j) => (
-                                      <div key={j} className="flex items-start gap-2">
-                                        <span className="text-[--color-iron-gold] text-[10px] font-black mt-0.5 shrink-0">▸</span>
-                                        <p className="text-gray-300 text-xs leading-snug">{scaleIngredient(ing, srv)}</p>
-                                      </div>
-                                    ))}
+                                    <div className="flex flex-wrap gap-1.5 mb-2">
+                                      {getMealIngredients(m).map((ing, j) => (
+                                        <span key={j} className="flex items-center gap-1 bg-white/10 border border-white/15 rounded-full px-2.5 py-0.5 text-[11px] text-gray-300">
+                                          {scaleIngredient(ing, srv)}
+                                          <button
+                                            onClick={() => setEditedIngredients((prev) => ({
+                                              ...prev,
+                                              [m.meal]: getMealIngredients(m).filter((_, i) => i !== j),
+                                            }))}
+                                            className="text-gray-500 hover:text-red-400 transition-colors ml-0.5 leading-none"
+                                          >×</button>
+                                        </span>
+                                      ))}
+                                    </div>
+                                    <div className="flex gap-1.5">
+                                      <input
+                                        type="text"
+                                        value={newIngInputs[m.meal] ?? ''}
+                                        onChange={(e) => setNewIngInputs((p) => ({ ...p, [m.meal]: e.target.value }))}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            const val = (newIngInputs[m.meal] ?? '').trim();
+                                            if (!val) return;
+                                            setEditedIngredients((prev) => ({ ...prev, [m.meal]: [...getMealIngredients(m), val] }));
+                                            setNewIngInputs((p) => ({ ...p, [m.meal]: '' }));
+                                          }
+                                        }}
+                                        placeholder="Add ingredient…"
+                                        className="flex-1 bg-black/30 border border-white/15 rounded-lg px-2.5 py-1 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-yellow-300/50"
+                                      />
+                                      <button
+                                        onClick={() => {
+                                          const val = (newIngInputs[m.meal] ?? '').trim();
+                                          if (!val) return;
+                                          setEditedIngredients((prev) => ({ ...prev, [m.meal]: [...getMealIngredients(m), val] }));
+                                          setNewIngInputs((p) => ({ ...p, [m.meal]: '' }));
+                                        }}
+                                        className="px-2.5 py-1 bg-white/10 border border-white/15 rounded-lg text-[11px] hover:bg-white/20 transition-all font-bold"
+                                      >+</button>
+                                    </div>
                                   </div>
                                   {m.steps && m.steps.length > 0 && <MealSteps steps={m.steps} />}
                                   {token && (
@@ -930,6 +986,72 @@ export default function UserProfile() {
                 {mealTab === 'custom' && (
                   <motion.div key="custom" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
                     <CustomRecipeBuilder token={token!} />
+                  </motion.div>
+                )}
+                {mealTab === 'ingredients' && (
+                  <motion.div key="ingredients" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }} className="space-y-6">
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
+                      <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">🧂 Ingredient Preferences</p>
+                      <p className="text-gray-400 text-xs">Add ingredients you love or dislike — the AI will use these when generating your meal plan.</p>
+
+                      {/* Preferred */}
+                      <div className="space-y-2">
+                        <p className="text-xs font-black uppercase text-green-400 tracking-wide">✅ Preferred</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(profile.preferredIngredients ?? []).filter((_, i, a) => a.indexOf(_) === i && !_.startsWith('!')).map((ing, i) => (
+                            <span key={i} className="flex items-center gap-1 bg-green-500/10 border border-green-400/20 text-green-300 rounded-full px-3 py-1 text-xs font-semibold">
+                              {ing}
+                              <button onClick={() => setProfile((p) => ({ ...p, preferredIngredients: (p.preferredIngredients ?? []).filter((x) => x !== ing) }))}
+                                className="text-green-500 hover:text-red-400 transition-colors ml-0.5">×</button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Disliked */}
+                      <div className="space-y-2">
+                        <p className="text-xs font-black uppercase text-red-400 tracking-wide">❌ Disliked / Avoid</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(profile.preferredIngredients ?? []).filter((x) => x.startsWith('!')).map((ing, i) => (
+                            <span key={i} className="flex items-center gap-1 bg-red-500/10 border border-red-400/20 text-red-300 rounded-full px-3 py-1 text-xs font-semibold">
+                              {ing.slice(1)}
+                              <button onClick={() => setProfile((p) => ({ ...p, preferredIngredients: (p.preferredIngredients ?? []).filter((x) => x !== ing) }))}
+                                className="text-red-500 hover:text-red-300 transition-colors ml-0.5">×</button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Add input */}
+                      <div className="flex gap-2 pt-2">
+                        <input
+                          type="text"
+                          value={prefIngNew}
+                          onChange={(e) => setPrefIngNew(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('pref-add-btn')?.click(); } }}
+                          placeholder="e.g. chicken, broccoli…"
+                          className="flex-1 bg-black/30 border border-white/15 rounded-xl px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-yellow-300/50"
+                        />
+                        <button id="pref-add-btn"
+                          onClick={() => {
+                            const val = prefIngNew.trim();
+                            if (!val) return;
+                            setProfile((p) => ({ ...p, preferredIngredients: [...(p.preferredIngredients ?? []).filter((x) => x !== val && x !== `!${val}`), val] }));
+                            setPrefIngNew('');
+                          }}
+                          className="px-4 py-2 bg-green-500/20 border border-green-400/30 text-green-300 font-black rounded-xl text-xs hover:bg-green-500/30 transition-all"
+                        >✅ Like</button>
+                        <button
+                          onClick={() => {
+                            const val = prefIngNew.trim();
+                            if (!val) return;
+                            setProfile((p) => ({ ...p, preferredIngredients: [...(p.preferredIngredients ?? []).filter((x) => x !== val && x !== `!${val}`), `!${val}`] }));
+                            setPrefIngNew('');
+                          }}
+                          className="px-4 py-2 bg-red-500/20 border border-red-400/30 text-red-300 font-black rounded-xl text-xs hover:bg-red-500/30 transition-all"
+                        >❌ Dislike</button>
+                      </div>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -1021,26 +1143,40 @@ export default function UserProfile() {
             <motion.div key="settings" {...fadeUp(0)} className="space-y-6">
               <SectionHeader title="Settings" sub="Account & Security" />
 
-              {/* Settings sub-tabs */}
-              <div className="flex gap-2 flex-wrap">
-                {([
-                  { id: 'account',  label: '👤 Account' },
-                  { id: 'password', label: '🔑 Password' },
-                  { id: 'legal',    label: '📜 Legal' },
-                ] as const).map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setSettingsTab(tab.id)}
-                    className={`px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide transition-all duration-200 ${
-                      settingsTab === tab.id
-                        ? 'bg-yellow-300 text-black shadow-[0_0_16px_rgba(253,224,71,0.3)]'
-                        : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-white/20'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
+              <div className="flex flex-col lg:flex-row gap-6">
+                {/* ── Settings sidebar nav ── */}
+                <div className="flex lg:flex-col gap-2 flex-wrap lg:w-52 shrink-0">
+                  {([
+                    { id: 'account',        icon: '👤', label: 'Account',       desc: 'Profile & visibility' },
+                    { id: 'password',       icon: '🔑', label: 'Password',      desc: 'Change credentials' },
+                    { id: 'legal',          icon: '📜', label: 'Legal',         desc: 'Disclaimer & terms' },
+                    { id: 'delete_account', icon: '⚠️', label: 'Danger Zone',   desc: 'Deactivate or delete' },
+                  ] as const).map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setSettingsTab(tab.id)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-all duration-200 w-full ${
+                        settingsTab === tab.id
+                          ? tab.id === 'delete_account'
+                            ? 'bg-red-500/20 border border-red-400/40 text-red-300 shadow-[0_0_16px_rgba(239,68,68,0.15)]'
+                            : 'bg-yellow-300/15 border border-yellow-300/40 text-yellow-300 shadow-[0_0_16px_rgba(253,224,71,0.15)]'
+                          : tab.id === 'delete_account'
+                            ? 'bg-white/3 border border-red-500/10 text-gray-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-400/20'
+                            : 'bg-white/3 border border-white/8 text-gray-400 hover:bg-white/8 hover:text-white hover:border-white/15'
+                      }`}
+                    >
+                      <span className="text-xl shrink-0">{tab.icon}</span>
+                      <div className="min-w-0">
+                        <p className="font-black uppercase text-xs tracking-wide leading-none">{tab.label}</p>
+                        <p className="text-[10px] opacity-60 mt-0.5 font-medium leading-none">{tab.desc}</p>
+                      </div>
+                      {settingsTab === tab.id && <span className="ml-auto text-xs opacity-60">▸</span>}
+                    </button>
+                  ))}
+                </div>
+
+                {/* ── Settings content panel ── */}
+                <div className="flex-1 min-w-0">
 
               <AnimatePresence mode="wait">
                 {/* Account tab */}
@@ -1164,6 +1300,37 @@ export default function UserProfile() {
                           ))}
                         </div>
                       )}
+
+                    </div>
+
+                    {/* Community visibility — standalone card */}
+                    <div className={`mt-4 rounded-2xl border p-5 flex items-center justify-between gap-4 transition-all duration-300 ${
+                      profile.communityVisible
+                        ? 'bg-yellow-300/8 border-yellow-300/30 shadow-[0_0_20px_rgba(253,224,71,0.08)]'
+                        : 'bg-white/5 border-white/10'
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{profile.communityVisible ? '👁️' : '🫥'}</span>
+                        <div>
+                          <p className="text-sm font-black text-white uppercase tracking-wide">Community Visibility</p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {profile.communityVisible
+                              ? 'You are visible — others can find and message you.'
+                              : 'You are hidden — no one can find you in the community.'}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        disabled={visibilityLoading}
+                        onClick={() => setProfile((p) => ({ ...p, communityVisible: !p.communityVisible }))}
+                        className={`relative w-14 h-7 rounded-full transition-colors duration-300 focus:outline-none shrink-0 ${
+                          profile.communityVisible ? 'bg-yellow-300 shadow-[0_0_12px_rgba(253,224,71,0.4)]' : 'bg-white/10 border border-white/20'
+                        }`}
+                      >
+                        <span className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${
+                          profile.communityVisible ? 'translate-x-7' : 'translate-x-0'
+                        }`} />
+                      </button>
                     </div>
                   </motion.div>
                 )}
@@ -1274,7 +1441,84 @@ export default function UserProfile() {
                     </div>
                   </motion.div>
                 )}
+
+                {/* Danger Zone tab */}
+                {settingsTab === 'delete_account' && (
+                  <motion.div key="danger" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
+                    <div className="bg-red-900/10 backdrop-blur-md border border-red-500/20 rounded-2xl p-6 space-y-6">
+                      <p className="text-red-400 font-black uppercase text-sm tracking-widest">⚠️ Danger Zone</p>
+
+                      {/* Deactivate */}
+                      <div className="space-y-2">
+                        <p className="text-white font-bold text-sm">Deactivate Account</p>
+                        <p className="text-gray-400 text-xs">Your account will be hidden. You can reactivate it by signing in again.</p>
+                        {dangerAction !== 'deactivate' ? (
+                          <button onClick={() => { setDangerAction('deactivate'); setDangerError(''); setDangerPassword(''); }}
+                            className="px-5 py-2 bg-orange-500/20 border border-orange-400/30 text-orange-300 font-black rounded-xl uppercase text-xs hover:bg-orange-500/30 transition-all">
+                            Deactivate
+                          </button>
+                        ) : (
+                          <div className="space-y-3">
+                            <PwField label="Confirm your password" value={dangerPassword} onChange={setDangerPassword} placeholder="Enter password" />
+                            {dangerError && <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded-xl px-3 py-2">{dangerError}</p>}
+                            <div className="flex gap-2">
+                              <button disabled={dangerLoading} onClick={async () => {
+                                setDangerLoading(true); setDangerError('');
+                                try {
+                                  await apiDeactivateAccount(token!, dangerPassword);
+                                  setProfile((p) => ({ ...p, onboarded: false }));
+                                  navigate('/');
+                                } catch (err: unknown) {
+                                  setDangerError(err instanceof Error ? err.message : 'Failed');
+                                } finally { setDangerLoading(false); }
+                              }} className="px-5 py-2 bg-orange-500 text-black font-black rounded-xl uppercase text-xs hover:bg-orange-400 active:scale-95 transition-all disabled:opacity-50">
+                                {dangerLoading ? 'Processing…' : 'Confirm Deactivate'}
+                              </button>
+                              <button onClick={() => setDangerAction(null)} className="px-5 py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all">Cancel</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="border-t border-red-500/20" />
+
+                      {/* Delete */}
+                      <div className="space-y-2">
+                        <p className="text-white font-bold text-sm">Delete Account</p>
+                        <p className="text-gray-400 text-xs">Permanently delete your account and all data. This cannot be undone.</p>
+                        {dangerAction !== 'delete' ? (
+                          <button onClick={() => { setDangerAction('delete'); setDangerError(''); setDangerPassword(''); }}
+                            className="px-5 py-2 bg-red-500/20 border border-red-400/30 text-red-300 font-black rounded-xl uppercase text-xs hover:bg-red-500/30 transition-all">
+                            Delete Account
+                          </button>
+                        ) : (
+                          <div className="space-y-3">
+                            <PwField label="Confirm your password" value={dangerPassword} onChange={setDangerPassword} placeholder="Enter password" />
+                            {dangerError && <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded-xl px-3 py-2">{dangerError}</p>}
+                            <div className="flex gap-2">
+                              <button disabled={dangerLoading} onClick={async () => {
+                                setDangerLoading(true); setDangerError('');
+                                try {
+                                  await apiDeleteAccount(token!, dangerPassword);
+                                  setProfile((p) => ({ ...p, onboarded: false }));
+                                  navigate('/');
+                                } catch (err: unknown) {
+                                  setDangerError(err instanceof Error ? err.message : 'Failed');
+                                } finally { setDangerLoading(false); }
+                              }} className="px-5 py-2 bg-red-600 text-white font-black rounded-xl uppercase text-xs hover:bg-red-500 active:scale-95 transition-all disabled:opacity-50">
+                                {dangerLoading ? 'Deleting…' : '🗑️ Permanently Delete'}
+                              </button>
+                              <button onClick={() => setDangerAction(null)} className="px-5 py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all">Cancel</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
               </AnimatePresence>
+                </div>{/* end content panel */}
+              </div>{/* end sidebar + content flex */}
             </motion.div>
           )}
 

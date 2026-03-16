@@ -19,6 +19,61 @@ class CreateUserView(generics.CreateAPIView):
     permission_classes = [AllowAny]
 
 
+def _get_ai_provider():
+    """Returns (provider, api_key, main_model, fast_model) based on env config."""
+    provider = os.environ.get('AI_PROVIDER', 'groq').lower()
+    model_override = os.environ.get('AI_MODEL', '').strip()
+
+    if provider == 'anthropic':
+        api_key = os.environ.get('ANTHROPIC_API_KEY', '')
+        main_model = model_override or 'claude-haiku-4-5'
+        fast_model = 'claude-haiku-4-5'
+        return provider, api_key, main_model, fast_model
+    else:
+        api_key = os.environ.get('GROQ_API_KEY', '')
+        main_model = model_override or 'llama-3.3-70b-versatile'
+        fast_model = 'llama-3.1-8b-instant'
+        return 'groq', api_key, main_model, fast_model
+
+
+def _call_anthropic(model, system, messages, max_tokens):
+    import anthropic as _anthropic
+    api_key = os.environ.get('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        raise RuntimeError('ANTHROPIC_API_KEY not set')
+    client = _anthropic.Anthropic(api_key=api_key)
+    response = client.messages.create(
+        model=model,
+        max_tokens=max_tokens,
+        system=system,
+        messages=messages,
+    )
+    return next(b.text for b in response.content if b.type == 'text')
+
+
+def _chat_completion(provider, api_key, model, system, messages, max_tokens=1024):
+    """Call the appropriate AI provider, falling back to Haiku on Groq rate limit."""
+    if provider == 'anthropic':
+        return _call_anthropic(model, system, messages, max_tokens)
+
+    # Groq — with automatic Haiku fallback on rate limit
+    from groq import RateLimitError as _GroqRateLimitError
+    try:
+        client = Groq(api_key=api_key)
+        response = client.chat.completions.create(
+            model=model,
+            max_tokens=max_tokens,
+            messages=[{"role": "system", "content": system}, *messages],
+        )
+        return response.choices[0].message.content
+    except _GroqRateLimitError:
+        # Groq rate limit hit — try Claude Haiku, but handle missing credits gracefully
+        try:
+            return _call_anthropic('claude-haiku-4-5', system, messages, max_tokens)
+        except Exception:
+            raise RuntimeError("I'm a bit overloaded right now — please try again in a moment! 🙏")
+
+
 class CoachChatView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -30,9 +85,9 @@ class CoachChatView(APIView):
         if not message:
             return Response({'error': 'Message is required'}, status=400)
 
-        api_key = os.environ.get('GROQ_API_KEY', '')
+        provider, api_key, main_model, fast_model = _get_ai_provider()
         if not api_key:
-            return Response({'error': 'AI coach is not configured. Set GROQ_API_KEY.'}, status=500)
+            return Response({'error': f'AI coach is not configured. Set {"ANTHROPIC_API_KEY" if provider == "anthropic" else "GROQ_API_KEY"}.'}, status=500)
 
         name = profile.get('name') or 'Athlete'
         goal = profile.get('fitnessGoals') or 'General Fitness'
@@ -64,7 +119,12 @@ Athlete profile:
 Always tailor advice to this specific profile. Reference the athlete's name occasionally.
 If injuries are present, always account for them in any exercise recommendations.
 
-IMPORTANT: Whenever you provide a workout plan or exercise routine (with sets/reps), you MUST append the exact tag [SAVE_WORKOUT] on its own line at the very end of your message. Do not include it for general advice, only when you list a concrete workout."""
+CRITICAL RULES — follow these strictly:
+1. NEVER provide a workout plan, exercise routine, or meal plan unless the user's current message explicitly and directly asks for one. Greetings, small talk, questions, or feedback do NOT count as a request for a workout or meal plan.
+2. Do NOT reference or continue any previous workout plan or meal plan from the chat history unless the user asks about it.
+3. If the user just says "hi", "hello", or makes small talk — respond warmly and briefly. Nothing more.
+4. Only when the user explicitly requests a workout, provide it with sets/reps AND append [SAVE_WORKOUT] on its own line at the very end.
+5. Only when the user explicitly requests a meal or meal plan, provide it with a full ingredient list (including spices, seasonings, and cooking staples like salt, pepper, oil, garlic, etc.) AND step-by-step preparation instructions. Append [SAVE_MEAL] on its own line at the very end."""
 
         messages = [
             {"role": m['role'], "content": m['content']}
@@ -75,41 +135,55 @@ IMPORTANT: Whenever you provide a workout plan or exercise routine (with sets/re
 
         try:
             import json, re as _re
-            client = Groq(api_key=api_key)
-            response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                max_tokens=1024,
-                messages=[{"role": "system", "content": system}, *messages],
-            )
-            reply = response.choices[0].message.content
+            reply = _chat_completion(provider, api_key, main_model, system, messages, max_tokens=1024)
 
-            # ── Tag-based detection: AI signals [SAVE_WORKOUT] itself ──
+            # ── Tag-based detection ──
+            _has_workout_content = bool(
+                _re.search(r'\b\d+\s*(sets?|sätze|wiederholungen|reps?)\b', reply, _re.IGNORECASE) or
+                _re.search(r'\b(sets?|sätze)\s*[xX×]\s*\d+', reply, _re.IGNORECASE) or
+                _re.search(r'\b\d+\s*[xX×]\s*\d+', reply)
+            )
             save_prompt = None
-            if '[SAVE_WORKOUT]' in reply:
-                # Strip the tag from the visible message
+            if '[SAVE_WORKOUT]' in reply and _has_workout_content:
                 clean_reply = _re.sub(r'\s*\[SAVE_WORKOUT\]\s*', '', reply).strip()
                 extract_prompt = f"""Extract the workout from this coach message and return ONLY valid JSON, no markdown:
 {{"type":"workout","label":"<short workout name>","data":{{"name":"<name>","description":"<muscle focus>","exercises":[{{"name":"<exercise name>","sets":<number>,"reps":"<reps>","rest":"<rest>","muscle":"<muscle group>","notes":""}}]}}}}
 Coach message:
 {clean_reply}"""
-                # Fallback if extraction fails
                 save_prompt = {
                     "type": "workout",
                     "label": "Coach Workout",
                     "data": {"name": "Coach Workout", "description": clean_reply[:200], "exercises": []}
                 }
                 try:
-                    ext = client.chat.completions.create(
-                        model="llama-3.1-8b-instant",
-                        max_tokens=1200,
-                        messages=[{"role": "user", "content": extract_prompt}],
-                    )
-                    raw = ext.choices[0].message.content or ''
+                    raw = _chat_completion(provider, api_key, fast_model, 'Return ONLY valid JSON, no markdown, no extra text.', [{"role": "user", "content": extract_prompt}], max_tokens=1200)
                     raw = _re.sub(r'^```(?:json)?\s*', '', raw.strip())
                     raw = _re.sub(r'\s*```$', '', raw)
                     save_prompt = json.loads(raw)
                 except Exception:
-                    pass  # keep fallback
+                    pass
+                reply = clean_reply
+
+            elif '[SAVE_MEAL]' in reply:
+                clean_reply = _re.sub(r'\s*\[SAVE_MEAL\]\s*', '', reply).strip()
+                extract_prompt = f"""Extract the meal from this coach message and return ONLY valid JSON, no markdown:
+{{"type":"meal","label":"<short meal name>","data":{{"name":"<meal name>","description":"<brief description>","kcal":"<kcal estimate, e.g. 450 kcal>","icon":"<single food emoji>","ingredients":["<ingredient 1>","<ingredient 2>","<...>"],"steps":["<step 1>","<step 2>","<...>"]}}}}
+Include ALL ingredients — main items, seasonings, and basics like salt, pepper, oil, etc. even if implied.
+Include ALL preparation steps in order, as numbered or listed in the message.
+Coach message:
+{clean_reply}"""
+                save_prompt = {
+                    "type": "meal",
+                    "label": "Coach Meal",
+                    "data": {"name": "Coach Meal", "description": clean_reply[:200], "kcal": "—", "icon": "🍽️", "ingredients": [], "steps": []}
+                }
+                try:
+                    raw = _chat_completion(provider, api_key, fast_model, 'Return ONLY valid JSON, no markdown, no extra text.', [{"role": "user", "content": extract_prompt}], max_tokens=1200)
+                    raw = _re.sub(r'^```(?:json)?\s*', '', raw.strip())
+                    raw = _re.sub(r'\s*```$', '', raw)
+                    save_prompt = json.loads(raw)
+                except Exception:
+                    pass
                 reply = clean_reply
 
             return Response({'reply': reply, 'save_prompt': save_prompt})
@@ -353,13 +427,15 @@ class AIMealPlanView(APIView):
     def post(self, request):
         profile = request.data.get('profile', {})
 
-        api_key = os.environ.get('GROQ_API_KEY', '')
+        provider, api_key, main_model, _ = _get_ai_provider()
         if not api_key:
             return Response({'error': 'AI coach is not configured.'}, status=500)
 
         goal       = profile.get('fitnessGoals') or 'General Fitness'
         allergies  = ', '.join(profile.get('allergies') or []) or 'None'
         injuries   = ', '.join(profile.get('injuries') or []) or 'None'
+        preferred  = ', '.join(profile.get('preferredIngredients') or []) or 'None'
+        excluded   = ', '.join(profile.get('excludedIngredients') or []) or 'None'
         weight     = profile.get('weight')
         height     = profile.get('height')
 
@@ -372,6 +448,8 @@ class AIMealPlanView(APIView):
 - Allergies / Intolerances: {allergies}
 - Injuries / Health Notes: {injuries}
 - BMI: {bmi if bmi else 'unknown'}
+- Preferred Ingredients (prioritise these): {preferred}
+- Excluded Ingredients (never use these): {excluded}
 
 Generate 3 options for each meal category: breakfast, lunch, dinner, and snacks.
 Each meal must include exact ingredient quantities (grams, ml, pieces, tbsp etc.).
@@ -401,21 +479,20 @@ Rules:
 - Dinner options should support recovery and the fitness goal
 - Snacks should be healthy and portion-controlled
 - Use realistic, affordable ingredients
+- Prioritise preferred ingredients ({preferred}) wherever suitable
+- Never use excluded ingredients ({excluded}) or allergens ({allergies})
 - Include exact gram/ml amounts for every ingredient
-- steps: 3-5 clear preparation steps written in plain language, each as a complete sentence"""
+- Always include spices, seasonings, and cooking staples in the ingredients list (e.g. salt, black pepper, olive oil, garlic, paprika, cumin, etc.) — never omit them even if implied
+- steps: 3-5 clear, numbered preparation steps written in plain language, each as a complete sentence. Include specific cooking times, temperatures, and techniques"""
 
         import json, re
         try:
-            client = Groq(api_key=api_key)
-            response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+            raw = _chat_completion(
+                provider, api_key, main_model,
+                "You are a professional sports nutritionist. Always respond with valid JSON only, no markdown, no explanation.",
+                [{"role": "user", "content": prompt}],
                 max_tokens=6000,
-                messages=[
-                    {"role": "system", "content": "You are a professional sports nutritionist. Always respond with valid JSON only, no markdown, no explanation."},
-                    {"role": "user", "content": prompt},
-                ],
-            )
-            raw = response.choices[0].message.content.strip()
+            ).strip()
             raw = re.sub(r'^```(?:json)?\s*', '', raw)
             raw = re.sub(r'\s*```$', '', raw).strip()
             plan = json.loads(raw)
@@ -530,11 +607,60 @@ class PasswordChangeView(APIView):
         return Response({'message': 'Password changed successfully'})
 
 
+class DeleteAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        password = request.data.get('password', '')
+        if not password:
+            return Response({'error': 'Password is required to delete your account'}, status=400)
+        if not request.user.check_password(password):
+            return Response({'error': 'Incorrect password'}, status=400)
+        request.user.delete()
+        return Response({'message': 'Account deleted successfully'}, status=200)
+
+
+class DeactivateAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        password = request.data.get('password', '')
+        if not password:
+            return Response({'error': 'Password is required to deactivate your account'}, status=400)
+        if not request.user.check_password(password):
+            return Response({'error': 'Incorrect password'}, status=400)
+        request.user.is_active = False
+        request.user.save()
+        return Response({'message': 'Account deactivated successfully'}, status=200)
+
+
+class ReactivatingTokenView(APIView):
+    """Custom login that reactivates deactivated accounts on sign-in."""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        from rest_framework_simplejwt.tokens import RefreshToken
+        username = request.data.get('username', '')
+        password = request.data.get('password', '')
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({'detail': 'No active account found with the given credentials'}, status=401)
+        if not user.check_password(password):
+            return Response({'detail': 'No active account found with the given credentials'}, status=401)
+        # Reactivate if deactivated
+        if not user.is_active:
+            user.is_active = True
+            user.save()
+        refresh = RefreshToken.for_user(user)
+        return Response({'access': str(refresh.access_token), 'refresh': str(refresh)})
+
+
 class UserListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        users = User.objects.exclude(id=request.user.id).select_related('profile')
+        users = User.objects.exclude(id=request.user.id).select_related('profile').filter(profile__community_visible=True)
         serializer = PublicUserSerializer(users, many=True)
         return Response(serializer.data)
 
