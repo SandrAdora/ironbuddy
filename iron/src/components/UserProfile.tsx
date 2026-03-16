@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import i18n, { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../i18n';
 import { useUser } from '../context/userContext';
 import { apiUploadFile, apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, type AIMealItem, type AIMealPlan, type WorkoutSession } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,17 +25,17 @@ function getUserIdFromToken(token: string): number | null {
   }
 }
 
-// ── Sidebar nav items ──────────────────────────────────────────
-const NAV = [
-  { id: 'dashboard', icon: '📊', label: 'Dashboard' },
-  { id: 'coach',     icon: '🦾', label: 'AI Coach' },
-  { id: 'goals',     icon: '🎯', label: 'Goals' },
-  { id: 'meals',     icon: '🥗', label: 'AI Meals' },
-  { id: 'workouts',  icon: '💪', label: 'Workouts' },
-  { id: 'community', icon: '💬', label: 'Community' },
-  { id: 'progress',  icon: '📈', label: 'Progress' },
-  { id: 'settings',  icon: '⚙️', label: 'Settings' },
-];
+// ── Sidebar nav ids (labels are computed inside the component via t()) ──────────
+const NAV_IDS = [
+  { id: 'dashboard', icon: '📊', key: 'nav.dashboard' },
+  { id: 'coach',     icon: '🦾', key: 'nav.coach' },
+  { id: 'goals',     icon: '🎯', key: 'nav.goals' },
+  { id: 'meals',     icon: '🥗', key: 'nav.meals' },
+  { id: 'workouts',  icon: '💪', key: 'nav.workouts' },
+  { id: 'community', icon: '💬', key: 'nav.community' },
+  { id: 'progress',  icon: '📈', key: 'nav.progress' },
+  { id: 'settings',  icon: '⚙️', key: 'nav.settings' },
+] as const;
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -143,7 +145,15 @@ function bmiCategory(bmi: number): { label: string; color: string } {
 
 export default function UserProfile() {
   const { profile, token, setProfile } = useUser();
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  // Sync i18n language with profile on mount
+  useEffect(() => {
+    if (profile.language && profile.language !== i18n.language) {
+      i18n.changeLanguage(profile.language);
+    }
+  }, [profile.language]);
   const [active, setActive] = useState('dashboard');
   const [communityUnread, setCommunityUnread] = useState(0);
   const [workoutTab, setWorkoutTab] = useState<'ai' | 'my' | 'videos'>('ai');
@@ -529,7 +539,7 @@ export default function UserProfile() {
 
         {/* Nav */}
         <nav className="flex flex-col gap-1">
-          {NAV.map((item) => (
+          {NAV_IDS.map((item) => (
             <button
               key={item.id}
               onClick={() => setActive(item.id)}
@@ -539,7 +549,7 @@ export default function UserProfile() {
                   : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
             >
               <span className="text-lg">{item.icon}</span>
-              {item.label}
+              {t(item.key)}
               {item.id === 'community' && communityUnread > 0 && (
                 <span className="ml-auto bg-yellow-300 text-black text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none">
                   {communityUnread > 99 ? '99+' : communityUnread}
@@ -1180,10 +1190,11 @@ export default function UserProfile() {
                 {/* ── Settings sidebar nav ── */}
                 <div className="flex lg:flex-col gap-2 flex-wrap lg:w-52 shrink-0">
                   {([
-                    { id: 'account',        icon: '👤', label: 'Account',       desc: 'Profile & visibility' },
-                    { id: 'password',       icon: '🔑', label: 'Password',      desc: 'Change credentials' },
-                    { id: 'legal',          icon: '📜', label: 'Legal',         desc: 'Disclaimer & terms' },
-                    { id: 'delete_account', icon: '⚠️', label: 'Danger Zone',   desc: 'Deactivate or delete' },
+                    { id: 'account',        icon: '👤', label: t('settings.tabs.account'),  desc: t('settings.tabs.account_desc') },
+                    { id: 'password',       icon: '🔑', label: t('settings.tabs.password'), desc: t('settings.tabs.password_desc') },
+                    { id: 'legal',          icon: '📜', label: t('settings.tabs.legal'),    desc: t('settings.tabs.legal_desc') },
+                    { id: 'languages',      icon: '🌍', label: t('settings.tabs.languages'),desc: t('settings.tabs.languages_desc') },
+                    { id: 'delete_account', icon: '⚠️', label: t('settings.tabs.danger'),   desc: t('settings.tabs.danger_desc') },
                   ] as const).map((tab) => (
                     <button
                       key={tab.id}
@@ -1470,6 +1481,62 @@ export default function UserProfile() {
                           <span className="text-gray-300">no liability</span> for any injury, illness, loss, or damage
                           arising directly or indirectly from use of this application or its AI-generated content.
                         </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Language tab */}
+                {settingsTab === 'languages' && (
+                  <motion.div key="languages" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }} className="space-y-4">
+                    {/* App Language */}
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-5">
+                      <div>
+                        <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">{t('language.app_language')}</p>
+                        <p className="text-gray-400 text-xs mt-1">{t('language.app_language_desc')}</p>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {(SUPPORTED_LANGUAGES as readonly SupportedLanguage[]).map((code) => {
+                          const isActive = (profile.language || 'en') === code;
+                          const flag = t(`language.flags.${code}`);
+                          const name = t(`language.languages.${code}`);
+                          return (
+                            <button
+                              key={code}
+                              onClick={() => {
+                                setProfile((p) => ({ ...p, language: code }));
+                                i18n.changeLanguage(code);
+                              }}
+                              className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-left transition-all duration-200 ${
+                                isActive
+                                  ? 'bg-yellow-300/15 border-yellow-300/50 text-yellow-300 shadow-[0_0_16px_rgba(253,224,71,0.15)]'
+                                  : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20 hover:text-white'
+                              }`}
+                            >
+                              <span className="text-2xl shrink-0">{flag}</span>
+                              <div className="min-w-0">
+                                <p className="font-black uppercase text-xs tracking-wide leading-none">{name}</p>
+                                <p className="text-[10px] uppercase opacity-50 mt-0.5 font-bold">{code.toUpperCase()}</p>
+                              </div>
+                              {isActive && (
+                                <span className="ml-auto text-yellow-300 text-sm shrink-0">✓</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* AI Coach Language */}
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-3">
+                      <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">🦾 {t('language.coach_language')}</p>
+                      <p className="text-gray-400 text-xs">{t('language.coach_language_desc')}</p>
+                      <div className="flex items-center gap-3 bg-yellow-300/5 border border-yellow-300/20 rounded-xl px-4 py-3">
+                        <span className="text-2xl">{t(`language.flags.${profile.language || 'en'}`)}</span>
+                        <div>
+                          <p className="text-white font-black text-sm">{t(`language.languages.${profile.language || 'en'}`)}</p>
+                          <p className="text-gray-500 text-xs mt-0.5">{t('language.coach_language_note')}</p>
+                        </div>
                       </div>
                     </div>
                   </motion.div>

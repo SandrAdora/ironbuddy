@@ -23,6 +23,7 @@ export interface UserProfile {
   excludedIngredients: string[];
   email: string;
   password: string;
+  language: string;
 }
 
 interface UserContextType {
@@ -57,6 +58,7 @@ const defaultProfile: UserProfile = {
   excludedIngredients: [],
   email: "",
   password: "",
+  language: "en",
 };
 
 // --- Token helpers ---

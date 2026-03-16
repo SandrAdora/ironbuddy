@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "dashboard": "Irányítópult",
+    "coach": "AI Edző",
+    "goals": "Célok",
+    "meals": "AI Étkezések",
+    "workouts": "Edzések",
+    "community": "Közösség",
+    "progress": "Haladás",
+    "settings": "Beállítások"
+  },
+  "settings": {
+    "title": "Beállítások",
+    "sub": "Fiók és biztonság",
+    "tabs": {
+      "account": "Fiók",
+      "account_desc": "Profil és láthatóság",
+      "password": "Jelszó",
+      "password_desc": "Belépési adatok módosítása",
+      "legal": "Jogi",
+      "legal_desc": "Felelősségkizárás és feltételek",
+      "languages": "Nyelv",
+      "languages_desc": "App és Coach nyelve",
+      "danger": "Veszélyzóna",
+      "danger_desc": "Deaktiválás vagy törlés"
+    }
+  },
+  "language": {
+    "title": "Nyelv",
+    "subtitle": "App és AI Edző",
+    "app_language": "Alkalmazás nyelve",
+    "app_language_desc": "Megváltoztatja a teljes alkalmazás felületének nyelvét.",
+    "coach_language": "AI Edző nyelve",
+    "coach_language_desc": "IRON mindig a kiválasztott nyelveden fog válaszolni.",
+    "coach_language_note": "Az edző nyelve automatikusan szinkronizálódik az app nyelvével.",
+    "current": "Jelenlegi",
+    "languages": {
+      "en": "English",
+      "de": "Deutsch",
+      "fr": "Français",
+      "es": "Español",
+      "hu": "Magyar"
+    },
+    "flags": {
+      "en": "🇬🇧",
+      "de": "🇩🇪",
+      "fr": "🇫🇷",
+      "es": "🇪🇸",
+      "hu": "🇭🇺"
+    }
+  },
+  "common": {
+    "save": "Mentés",
+    "cancel": "Mégse",
+    "edit": "Szerkesztés",
+    "delete": "Törlés",
+    "loading": "Betöltés…",
+    "saving": "Mentés…",
+    "update": "Frissítés",
+    "confirm": "Megerősítés",
+    "not_now": "Most nem",
+    "add": "Hozzáadás",
+    "close": "Bezárás"
+  },
+  "coach": {
+    "title": "AI Edző",
+    "placeholder": "Kérdezz bármit az edzőtől…",
+    "send": "Küldés",
+    "clear": "Törlés",
+    "typing": "IRON gondolkodik…",
+    "save_workout": "Mentés az Edzéseimbe",
+    "save_meal": "Mentés az Étkezéseimbe",
+    "add_recipe": "Hozzáadás a Receptjeimhez"
+  },
+  "meals": {
+    "title": "AI Étkezési terv",
+    "regenerate": "Újragenerálás",
+    "generating": "Generálás…",
+    "breakfast": "Reggeli",
+    "lunch": "Ebéd",
+    "dinner": "Vacsora",
+    "snacks": "Snackek",
+    "servings": "Adagok",
+    "ingredients": "Hozzávalók",
+    "add_ingredient": "Hozzávaló hozzáadása…",
+    "save_meal": "Mentés az Étkezéseimbe",
+    "add_recipe": "Hozzáadás a Receptjeimhez",
+    "saved_meal": "Elmentve az étkezésekbe",
+    "saved_recipe": "Elmentve a receptekbe"
+  },
+  "workouts": {
+    "title": "Edzések",
+    "ai_plan": "AI Edzésterv",
+    "my_workouts": "Edzéseim",
+    "videos": "Videók"
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "coach": "Coach IA",
+    "goals": "Objectifs",
+    "meals": "Repas IA",
+    "workouts": "Entraînements",
+    "community": "Communauté",
+    "progress": "Progrès",
+    "settings": "Paramètres"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "sub": "Compte & Sécurité",
+    "tabs": {
+      "account": "Compte",
+      "account_desc": "Profil & visibilité",
+      "password": "Mot de passe",
+      "password_desc": "Changer les identifiants",
+      "legal": "Légal",
+      "legal_desc": "Avertissement & conditions",
+      "languages": "Langue",
+      "languages_desc": "Langue de l'app & du Coach",
+      "danger": "Zone de danger",
+      "danger_desc": "Désactiver ou supprimer"
+    }
+  },
+  "language": {
+    "title": "Langue",
+    "subtitle": "App & Coach IA",
+    "app_language": "Langue de l'application",
+    "app_language_desc": "Change la langue de l'interface pour toute l'application.",
+    "coach_language": "Langue du Coach IA",
+    "coach_language_desc": "IRON répondra toujours dans votre langue sélectionnée.",
+    "coach_language_note": "La langue du coach est automatiquement synchronisée avec la langue de l'app.",
+    "current": "Actuel",
+    "languages": {
+      "en": "English",
+      "de": "Deutsch",
+      "fr": "Français",
+      "es": "Español",
+      "hu": "Magyar"
+    },
+    "flags": {
+      "en": "🇬🇧",
+      "de": "🇩🇪",
+      "fr": "🇫🇷",
+      "es": "🇪🇸",
+      "hu": "🇭🇺"
+    }
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "loading": "Chargement…",
+    "saving": "Enregistrement…",
+    "update": "Mettre à jour",
+    "confirm": "Confirmer",
+    "not_now": "Pas maintenant",
+    "add": "Ajouter",
+    "close": "Fermer"
+  },
+  "coach": {
+    "title": "Coach IA",
+    "placeholder": "Posez toutes vos questions au coach…",
+    "send": "Envoyer",
+    "clear": "Effacer",
+    "typing": "IRON réfléchit…",
+    "save_workout": "Sauvegarder dans Mes entraînements",
+    "save_meal": "Sauvegarder dans Mes repas",
+    "add_recipe": "Ajouter à Mes recettes"
+  },
+  "meals": {
+    "title": "Plan alimentaire IA",
+    "regenerate": "Régénérer",
+    "generating": "Génération…",
+    "breakfast": "Petit-déjeuner",
+    "lunch": "Déjeuner",
+    "dinner": "Dîner",
+    "snacks": "En-cas",
+    "servings": "Portions",
+    "ingredients": "Ingrédients",
+    "add_ingredient": "Ajouter un ingrédient…",
+    "save_meal": "Sauvegarder dans Mes repas",
+    "add_recipe": "Ajouter à Mes recettes",
+    "saved_meal": "Sauvegardé dans les repas",
+    "saved_recipe": "Sauvegardé dans les recettes"
+  },
+  "workouts": {
+    "title": "Entraînements",
+    "ai_plan": "Plan d'entraînement IA",
+    "my_workouts": "Mes entraînements",
+    "videos": "Vidéos"
+  }
+}
