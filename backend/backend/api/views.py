@@ -79,6 +79,7 @@ class CoachChatView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        import json, re as _re
         message = request.data.get('message', '').strip()
         profile = request.data.get('profile', {})
         history = request.data.get('history', [])
@@ -239,7 +240,6 @@ RULE C — DEFAULT BEHAVIOR:
             messages[-1]['content'] = message + recipe_context
 
         try:
-            import json, re as _re
             reply = _chat_completion(provider, api_key, main_model, system, messages, max_tokens=1024)
 
             # ── Server-side guard: strip tags the LLM produced without permission ──

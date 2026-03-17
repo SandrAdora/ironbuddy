@@ -326,6 +326,7 @@ export default function ProgressTab({ token, sessions, currentWeight }: Props) {
             {saving ? '…' : 'Log'}
           </button>
         </div>
+        <p className="text-gray-600 text-xs">One entry per day — logging the same date again updates that day's value.</p>
         {weightError && <p className="text-red-400 text-xs">{weightError}</p>}
 
         {/* Chart */}
