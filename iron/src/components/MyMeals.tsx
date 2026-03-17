@@ -64,6 +64,7 @@ export default function MyMeals({ token }: Props) {
           kcal: kcal.trim(),
           icon,
           recipe_url: '',
+          ingredients: [],
         });
         setMeals((prev) => [created, ...prev]);
       }

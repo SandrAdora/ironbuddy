@@ -7,19 +7,26 @@
     "workouts": "Entrenamientos",
     "community": "Comunidad",
     "progress": "Progreso",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "about": "Acerca de",
+    "contact": "Contacto",
+    "sign_up": "Registrarse",
+    "sign_out": "Cerrar sesión"
   },
   "settings": {
     "title": "Ajustes",
     "sub": "Cuenta y Seguridad",
+    "save": "💾 Guardar ajustes",
+    "saving": "Guardando…",
+    "saved": "✓ Guardado",
     "tabs": {
-      "account": "Cuenta",
+      "account": "Configuración de cuenta",
       "account_desc": "Perfil y visibilidad",
       "password": "Contraseña",
       "password_desc": "Cambiar credenciales",
       "legal": "Legal",
       "legal_desc": "Aviso y términos",
-      "languages": "Idioma",
+      "languages": "Configuración de idioma",
       "languages_desc": "Idioma de la app y el Coach",
       "danger": "Zona de peligro",
       "danger_desc": "Desactivar o eliminar"
@@ -60,7 +67,15 @@
     "confirm": "Confirmar",
     "not_now": "Ahora no",
     "add": "Añadir",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "sign_out": "Cerrar sesión",
+    "athlete": "Atleta",
+    "uploading": "Subiendo…",
+    "processing": "Procesando…",
+    "select": "— Seleccionar —",
+    "view": "Ver",
+    "upload": "Subir",
+    "out": "Salir"
   },
   "coach": {
     "title": "Coach IA",
@@ -70,7 +85,81 @@
     "typing": "IRON está pensando…",
     "save_workout": "Guardar en Mis entrenamientos",
     "save_meal": "Guardar en Mis comidas",
-    "add_recipe": "Añadir a Mis recetas"
+    "add_recipe": "Añadir a Mis recetas",
+    "subtitle": "Personalizado",
+    "welcome": "Hey {{name}}! 💪 Soy IRON, tu coach IA personal. Se que tu objetivo es **{{goal}}** y nivel **{{level}}**. Preguntame cualquier cosa!",
+    "quick_workout": "Entrenamiento de {{goal}}",
+    "quick_eat": "Que deberia comer hoy?",
+    "quick_recover": "Como recuperarme mas rapido?",
+    "quick_progress": "Valora mi progreso"
+  },
+  "dashboard": {
+    "title": "Resumen",
+    "welcome": "Bienvenido/a,",
+    "workouts": "Entrenamientos",
+    "streak": "Racha",
+    "day": "día",
+    "days": "días",
+    "goal": "Objetivo",
+    "bmi": "IMC",
+    "start_workout": "🏋️ Iniciar entrenamiento",
+    "ai_plan": "Plan IA",
+    "ai_plan_desc": "Generado para tu objetivo",
+    "my_workouts": "Mis entrenamientos",
+    "my_workouts_desc": "Tus rutinas personalizadas"
+  },
+  "goals": {
+    "title": "Objetivos",
+    "subtitle": "Tu distribución de fitness",
+    "no_goal": "Sin objetivo establecido",
+    "weight_loss": "Pérdida de peso",
+    "muscle_gain": "Ganancia muscular",
+    "endurance": "Resistencia",
+    "general_fitness": "Fitness general",
+    "seg": {
+      "fat_loss": "Pérdida de grasa",
+      "cardio": "Cardio",
+      "strength": "Fuerza",
+      "hypertrophy": "Hipertrofia",
+      "recovery": "Recuperación",
+      "stamina": "Resistencia",
+      "mobility": "Movilidad",
+      "flexibility": "Flexibilidad",
+      "set_goal": "Establece un objetivo"
+    }
+  },
+  "level": {
+    "beginner": "Principiante",
+    "intermediate": "Intermedio",
+    "advanced": "Avanzado",
+    "unsure": "No estoy seguro/a"
+  },
+  "gender": {
+    "male": "Masculino",
+    "female": "Femenino",
+    "other": "Otro",
+    "prefer_not": "Prefiero no decirlo"
+  },
+  "equipment": {
+    "none": "Sin equipo",
+    "dumbbells": "Mancuernas",
+    "barbell": "Barra y rack",
+    "full_gym": "Gimnasio completo",
+    "bands": "Bandas elásticas"
+  },
+  "bmi": {
+    "underweight": "Bajo peso",
+    "normal": "Normal",
+    "overweight": "Sobrepeso",
+    "obese": "Obesidad"
+  },
+  "sidebar": {
+    "goal": "Objetivo",
+    "level": "Nivel",
+    "height": "Altura",
+    "weight": "Peso",
+    "gender": "Género",
+    "bmi": "IMC"
   },
   "meals": {
     "title": "Plan de comidas IA",
@@ -81,17 +170,190 @@
     "dinner": "Cena",
     "snacks": "Snacks",
     "servings": "Porciones",
-    "ingredients": "Ingredientes",
+    "ingredients": "🛒 Ingredientes",
     "add_ingredient": "Añadir ingrediente…",
-    "save_meal": "Guardar en Mis comidas",
-    "add_recipe": "Añadir a Mis recetas",
-    "saved_meal": "Guardado en comidas",
-    "saved_recipe": "Guardado en recetas"
+    "save_meal": "💾 Guardar en Mis comidas",
+    "add_recipe": "👨‍🍳 Añadir a Mis recetas",
+    "saved_meal": "✓ Guardado en comidas",
+    "saved_recipe": "✓ Guardado en recetas",
+    "weekly_plan": "Plan semanal",
+    "refreshes_weekly": "se actualiza semanalmente",
+    "day_ago": "Generado hace {{count}} día",
+    "days_ago": "Generado hace {{count}} días",
+    "no_plan": "Sin plan todavía",
+    "no_plan_desc": "Pulsa Regenerar para generar tu plan alimentario personalizado.",
+    "how_to_prepare": "👨‍🍳 Cómo preparar",
+    "ingredient_prefs": "🧂 Preferencias de ingredientes",
+    "ingredient_prefs_desc": "Añade ingredientes que te gusten o no — la IA los tendrá en cuenta.",
+    "preferred": "✅ Preferidos",
+    "disliked": "❌ No me gustan / Evitar",
+    "prefs_placeholder": "p.ej. pollo, brócoli…",
+    "like_btn": "✅ Me gusta",
+    "dislike_btn": "❌ No me gusta",
+    "ai_tab": "🥗 Sugerencias IA",
+    "my_tab": "🍽️ Mis comidas",
+    "recipes_tab": "👨‍🍳 Mis recetas",
+    "videos_tab": "🎬 Vídeos de recetas",
+    "prefs_tab": "🧂 Preferencias",
+    "view_all": "Ver todo →",
+    "tap_to_generate": "Toca para generar tu plan de comidas IA",
+    "daily_total": "Estimación diaria"
   },
   "workouts": {
     "title": "Entrenamientos",
     "ai_plan": "Plan de entrenamiento IA",
     "my_workouts": "Mis entrenamientos",
-    "videos": "Vídeos"
+    "videos": "Vídeos",
+    "ai_tab": "🤖 Plan IA",
+    "my_tab": "✏️ Mis entrenamientos",
+    "videos_tab": "🎬 Vídeos",
+    "start_ai": "▶ Iniciar entrenamiento IA",
+    "in_progress": "🏋️ Entrenamiento en curso — "
+  },
+  "progress": {
+    "title": "Progreso",
+    "subtitle": "Sigue tu transformación"
+  },
+  "profile": {
+    "details": "Detalles del perfil",
+    "email": "Correo electrónico",
+    "name": "Nombre",
+    "goal": "Objetivo",
+    "level": "Nivel",
+    "gender": "Género",
+    "height_cm": "Altura (cm)",
+    "height_placeholder": "p.ej. 175",
+    "weight_kg": "Peso (kg)",
+    "weight_placeholder": "p.ej. 75",
+    "dob": "Fecha de nacimiento",
+    "equipment": "Equipo",
+    "community_visible": "Visibilidad en la comunidad",
+    "visible_desc": "Eres visible — otros pueden encontrarte y escribirte.",
+    "hidden_desc": "Estás oculto/a — nadie puede encontrarte en la comunidad.",
+    "view_photo": "Ver foto",
+    "upload_photo": "Subir foto"
+  },
+  "password": {
+    "current": "Contraseña actual",
+    "new": "Nueva contraseña",
+    "new_placeholder": "Mín. 8 caracteres",
+    "confirm": "Confirmar nueva contraseña",
+    "confirm_placeholder": "Repite la nueva contraseña",
+    "update": "Actualizar contraseña",
+    "success": "¡Contraseña cambiada con éxito!",
+    "error_length": "La nueva contraseña debe tener al menos 8 caracteres",
+    "error_match": "Las contraseñas no coinciden",
+    "error_failed": "Error al cambiar la contraseña"
+  },
+  "legal": {
+    "title": "Aviso de salud y responsabilidad",
+    "agreed": "✓ Aceptado",
+    "not_signed": "No firmado",
+    "accepted_on": "Aceptado el",
+    "intro": "IronBuddy ofrece sugerencias de fitness y nutrición generadas por IA solo con fines",
+    "informational": "informativos",
+    "intro2": ". El contenido de IRON no constituye consejo médico y no es",
+    "not_substitute": "un sustituto de la orientación médica, nutricional o deportiva profesional",
+    "intro3": "de un profesional cualificado.",
+    "item_0": "Tienes 18 años o más, o has obtenido el consentimiento de un padre/tutor.",
+    "item_1": "Has consultado a un médico antes de comenzar cualquier programa, o aceptas plena responsabilidad.",
+    "item_2": "Entiendes que el ejercicio físico conlleva riesgos inherentes y los asumes voluntariamente.",
+    "item_3": "Entiendes que las recomendaciones son generadas por una IA y pueden no tener en cuenta tu historial médico.",
+    "outro": "El desarrollador de IronBuddy no acepta",
+    "no_liability": "ninguna responsabilidad",
+    "outro2": "por daños derivados directa o indirectamente del uso de esta aplicación o su contenido generado por IA."
+  },
+  "danger": {
+    "title": "⚠️ Zona de peligro",
+    "deactivate": "Desactivar cuenta",
+    "deactivate_desc": "Tu cuenta quedará oculta. Puedes reactivarla iniciando sesión de nuevo.",
+    "deactivate_btn": "Desactivar",
+    "confirm_deactivate": "Confirmar desactivación",
+    "delete": "Eliminar cuenta",
+    "delete_desc": "Elimina permanentemente tu cuenta y todos los datos. Esta acción no se puede deshacer.",
+    "delete_btn": "Eliminar cuenta",
+    "confirm_delete": "🗑️ Eliminar permanentemente",
+    "password_label": "Confirma tu contraseña",
+    "password_placeholder": "Introduce la contraseña",
+    "cancel": "Cancelar"
+  },
+  "session": {
+    "in_progress": "En curso · "
+  },
+  "home": {
+    "badge": "Fitness con IA",
+    "headline1": "Entrena",
+    "headline2": "Mejor.",
+    "headline3": "Levanta",
+    "headline4": "Más Fuerte.",
+    "tagline": "IRON aprende tus objetivos, crea planes personalizados y te mantiene comprometido — cada rep, cada comida, cada día.",
+    "features": {
+      "ai_coach": "Planes de entrenamiento IA personalizados",
+      "nutrition": "Nutrición inteligente y seguimiento de comidas",
+      "analytics": "Análisis de progreso en tiempo real",
+      "community": "Comunidad de atletas y chat directo"
+    },
+    "stats": {
+      "athletes": "Atletas",
+      "plans": "Planes IA",
+      "rating": "Puntuación"
+    },
+    "signin": {
+      "portal": "Portal del Atleta",
+      "title": "Iniciar sesión",
+      "submit": "Iniciar sesión →",
+      "submitting": "Iniciando sesión…",
+      "error": "Email o contraseña inválidos. Por favor, inténtalo de nuevo.",
+      "forgot": "¿Olvidaste tu contraseña?",
+      "no_account": "¿Sin cuenta?"
+    },
+    "how_it_works": {
+      "label": "Proceso sencillo",
+      "title": "Cómo funciona",
+      "step1_title": "Configura tu perfil",
+      "step1_desc": "Cuéntale a IRON tus objetivos, nivel de forma, equipo disponible y cualquier lesión o alergia. Solo 2 minutos.",
+      "step2_title": "Obtén tu plan",
+      "step2_desc": "IRON genera al instante un plan de entrenamiento y un plan semanal de comidas adaptados específicamente a ti.",
+      "step3_title": "Sigue y mejora",
+      "step3_desc": "Registra entrenamientos, sigue tu peso y medidas corporales, y observa cómo IRON adapta tu plan a medida que progresas."
+    },
+    "features_section": {
+      "label": "Todo incluido",
+      "title": "Todas las herramientas que necesitas",
+      "ai_coach_title": "Coach IA",
+      "ai_coach_desc": "Chatea con IRON en cualquier momento. Pide entrenamientos, ideas de comidas, consejos de recuperación o simplemente motivación.",
+      "meals_title": "Planes de comidas IA",
+      "meals_desc": "Planes de comidas semanales generados para tu objetivo — desayuno, almuerzo, cena y snacks con detalle de macros.",
+      "workouts_title": "Planes de entrenamiento",
+      "workouts_desc": "Planes generados por IA o personalizados con biblioteca de ejercicios, series, repeticiones, tiempos de descanso y seguimiento de sesiones.",
+      "tracker_title": "Rastreador corporal",
+      "tracker_desc": "Registra tu peso y medidas corporales (pecho, cintura, caderas, brazos) para visualizar tu transformación.",
+      "community_title": "Comunidad",
+      "community_desc": "Conéctate con otros atletas por mensajes directos. Comparte tu progreso, haz preguntas, mantente comprometido.",
+      "languages_title": "5 idiomas",
+      "languages_desc": "Soporte completo de la app y el coach IA en inglés, alemán, francés, español y húngaro."
+    },
+    "cta": {
+      "title1": "¿Listo para entrenar",
+      "title2": "Mejor?",
+      "desc": "Únete a miles de atletas que ya usan IronBuddy para alcanzar sus objetivos. Gratis para empezar — sin tarjeta de crédito.",
+      "btn": "Crear cuenta gratuita →"
+    },
+    "forgot": {
+      "title": "Restablecer contraseña",
+      "desc": "Ingresa el email de tu cuenta y te enviaremos un enlace de restablecimiento.",
+      "check_inbox": "Revisa tu bandeja de entrada",
+      "sent_desc": "Si {{email}} está registrado, recibirás un enlace de restablecimiento en breve.",
+      "done": "Listo",
+      "send": "Enviar enlace",
+      "sending": "Enviando…",
+      "error": "Algo salió mal. Por favor, inténtalo de nuevo."
+    },
+    "section_nav": {
+      "home": "Inicio",
+      "how_it_works": "Cómo funciona",
+      "features": "Funciones",
+      "join": "Unirse gratis"
+    }
   }
 }

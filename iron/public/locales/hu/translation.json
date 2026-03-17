@@ -7,19 +7,26 @@
     "workouts": "Edzések",
     "community": "Közösség",
     "progress": "Haladás",
-    "settings": "Beállítások"
+    "settings": "Beállítások",
+    "about": "Rólunk",
+    "contact": "Kapcsolat",
+    "sign_up": "Regisztráció",
+    "sign_out": "Kijelentkezés"
   },
   "settings": {
     "title": "Beállítások",
     "sub": "Fiók és biztonság",
+    "save": "💾 Beállítások mentése",
+    "saving": "Mentés…",
+    "saved": "✓ Mentve",
     "tabs": {
-      "account": "Fiók",
+      "account": "Fiókbeállítások",
       "account_desc": "Profil és láthatóság",
       "password": "Jelszó",
       "password_desc": "Belépési adatok módosítása",
       "legal": "Jogi",
-      "legal_desc": "Felelősségkizárás és feltételek",
-      "languages": "Nyelv",
+      "legal_desc": "Felelősségkizárás",
+      "languages": "Nyelvi beállítások",
       "languages_desc": "App és Coach nyelve",
       "danger": "Veszélyzóna",
       "danger_desc": "Deaktiválás vagy törlés"
@@ -60,7 +67,15 @@
     "confirm": "Megerősítés",
     "not_now": "Most nem",
     "add": "Hozzáadás",
-    "close": "Bezárás"
+    "close": "Bezárás",
+    "sign_out": "Kijelentkezés",
+    "athlete": "Sportoló",
+    "uploading": "Feltöltés…",
+    "processing": "Feldolgozás…",
+    "select": "— Válassz —",
+    "view": "Megtekintés",
+    "upload": "Feltöltés",
+    "out": "Ki"
   },
   "coach": {
     "title": "AI Edző",
@@ -70,7 +85,81 @@
     "typing": "IRON gondolkodik…",
     "save_workout": "Mentés az Edzéseimbe",
     "save_meal": "Mentés az Étkezéseimbe",
-    "add_recipe": "Hozzáadás a Receptjeimhez"
+    "add_recipe": "Hozzáadás a Receptjeimhez",
+    "subtitle": "Személyre szabott",
+    "welcome": "Szia {{name}}! 💪 IRON vagyok, a személyes AI edződ. Tudom, hogy a célod **{{goal}}** és **{{level}}** szinten vagy. Kérdezz bármit!",
+    "quick_workout": "{{goal}} edzés nekem",
+    "quick_eat": "Mit egyek ma?",
+    "quick_recover": "Hogyan regenerálódjak gyorsabban?",
+    "quick_progress": "Értékeld a fejlődésem"
+  },
+  "dashboard": {
+    "title": "Áttekintés",
+    "welcome": "Üdv vissza,",
+    "workouts": "Edzések",
+    "streak": "Sorozat",
+    "day": "nap",
+    "days": "nap",
+    "goal": "Cél",
+    "bmi": "BMI",
+    "start_workout": "🏋️ Edzés indítása",
+    "ai_plan": "AI Edzésterv",
+    "ai_plan_desc": "A céljaidhoz generálva",
+    "my_workouts": "Edzéseim",
+    "my_workouts_desc": "Egyéni rutinjaid"
+  },
+  "goals": {
+    "title": "Célok",
+    "subtitle": "Fitnesz célok megoszlása",
+    "no_goal": "Még nincs cél beállítva",
+    "weight_loss": "Fogyás",
+    "muscle_gain": "Izomépítés",
+    "endurance": "Állóképesség",
+    "general_fitness": "Általános fitnesz",
+    "seg": {
+      "fat_loss": "Zsírégetés",
+      "cardio": "Kardió",
+      "strength": "Erőedzés",
+      "hypertrophy": "Hipertrófia",
+      "recovery": "Regeneráció",
+      "stamina": "Állóképesség",
+      "mobility": "Mozgékonyság",
+      "flexibility": "Rugalmasság",
+      "set_goal": "Állíts be célt"
+    }
+  },
+  "level": {
+    "beginner": "Kezdő",
+    "intermediate": "Haladó",
+    "advanced": "Profi",
+    "unsure": "Nem biztos"
+  },
+  "gender": {
+    "male": "Férfi",
+    "female": "Nő",
+    "other": "Egyéb",
+    "prefer_not": "Inkább nem mondom"
+  },
+  "equipment": {
+    "none": "Nincs felszerelés",
+    "dumbbells": "Kézisúlyzók",
+    "barbell": "Olimpiai rúd & állvány",
+    "full_gym": "Teljes edzőterem",
+    "bands": "Gumiszalagok"
+  },
+  "bmi": {
+    "underweight": "Alulsúly",
+    "normal": "Normál",
+    "overweight": "Túlsúly",
+    "obese": "Elhízás"
+  },
+  "sidebar": {
+    "goal": "Cél",
+    "level": "Szint",
+    "height": "Magasság",
+    "weight": "Testsúly",
+    "gender": "Nem",
+    "bmi": "BMI"
   },
   "meals": {
     "title": "AI Étkezési terv",
@@ -81,17 +170,190 @@
     "dinner": "Vacsora",
     "snacks": "Snackek",
     "servings": "Adagok",
-    "ingredients": "Hozzávalók",
+    "ingredients": "🛒 Hozzávalók",
     "add_ingredient": "Hozzávaló hozzáadása…",
-    "save_meal": "Mentés az Étkezéseimbe",
-    "add_recipe": "Hozzáadás a Receptjeimhez",
-    "saved_meal": "Elmentve az étkezésekbe",
-    "saved_recipe": "Elmentve a receptekbe"
+    "save_meal": "💾 Mentés az Étkezéseimbe",
+    "add_recipe": "👨‍🍳 Hozzáadás a Receptjeimhez",
+    "saved_meal": "✓ Elmentve az étkezésekbe",
+    "saved_recipe": "✓ Elmentve a receptekbe",
+    "weekly_plan": "Heti terv",
+    "refreshes_weekly": "hetente frissül",
+    "day_ago": "{{count}} napja generálva",
+    "days_ago": "{{count}} napja generálva",
+    "no_plan": "Még nincs terv",
+    "no_plan_desc": "Kattints az Újragenerálásra a személyre szabott heti terv létrehozásához.",
+    "how_to_prepare": "👨‍🍳 Elkészítés",
+    "ingredient_prefs": "🧂 Hozzávaló-preferenciák",
+    "ingredient_prefs_desc": "Add hozzá a kedvelt és kerülendő hozzávalókat — az AI figyelembe veszi ezeket.",
+    "preferred": "✅ Kedvelt",
+    "disliked": "❌ Nem szeretem / Kerülöm",
+    "prefs_placeholder": "pl. csirke, brokkoli…",
+    "like_btn": "✅ Szeretem",
+    "dislike_btn": "❌ Nem szeretem",
+    "ai_tab": "🥗 AI Javaslatok",
+    "my_tab": "🍽️ Étkezéseim",
+    "recipes_tab": "👨‍🍳 Receptjeim",
+    "videos_tab": "🎬 Recept videók",
+    "prefs_tab": "🧂 Preferenciák",
+    "view_all": "Összes megtekintése →",
+    "tap_to_generate": "Érintsd meg az AI étkezési terv generálásához",
+    "daily_total": "Napi becslés"
   },
   "workouts": {
     "title": "Edzések",
     "ai_plan": "AI Edzésterv",
     "my_workouts": "Edzéseim",
-    "videos": "Videók"
+    "videos": "Videók",
+    "ai_tab": "🤖 AI Terv",
+    "my_tab": "✏️ Edzéseim",
+    "videos_tab": "🎬 Videók",
+    "start_ai": "▶ AI Edzés indítása",
+    "in_progress": "🏋️ Edzés folyamatban — "
+  },
+  "progress": {
+    "title": "Haladás",
+    "subtitle": "Kövesd az átalakulásodat"
+  },
+  "profile": {
+    "details": "Profiladatok",
+    "email": "E-mail",
+    "name": "Név",
+    "goal": "Cél",
+    "level": "Szint",
+    "gender": "Nem",
+    "height_cm": "Magasság (cm)",
+    "height_placeholder": "pl. 175",
+    "weight_kg": "Testsúly (kg)",
+    "weight_placeholder": "pl. 75",
+    "dob": "Születési dátum",
+    "equipment": "Felszerelés",
+    "community_visible": "Közösségi láthatóság",
+    "visible_desc": "Látható vagy — mások megtalálhatnak és írhatnak neked.",
+    "hidden_desc": "El vagy rejtve — senki sem talál rád a közösségben.",
+    "view_photo": "Fotó megtekintése",
+    "upload_photo": "Fotó feltöltése"
+  },
+  "password": {
+    "current": "Jelenlegi jelszó",
+    "new": "Új jelszó",
+    "new_placeholder": "Min. 8 karakter",
+    "confirm": "Új jelszó megerősítése",
+    "confirm_placeholder": "Ismételd meg az új jelszót",
+    "update": "Jelszó frissítése",
+    "success": "Jelszó sikeresen megváltoztatva!",
+    "error_length": "Az új jelszónak legalább 8 karakteresnek kell lennie",
+    "error_match": "A jelszavak nem egyeznek",
+    "error_failed": "Nem sikerült megváltoztatni a jelszót"
+  },
+  "legal": {
+    "title": "Egészségügyi és felelősségi nyilatkozat",
+    "agreed": "✓ Elfogadva",
+    "not_signed": "Nem aláírva",
+    "accepted_on": "Elfogadva ekkor:",
+    "intro": "Az IronBuddy AI által generált fitnesz- és táplálkozási javaslatokat nyújt kizárólag",
+    "informational": "tájékoztatási célokra",
+    "intro2": ". Az IRON tartalma nem minősül orvosi tanácsnak, és nem helyettesíti a",
+    "not_substitute": "szakképzett orvosi, táplálkozási vagy fitnesz szakembertől kapott tanácsot",
+    "intro3": ".",
+    "item_0": "18 éves vagy idősebb vagy, vagy szülői/gyámi beleegyezéssel rendelkezel.",
+    "item_1": "Edzés- vagy diétaprogram megkezdése előtt orvossal konzultáltál, vagy teljes felelősséget vállalsz.",
+    "item_2": "Megérted, hogy a fizikai edzés sérülési kockázattal jár, és önként vállalod ezeket.",
+    "item_3": "Megérted, hogy az ajánlásokat AI generálja, és előfordulhat, hogy nem veszi figyelembe orvosi előzményeidet.",
+    "outro": "Az IronBuddy fejlesztője",
+    "no_liability": "semmilyen felelősséget nem vállal",
+    "outro2": "az alkalmazás vagy AI-tartalmainak használatából eredő károkért."
+  },
+  "danger": {
+    "title": "⚠️ Veszélyzóna",
+    "deactivate": "Fiók deaktiválása",
+    "deactivate_desc": "A fiókod rejtett lesz. Újra aktiválhatod, ha újra bejelentkezel.",
+    "deactivate_btn": "Deaktiválás",
+    "confirm_deactivate": "Deaktiválás megerősítése",
+    "delete": "Fiók törlése",
+    "delete_desc": "Véglegesen törli a fiókodat és az összes adatot. Ez nem vonható vissza.",
+    "delete_btn": "Fiók törlése",
+    "confirm_delete": "🗑️ Végleges törlés",
+    "password_label": "Jelszó megerősítése",
+    "password_placeholder": "Add meg a jelszót",
+    "cancel": "Mégse"
+  },
+  "session": {
+    "in_progress": "Folyamatban · "
+  },
+  "home": {
+    "badge": "MI-vezérelt Fitness",
+    "headline1": "Edzz",
+    "headline2": "Okosabban.",
+    "headline3": "Emelj",
+    "headline4": "Keményebben.",
+    "tagline": "IRON megtanulja a céljaidat, személyre szabott terveket készít, és motivál – minden ismétlésnél, minden étkezésnél, minden nap.",
+    "features": {
+      "ai_coach": "Személyre szabott MI edzéstervek",
+      "nutrition": "Okos táplálkozás és étkezés-követés",
+      "analytics": "Valós idejű fejlődéselemzés",
+      "community": "Sportolói közösség és közvetlen üzenetváltás"
+    },
+    "stats": {
+      "athletes": "Sportolók",
+      "plans": "MI tervek",
+      "rating": "Értékelés"
+    },
+    "signin": {
+      "portal": "Sportoló Portál",
+      "title": "Bejelentkezés",
+      "submit": "Bejelentkezés →",
+      "submitting": "Bejelentkezés…",
+      "error": "Hibás email vagy jelszó. Kérjük, próbáld újra.",
+      "forgot": "Elfelejtett jelszó?",
+      "no_account": "Nincs fiókod?"
+    },
+    "how_it_works": {
+      "label": "Egyszerű folyamat",
+      "title": "Hogyan működik",
+      "step1_title": "Állítsd be a profilodat",
+      "step1_desc": "Mondd el IRON-nak a céljaidat, fittségi szintedet, elérhető felszerelésed és bármilyen sérülésed vagy allergiádat. Csak 2 perc.",
+      "step2_title": "Kapd meg a tervedet",
+      "step2_desc": "IRON azonnal generál egy személyre szabott edzéstervet és heti étkezési tervet, kifejezetten neked.",
+      "step3_title": "Kövesd nyomon és fejlődj",
+      "step3_desc": "Rögzítsd az edzéseket, kövesd a súlyodat és testméreteidet, és figyeld, ahogy IRON alkalmazkodik a fejlődésedhez."
+    },
+    "features_section": {
+      "label": "Minden benne van",
+      "title": "Minden eszköz, amire szükséged van",
+      "ai_coach_title": "MI Edző",
+      "ai_coach_desc": "Csevegj IRON-nal bármikor. Kérj edzéseket, étkezési ötleteket, regenerálódási tippeket vagy csak motivációt.",
+      "meals_title": "MI Étkezési tervek",
+      "meals_desc": "Heti étkezési tervek a céljaidhoz – reggeli, ebéd, vacsora és rágcsálnivalók makró-bontással.",
+      "workouts_title": "Edzéstervek",
+      "workouts_desc": "MI által generált vagy egyéni edzéstervek gyakorlatkönyvtárral, sorozatokkal, ismétlésekkel, pihenőidőkkel és edzés-követéssel.",
+      "tracker_title": "Testkövetés",
+      "tracker_desc": "Rögzítsd a súlyodat és testméreteidet (mellkas, derék, csípő, kar), hogy vizualizáld az átalakulásodat.",
+      "community_title": "Közösség",
+      "community_desc": "Kapcsolódj más sportolókhoz közvetlen üzenetben. Oszd meg a fejlődésed, tegyél fel kérdéseket, maradj elkötelezett.",
+      "languages_title": "5 nyelv",
+      "languages_desc": "Teljes alkalmazás- és MI edző-támogatás angolul, németül, franciául, spanyolul és magyarul."
+    },
+    "cta": {
+      "title1": "Készen állsz okosabban",
+      "title2": "edzeni?",
+      "desc": "Csatlakozz ezer sportolóhoz, akik már az IronBuddy-t használják céljaik eléréséhez. Ingyenes kezdés – bankkártya nélkül.",
+      "btn": "Ingyenes fiók létrehozása →"
+    },
+    "forgot": {
+      "title": "Jelszó visszaállítása",
+      "desc": "Add meg a fiók e-mail-jét, és küldünk egy visszaállítási linket.",
+      "check_inbox": "Ellenőrizd a beérkező leveleket",
+      "sent_desc": "Ha {{email}} regisztrálva van, hamarosan kapsz egy visszaállítási linket.",
+      "done": "Kész",
+      "send": "Link küldése",
+      "sending": "Küldés…",
+      "error": "Valami hiba történt. Kérjük, próbáld újra."
+    },
+    "section_nav": {
+      "home": "Kezdőlap",
+      "how_it_works": "Hogyan működik",
+      "features": "Funkciók",
+      "join": "Csatlakozás"
+    }
   }
 }
