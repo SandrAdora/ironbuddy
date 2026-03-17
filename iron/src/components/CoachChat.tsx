@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { apiChat, apiCreateCustomMeal, type ChatMessage, type SavePrompt } from '../api';
 import type { UserProfile } from '../context/userContext';
 
@@ -24,8 +25,6 @@ function getUserId(token?: string): number {
   try { return JSON.parse(atob(token.split('.')[1])).user_id ?? 0; } catch { return 0; }
 }
 
-const WELCOME = (profile: UserProfile) =>
-  `Hey ${profile.name?.split(' ')[0] || 'Athlete'}! 💪 I'm IRON, your personal AI coach. I know your goal is **${profile.fitnessGoals || 'getting fit'}** and you're at **${profile.experienceLevel || 'beginner'}** level. Ask me anything — workouts, nutrition, recovery, you name it!`;
 
 const SAVE_META: Record<string, { icon: string; tab: string; color: string }> = {
   workout:    { icon: '💪', tab: 'My Workouts',    color: 'bg-blue-500/20 border-blue-400/30 text-blue-300' },
@@ -205,14 +204,21 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
 }
 
 export default function CoachChat({ profile, token }: Props) {
+  const { t } = useTranslation();
   const storageKey = `ironbuddy_coach_${getUserId(token)}`;
+
+  const welcome = t('coach.welcome', {
+    name: profile.name?.split(' ')[0] || 'Athlete',
+    goal: profile.fitnessGoals || 'getting fit',
+    level: profile.experienceLevel || 'beginner',
+  });
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) return JSON.parse(saved);
     } catch { /* ignore */ }
-    return [{ role: 'assistant', content: WELCOME(profile) }];
+    return [{ role: 'assistant', content: welcome }];
   });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -259,15 +265,15 @@ export default function CoachChat({ profile, token }: Props) {
       {/* Header */}
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Personalized</p>
-          <h1 className="text-2xl md:text-3xl font-black uppercase italic mt-1">🦾 AI Coach</h1>
+          <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('coach.subtitle')}</p>
+          <h1 className="text-2xl md:text-3xl font-black uppercase italic mt-1">🦾 {t('coach.title')}</h1>
         </div>
         {messages.length > 1 && (
           <button
-            onClick={() => setMessages([{ role: 'assistant', content: WELCOME(profile) }])}
+            onClick={() => setMessages([{ role: 'assistant', content: welcome }])}
             className="text-xs text-gray-500 hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-400/10 font-bold uppercase tracking-wide"
           >
-            Clear
+            {t('coach.clear')}
           </button>
         )}
       </div>
@@ -348,7 +354,7 @@ export default function CoachChat({ profile, token }: Props) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-          placeholder="Ask your coach anything..."
+          placeholder={t('coach.placeholder')}
           disabled={loading}
           className="flex-1 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl px-4 py-3 text-white text-sm
             focus:border-yellow-300/60 focus:outline-none transition-all placeholder:text-gray-500
@@ -361,17 +367,17 @@ export default function CoachChat({ profile, token }: Props) {
             hover:bg-yellow-200 hover:shadow-[0_0_20px_rgba(253,224,71,0.5)] hover:scale-[1.02]
             active:scale-95 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Send
+          {t('coach.send')}
         </button>
       </div>
 
       {/* Quick prompts */}
       <div className="mt-3 flex flex-wrap gap-2">
         {[
-          `Give me a ${profile.fitnessGoals || 'fitness'} workout`,
-          'What should I eat today?',
-          'How do I recover faster?',
-          'Rate my progress',
+          t('coach.quick_workout', { goal: profile.fitnessGoals || 'fitness' }),
+          t('coach.quick_eat'),
+          t('coach.quick_recover'),
+          t('coach.quick_progress'),
         ].map((prompt) => (
           <button
             key={prompt}

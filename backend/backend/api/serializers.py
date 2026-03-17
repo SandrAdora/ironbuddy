@@ -167,7 +167,7 @@ from .models import WorkoutSession
 class WorkoutSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkoutSession
-        fields = ['id', 'workout_name', 'workout_type', 'started_at', 'finished_at', 'duration_min']
+        fields = ['id', 'workout_name', 'workout_type', 'started_at', 'finished_at', 'duration_min', 'notes']
         read_only_fields = ['id', 'started_at']
 
 
@@ -175,4 +175,13 @@ class WeightLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = WeightLog
         fields = ['id', 'weight', 'logged_at']
+        read_only_fields = ['id']
+
+
+from .models import BodyMeasurement
+
+class BodyMeasurementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BodyMeasurement
+        fields = ['id', 'chest', 'waist', 'hips', 'arms', 'logged_at']
         read_only_fields = ['id']

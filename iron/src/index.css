@@ -1,59 +1,74 @@
-
 @import "tailwindcss";
 
 @theme {
-  
-  --color-gym-dark: #000000;
+  --color-gym-dark: #060608;
   --color-iron-gold: #facc15;
   --color-neon-accent: #eab308;
 }
+
 @theme {
-  /* 5s für ein ruhiges Atmen, 8s für extrem dezenten Glow */
   --animate-coach-breathe: coach-breathe 7s ease-in-out infinite;
+  --animate-float: float 4s ease-in-out infinite;
 
   @keyframes coach-breathe {
-    0%, 100% { 
-      opacity: 1; 
-      filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.8)); 
+    0%, 100% {
+      opacity: 1;
+      filter: drop-shadow(0 0 16px rgba(250, 204, 21, 0.9));
     }
-    50% { 
-      opacity: 0.85; /* Nur ganz leichter Abfall der Sichtbarkeit */
-      filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.3)); 
+    50% {
+      opacity: 0.82;
+      filter: drop-shadow(0 0 5px rgba(250, 204, 21, 0.25));
     }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
   }
 }
 
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #000000;
+  background-color: #060608;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+::selection {
+  background: rgba(250, 204, 21, 0.28);
+  color: #fff;
+}
+
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(250, 204, 21, 0.25); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(250, 204, 21, 0.55); }
+
 a {
   font-weight: 500;
   color: #facc15;
   text-decoration: inherit;
 }
-a:hover {
-  color: #fde047;
-}
+a:hover { color: #fde047; }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #000000;
+  background-color: #060608;
   background-image:
-    radial-gradient(ellipse at 20% 20%, rgba(250,204,21,0.07) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(250,204,21,0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 60% 10%, rgba(56,189,248,0.04) 0%, transparent 40%);
+    radial-gradient(ellipse 90% 55% at 15%  8%,  rgba(250, 204, 21, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 45% at 85% 92%,  rgba(250, 204, 21, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 35% at 72%  5%,  rgba(56, 189, 248, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 45% 55% at  8% 85%, rgba(168,  85, 247, 0.03) 0%, transparent 50%);
 }
 
 button {
@@ -64,9 +79,24 @@ button {
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all 0.2s;
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
+
+/* ── Shared card utility ──────────────────────────────────────────────────── */
+/* Wrap a <div> with class="card-gold" to get a gradient-border card          */
+.card-gold {
+  position: relative;
+  padding: 1px;
+  border-radius: 1.25rem;
+  background: linear-gradient(
+    135deg,
+    rgba(250, 204, 21, 0.45) 0%,
+    rgba(250, 204, 21, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+}
+.card-gold > * { border-radius: calc(1.25rem - 1px); }

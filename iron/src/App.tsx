@@ -13,6 +13,8 @@ import Contact from './components/pages/ContactPage';
 import Signup from './components/pages/SignupPage';
 import UserProfile from './components/UserProfile';
 import ResetPasswordPage from './components/pages/ResetPasswordPage';
+import TermsPage from './components/pages/TermsPage';
+import PrivacyPage from './components/pages/PrivacyPage';
 
 
 function AnimatedRoutes(){
@@ -42,6 +44,8 @@ function AnimatedRoutes(){
           <PageWrapper>
             <ResetPasswordPage />
           </PageWrapper>} />
+        <Route path="/terms" element={<PageWrapper><TermsPage /></PageWrapper>} />
+        <Route path="/privacy" element={<PageWrapper><PrivacyPage /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   )

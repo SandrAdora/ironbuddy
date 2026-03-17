@@ -133,12 +133,29 @@ class WorkoutSession(models.Model):
     started_at   = models.DateTimeField(auto_now_add=True)
     finished_at  = models.DateTimeField(null=True, blank=True)
     duration_min = models.IntegerField(null=True, blank=True)
+    notes        = models.TextField(blank=True)
 
     class Meta:
         ordering = ['-started_at']
 
     def __str__(self):
         return f"{self.user.username} – {self.workout_name} ({self.started_at.date()})"
+
+
+class BodyMeasurement(models.Model):
+    user      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='body_measurements')
+    chest     = models.FloatField(null=True, blank=True)
+    waist     = models.FloatField(null=True, blank=True)
+    hips      = models.FloatField(null=True, blank=True)
+    arms      = models.FloatField(null=True, blank=True)
+    logged_at = models.DateField()
+
+    class Meta:
+        ordering = ['logged_at']
+        unique_together = ('user', 'logged_at')
+
+    def __str__(self):
+        return f"{self.user.username} – measurements on {self.logged_at}"
 
 
 class WeightLog(models.Model):

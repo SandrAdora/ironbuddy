@@ -1,7 +1,7 @@
-// Use relative paths — Vite proxies /api → Django :8001, /upload|/uploads → Socket :3001
-// This means the app works on any device on the local network, not just localhost.
-const BASE        = "";
-const SOCKET_BASE = "";
+// In dev: empty string → Vite proxy forwards /api → Django, /upload → Socket
+// In production: set VITE_API_URL and VITE_SOCKET_URL to the deployed service URLs
+const BASE        = import.meta.env.VITE_API_URL    ?? "";
+const SOCKET_BASE = import.meta.env.VITE_SOCKET_URL ?? "";
 
 export async function apiGetProfile(token: string): Promise<Record<string, unknown>> {
   const res = await fetch(`${BASE}/api/user/profile/`, {
@@ -367,7 +367,10 @@ export async function apiStartConversation(token: string, userId: number): Promi
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify({ user_id: userId }),
   });
-  if (!res.ok) throw new Error('Failed to start conversation');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error ?? 'Failed to start conversation');
+  }
   return res.json();
 }
 
@@ -382,7 +385,10 @@ export async function apiGetMessages(token: string, convoId: number): Promise<Di
 export interface AIMealItem {
   meal: string;
   icon: string;
-  kcal: string;
+  kcal: number | string;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
   desc: string;
   servings: string;
   ingredients: string[];
@@ -414,6 +420,7 @@ export interface WorkoutSession {
   started_at: string;
   finished_at: string | null;
   duration_min: number | null;
+  notes?: string;
 }
 
 export async function apiGetSessions(token: string): Promise<WorkoutSession[]> {
@@ -434,11 +441,11 @@ export async function apiStartSession(token: string, workout_name: string, worko
   return res.json();
 }
 
-export async function apiFinishSession(token: string, id: number, duration_min: number): Promise<WorkoutSession> {
+export async function apiFinishSession(token: string, id: number, duration_min: number, notes?: string): Promise<WorkoutSession> {
   const res = await fetch(`${BASE}/api/sessions/${id}/`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ finished_at: new Date().toISOString(), duration_min }),
+    body: JSON.stringify({ finished_at: new Date().toISOString(), duration_min, notes: notes ?? '' }),
   });
   if (!res.ok) throw new Error('Failed to finish session');
   return res.json();
@@ -577,4 +584,39 @@ export async function apiDeleteWeightLog(token: string, id: number): Promise<voi
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to delete weight entry');
+}
+
+export interface BodyMeasurement {
+  id: number;
+  chest?: number | null;
+  waist?: number | null;
+  hips?: number | null;
+  arms?: number | null;
+  logged_at: string; // 'YYYY-MM-DD'
+}
+
+export async function apiGetBodyMeasurements(token: string): Promise<BodyMeasurement[]> {
+  const res = await fetch(`${BASE}/api/body-measurements/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch measurements');
+  return res.json();
+}
+
+export async function apiAddBodyMeasurement(token: string, data: Omit<BodyMeasurement, 'id'>): Promise<BodyMeasurement> {
+  const res = await fetch(`${BASE}/api/body-measurements/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to save measurement');
+  return res.json();
+}
+
+export async function apiDeleteBodyMeasurement(token: string, id: number): Promise<void> {
+  const res = await fetch(`${BASE}/api/body-measurements/${id}/`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to delete measurement');
 }

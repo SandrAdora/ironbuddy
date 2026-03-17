@@ -24,7 +24,9 @@ const frontendEnv = parseEnvFile(resolve(__dirname, '../.env/frontend.env'));
 // https://vite.dev/config/
 export default defineConfig({
   define: {
-    'import.meta.env.VITE_I18NEXUS_API_KEY': JSON.stringify(frontendEnv.VITE_I18NEXUS_API_KEY ?? ''),
+    'import.meta.env.VITE_I18NEXUS_API_KEY': JSON.stringify(
+      process.env.VITE_I18NEXUS_API_KEY ?? frontendEnv.VITE_I18NEXUS_API_KEY ?? ''
+    ),
   },
   plugins: [react(), tailwindcss(), basicSsl()],
 

@@ -1,30 +1,66 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useUser } from '../../context/userContext.js';
 import { Link, useNavigate } from "react-router-dom";
 import React from "react";
-import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiRequestPasswordReset } from '../../api';
+import { useTranslation } from 'react-i18next';
+
+const NAV_SECTIONS = [
+  { id: 'hero',          key: 'home' },
+  { id: 'how-it-works',  key: 'how_it_works' },
+  { id: 'features',      key: 'features' },
+  { id: 'cta',           key: 'join' },
+];
 
 export default function Home() {
   const { login, logout, token } = useUser();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  useEffect(() => { if (token) navigate('/user'); }, [token]);
+
+  const [email, setEmail]       = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
+
+  const [forgotOpen, setForgotOpen]       = useState(false);
+  const [forgotEmail, setForgotEmail]     = useState('');
+  const [forgotSending, setForgotSending] = useState(false);
+  const [forgotDone, setForgotDone]       = useState(false);
+  const [forgotError, setForgotError]     = useState('');
+
+  // Section nav
+  const [navVisible, setNavVisible]       = useState(false);
+  const [activeSection, setActiveSection] = useState('hero');
+  // langRef kept for future use
+  const langRef = useRef<HTMLDivElement>(null); void langRef;
 
   useEffect(() => {
-    if (token) navigate('/user');
-  }, [token]);
+    const onScroll = () => setNavVisible(window.scrollY > 80);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+    NAV_SECTIONS.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActiveSection(id); },
+        { rootMargin: '-40% 0px -55% 0px' }
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+    return () => observers.forEach(o => o.disconnect());
+  }, []);
 
-  // Forgot password state
-  const [forgotOpen, setForgotOpen] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotSending, setForgotSending] = useState(false);
-  const [forgotDone, setForgotDone] = useState(false);
-  const [forgotError, setForgotError] = useState('');
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,7 +70,7 @@ export default function Home() {
       await login(email, password);
       navigate('/user');
     } catch {
-      setError('Invalid email or password. Please try again.');
+      setError(t('home.signin.error'));
     } finally {
       setLoading(false);
     }
@@ -48,89 +84,315 @@ export default function Home() {
       await apiRequestPasswordReset(forgotEmail);
       setForgotDone(true);
     } catch {
-      setForgotError('Something went wrong. Please try again.');
+      setForgotError(t('home.forgot.error'));
     } finally {
       setForgotSending(false);
     }
   };
 
   const closeForgot = () => {
-    setForgotOpen(false);
-    setForgotEmail('');
-    setForgotDone(false);
-    setForgotError('');
+    setForgotOpen(false); setForgotEmail(''); setForgotDone(false); setForgotError('');
   };
 
+  const FEATURES = [
+    { icon: '🤖', text: t('home.features.ai_coach') },
+    { icon: '🥗', text: t('home.features.nutrition') },
+    { icon: '📈', text: t('home.features.analytics') },
+    { icon: '👥', text: t('home.features.community') },
+  ];
+
+  const STATS = [
+    { value: '10K+', label: t('home.stats.athletes') },
+    { value: '500+', label: t('home.stats.plans') },
+    { value: '4.9★', label: t('home.stats.rating') },
+  ];
+
+  const FEATURE_CARDS = [
+    { icon: '🦾', title: t('home.features_section.ai_coach_title'),  desc: t('home.features_section.ai_coach_desc') },
+    { icon: '🥗', title: t('home.features_section.meals_title'),      desc: t('home.features_section.meals_desc') },
+    { icon: '💪', title: t('home.features_section.workouts_title'),   desc: t('home.features_section.workouts_desc') },
+    { icon: '📏', title: t('home.features_section.tracker_title'),    desc: t('home.features_section.tracker_desc') },
+    { icon: '💬', title: t('home.features_section.community_title'),  desc: t('home.features_section.community_desc') },
+    { icon: '🌍', title: t('home.features_section.languages_title'),  desc: t('home.features_section.languages_desc') },
+  ];
+
+  const HOW_STEPS = [
+    { step: '01', icon: '📋', title: t('home.how_it_works.step1_title'), desc: t('home.how_it_works.step1_desc') },
+    { step: '02', icon: '🤖', title: t('home.how_it_works.step2_title'), desc: t('home.how_it_works.step2_desc') },
+    { step: '03', icon: '📈', title: t('home.how_it_works.step3_title'), desc: t('home.how_it_works.step3_desc') },
+  ];
+
   return (
-    <div className="mt-20 bg-[--color-gym-dark] text-white min-h-screen">
-      <section className="grid gap-8 md:grid-cols-2 px-6 py-12">
-        <div className="flex flex-col justify-center px-4">
-          <span className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">
-            AI COACH
-          </span>
-          <h1 className="text-4xl font-black italic uppercase leading-tight mt-2">
-            <span className="text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.6)]">Hello, I am </span>
-            <span className="text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.9)] animate-coach-breathe">
-              🦾 IRON
-            </span>
-          </h1>
-          <span className="text-gray-400 text-3xl mt-4 block">
-            Your Personal Fitness Trainer
-          </span>
+    <div className="min-h-screen bg-[--color-gym-dark] text-white">
+
+      {/* ── Section Nav ─────────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {navVisible && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25 }}
+            className="fixed z-40 left-0 right-0 flex justify-center"
+            style={{ top: '68px' }}
+          >
+            <div
+              className="flex items-center gap-1 px-3 py-2 rounded-2xl"
+              style={{
+                background: 'rgba(10,10,13,0.92)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px)',
+                boxShadow: '0 4px 32px rgba(0,0,0,0.6)',
+              }}
+            >
+              {NAV_SECTIONS.map(({ id, key }) => (
+                <button
+                  key={id}
+                  onClick={() => scrollTo(id)}
+                  className="px-3.5 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-200"
+                  style={{
+                    color: activeSection === id ? '#facc15' : 'rgba(255,255,255,0.45)',
+                    background: activeSection === id ? 'rgba(250,204,21,0.1)' : 'transparent',
+                    border: activeSection === id ? '1px solid rgba(250,204,21,0.2)' : '1px solid transparent',
+                  }}
+                >
+                  {t(`home.section_nav.${key}`)}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Hero ────────────────────────────────────────────────────────────────── */}
+      <section id="hero" className="relative min-h-screen flex items-center pt-16 overflow-hidden">
+
+        {/* Background glows */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 -left-32 w-[600px] h-[600px] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(250,204,21,0.07) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.04) 0%, transparent 70%)', filter: 'blur(80px)' }} />
         </div>
 
-        <div className="bg-white/5 backdrop-blur-xl p-8 rounded-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] max-w-md mx-auto w-full
-          text-[--color-iron-gold] drop-shadow-[0_0_10px_rgba(250,204,21,0.8)] animate-coach-breathe">
-          <h2 className="text-2xl font-bold text-[--color-iron-gold] italic uppercase">
-            Sign In
-          </h2>
-          <form onSubmit={handleLogin} className="space-y-4 mt-6">
-            <InputField label="Email" value={email} onChange={setEmail}
-              type="email" required placeholder="email@example.com" />
-            <InputField label="Password" value={password} onChange={setPassword}
-              type="password" required placeholder="••••••••" />
-            {error && <p className="text-red-400 text-sm">{error}</p>}
-            <button type="submit" disabled={loading}
-              className="w-full py-4 font-black rounded-lg uppercase transition-all duration-300
-                bg-yellow-300 text-black hover:bg-yellow-200 hover:shadow-[0_0_25px_rgba(253,224,71,0.7)] hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-14 items-center">
 
-          {/* Forgot password link */}
-          <div className="mt-3 text-center">
-            <button
-              onClick={() => setForgotOpen(true)}
-              className="text-gray-500 hover:text-[--color-iron-gold] text-xs font-semibold transition-colors"
-            >
-              Forgot password?
-            </button>
-          </div>
+          {/* Left — hero copy */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
+            className="flex flex-col gap-7"
+          >
+            {/* Badge */}
+            <div className="inline-flex items-center gap-3 self-start">
+              <div className="h-px w-8" style={{ background: 'linear-gradient(90deg, transparent, rgba(250,204,21,0.7))' }} />
+              <span className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.35em] uppercase opacity-80">
+                {t('home.badge')}
+              </span>
+              <div className="h-px w-8" style={{ background: 'linear-gradient(90deg, rgba(250,204,21,0.7), transparent)' }} />
+            </div>
 
-          <p className="text-gray-400 text-sm mt-4 text-center">
-            {token ? (
-              <button onClick={() => { logout(); }} className="text-[--color-iron-gold] hover:underline font-bold bg-transparent border-none cursor-pointer p-0">
-                Sign Out
-              </button>
-            ) : (
-              <>No Account yet?{" "}
-                <Link to="/signup" className="text-[--color-iron-gold] hover:underline transition-colors duration-300 font-bold">
-                  Sign Up Here
-                </Link>
-              </>
-            )}
-          </p>
+            {/* Headline */}
+            <div>
+              <h1 className="text-6xl md:text-7xl font-black uppercase leading-[0.85] tracking-tight mb-1">
+                <span className="text-white">{t('home.headline1')}</span>{' '}
+                <span style={{
+                  background: 'linear-gradient(135deg, #facc15 0%, #fb923c 60%, #facc15 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>{t('home.headline2')}</span>
+              </h1>
+              <h1 className="text-6xl md:text-7xl font-black uppercase leading-[0.85] tracking-tight">
+                <span className="text-white">{t('home.headline3')} </span>
+                <span className="text-white animate-coach-breathe inline-block">🦾 {t('home.headline4')}</span>
+              </h1>
+            </div>
+
+            <p className="text-gray-400 text-base leading-relaxed max-w-[420px]">
+              {t('home.tagline')}
+            </p>
+
+            {/* Features list */}
+            <ul className="space-y-2">
+              {FEATURES.map(({ icon, text }) => (
+                <li key={text} className="flex items-center gap-3">
+                  <span className="w-8 h-8 flex items-center justify-center rounded-xl shrink-0 text-sm"
+                    style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.2)' }}>
+                    {icon}
+                  </span>
+                  <span className="text-sm text-gray-300 font-medium">{text}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Stats row */}
+            <div className="flex items-center gap-7 pt-1">
+              {STATS.map(({ value, label }, i) => (
+                <React.Fragment key={label}>
+                  {i > 0 && <div className="w-px h-9 bg-white/10" />}
+                  <div>
+                    <div className="text-xl font-black text-[--color-iron-gold] leading-tight">{value}</div>
+                    <div className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">{label}</div>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Right — sign-in card */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, ease: 'easeOut', delay: 0.1 }}
+            className="card-gold max-w-md mx-auto w-full"
+          >
+            <div className="bg-[#0d0d10] p-8 rounded-[calc(1.25rem-1px)]">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-[--color-iron-gold]" style={{ boxShadow: '0 0 8px rgba(250,204,21,0.8)' }} />
+                <span className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.3em] uppercase">{t('home.signin.portal')}</span>
+              </div>
+              <h2 className="text-2xl font-black text-white italic uppercase mb-6 mt-1">{t('home.signin.title')}</h2>
+
+              <form onSubmit={handleLogin} className="space-y-4">
+                <InputField label={t('profile.email')} value={email} onChange={setEmail} type="email" required placeholder="email@example.com" />
+                <InputField label={t('password.current')} value={password} onChange={setPassword} type="password" required placeholder="••••••••" />
+                {error && (
+                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20">
+                    <span className="text-red-400 text-xs shrink-0">⚠</span>
+                    <p className="text-red-400 text-xs">{error}</p>
+                  </div>
+                )}
+                <button
+                  type="submit" disabled={loading}
+                  className="w-full py-3.5 font-black rounded-xl uppercase tracking-wider text-sm transition-all duration-200
+                    bg-yellow-300 text-black
+                    hover:brightness-110 hover:shadow-[0_0_28px_rgba(250,204,21,0.5)] hover:scale-[1.02]
+                    active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? t('home.signin.submitting') : t('home.signin.submit')}
+                </button>
+              </form>
+
+              <div className="mt-4 flex items-center justify-between">
+                <button onClick={() => setForgotOpen(true)}
+                  className="text-gray-600 hover:text-gray-400 text-xs font-semibold transition-colors bg-transparent border-none p-0 cursor-pointer">
+                  {t('home.signin.forgot')}
+                </button>
+                {token ? (
+                  <button onClick={() => logout()}
+                    className="text-[--color-iron-gold] text-xs font-bold hover:underline bg-transparent border-none cursor-pointer p-0">
+                    {t('nav.sign_out')}
+                  </button>
+                ) : (
+                  <Link to="/signup" className="text-xs text-gray-500 hover:text-gray-300 font-medium transition-colors">
+                    {t('home.signin.no_account')}{' '}
+                    <span className="text-[--color-iron-gold] font-bold">{t('nav.sign_up')}</span>
+                  </Link>
+                )}
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ── Forgot Password Modal ──────────────────────────────── */}
+      {/* ── How It Works ────────────────────────────────────────────────────── */}
+      <section id="how-it-works" className="relative py-24 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-14">
+            <p className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.35em] uppercase opacity-70 mb-2">{t('home.how_it_works.label')}</p>
+            <h2 className="text-4xl md:text-5xl font-black uppercase italic">{t('home.how_it_works.title')}</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {HOW_STEPS.map(({ step, icon, title, desc }) => (
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="relative p-6 rounded-2xl border"
+                style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.08)' }}
+              >
+                <div className="absolute -top-4 left-6 text-[10px] font-black tracking-widest text-[--color-iron-gold] bg-[#0a0a0d] px-2">{step}</div>
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mb-4"
+                  style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.15)' }}>
+                  {icon}
+                </div>
+                <h3 className="text-lg font-black uppercase italic mb-2">{title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Feature Grid ────────────────────────────────────────────────────── */}
+      <section id="features" className="relative py-24 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-14">
+            <p className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.35em] uppercase opacity-70 mb-2">{t('home.features_section.label')}</p>
+            <h2 className="text-4xl md:text-5xl font-black uppercase italic">{t('home.features_section.title')}</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {FEATURE_CARDS.map(({ icon, title, desc }) => (
+              <motion.div
+                key={title}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4 }}
+                className="p-5 rounded-2xl border hover:border-yellow-300/20 transition-all duration-300 group"
+                style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.07)' }}
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-3"
+                  style={{ background: 'rgba(250,204,21,0.07)', border: '1px solid rgba(250,204,21,0.12)' }}>
+                  {icon}
+                </div>
+                <h3 className="text-sm font-black uppercase italic mb-1.5 group-hover:text-[--color-iron-gold] transition-colors">{title}</h3>
+                <p className="text-gray-500 text-xs leading-relaxed">{desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Final CTA ────────────────────────────────────────────────────────── */}
+      <section id="cta" className="relative py-24 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 mx-auto w-[700px] h-[400px] top-1/2 -translate-y-1/2 rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(250,204,21,0.05) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+        </div>
+        <div className="relative max-w-2xl mx-auto px-6 text-center space-y-6">
+          <span className="text-5xl">🏆</span>
+          <h2 className="text-4xl md:text-5xl font-black uppercase italic leading-tight">
+            {t('home.cta.title1')}<br />
+            <span style={{ background: 'linear-gradient(135deg,#facc15,#fb923c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              {t('home.cta.title2')}
+            </span>
+          </h2>
+          <p className="text-gray-400 leading-relaxed">
+            {t('home.cta.desc')}
+          </p>
+          <Link
+            to="/signup"
+            className="inline-block px-10 py-4 font-black rounded-2xl uppercase tracking-wider text-sm transition-all duration-200
+              bg-yellow-300 text-black hover:brightness-110 hover:shadow-[0_0_36px_rgba(250,204,21,0.5)] hover:scale-[1.03] active:scale-95"
+          >
+            {t('home.cta.btn')}
+          </Link>
+        </div>
+      </section>
+
+      {/* ── Forgot Password Modal ──────────────────────────────────────────────── */}
       <AnimatePresence>
         {forgotOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
             onClick={closeForgot}
           >
             <motion.div
@@ -138,58 +400,49 @@ export default function Home() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="bg-[#0f1117] border border-white/10 rounded-2xl p-8 max-w-sm w-full shadow-[0_0_40px_rgba(0,0,0,0.6)]"
+              className="card-gold max-w-sm w-full"
               onClick={(e) => e.stopPropagation()}
             >
-              {forgotDone ? (
-                <div className="text-center space-y-4">
-                  <span className="text-5xl">📧</span>
-                  <p className="text-[--color-iron-gold] font-black uppercase text-lg tracking-wide">Check your inbox</p>
-                  <p className="text-gray-400 text-sm leading-relaxed">
-                    If <span className="text-white font-semibold">{forgotEmail}</span> is registered, you'll receive a password reset link shortly.
-                  </p>
-                  <button
-                    onClick={closeForgot}
-                    className="w-full py-3 bg-yellow-300 text-black font-black rounded-xl uppercase text-sm
-                      hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all"
-                  >
-                    Done
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest mb-1">🔑 Reset Password</p>
-                  <p className="text-gray-400 text-xs mb-6">Enter your account email and we'll send you a reset link.</p>
-                  <form onSubmit={handleForgotSubmit} className="space-y-4">
-                    <InputField
-                      label="Email"
-                      value={forgotEmail}
-                      onChange={setForgotEmail}
-                      type="email"
-                      required
-                      placeholder="email@example.com"
-                    />
-                    {forgotError && <p className="text-red-400 text-xs">{forgotError}</p>}
-                    <div className="flex gap-3">
-                      <button
-                        type="button"
-                        onClick={closeForgot}
-                        className="flex-1 py-3 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={forgotSending}
-                        className="flex-1 py-3 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs
-                          hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
-                      >
-                        {forgotSending ? 'Sending…' : 'Send Link'}
-                      </button>
+              <div className="bg-[#0d0d10] p-8 rounded-[calc(1.25rem-1px)]">
+                {forgotDone ? (
+                  <div className="text-center space-y-4">
+                    <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-3xl"
+                      style={{ background: 'rgba(250,204,21,0.1)', border: '1px solid rgba(250,204,21,0.2)' }}>
+                      📧
                     </div>
-                  </form>
-                </>
-              )}
+                    <p className="text-white font-black uppercase tracking-wide">{t('home.forgot.check_inbox')}</p>
+                    <p className="text-gray-400 text-sm leading-relaxed">
+                      {t('home.forgot.sent_desc', { email: forgotEmail })}
+                    </p>
+                    <button onClick={closeForgot}
+                      className="w-full py-3 bg-yellow-300 text-black font-black rounded-xl uppercase text-sm hover:brightness-110 hover:scale-[1.02] active:scale-95 transition-all">
+                      {t('home.forgot.done')}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg">🔑</span>
+                      <span className="text-[--color-iron-gold] font-black uppercase text-xs tracking-[0.2em]">{t('home.forgot.title')}</span>
+                    </div>
+                    <p className="text-gray-500 text-xs mb-6">{t('home.forgot.desc')}</p>
+                    <form onSubmit={handleForgotSubmit} className="space-y-4">
+                      <InputField label={t('profile.email')} value={forgotEmail} onChange={setForgotEmail} type="email" required placeholder="email@example.com" />
+                      {forgotError && <p className="text-red-400 text-xs">{forgotError}</p>}
+                      <div className="flex gap-3">
+                        <button type="button" onClick={closeForgot}
+                          className="flex-1 py-3 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white hover:bg-white/10 transition-all">
+                          {t('common.cancel')}
+                        </button>
+                        <button type="submit" disabled={forgotSending}
+                          className="flex-1 py-3 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs hover:brightness-110 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
+                          {forgotSending ? t('home.forgot.sending') : t('home.forgot.send')}
+                        </button>
+                      </div>
+                    </form>
+                  </>
+                )}
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -207,20 +460,20 @@ interface InputFieldProps {
   required?: boolean;
 }
 
-function InputField({ label, value, onChange, type = "text", placeholder, required }: InputFieldProps) {
+function InputField({ label, value, onChange, type = 'text', placeholder, required }: InputFieldProps) {
   return (
-    <div className="flex flex-col">
-      <label className="text-xs font-bold text-gray-500 uppercase mb-1 ml-1">
-        {label}
-      </label>
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.18em] ml-0.5">{label}</label>
       <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        required={required}
+        type={type} value={value} placeholder={placeholder} required={required}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white
-          focus:border-yellow-300/60 outline-none transition-all backdrop-blur-sm"
+        className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-gray-600
+          bg-white/[0.04] border border-white/10
+          focus:border-yellow-300/50 focus:bg-white/[0.06]
+          outline-none transition-all duration-200"
+        style={{ boxShadow: undefined }}
+        onFocus={(e) => (e.currentTarget.style.boxShadow = '0 0 0 3px rgba(250,204,21,0.08)')}
+        onBlur={(e)  => (e.currentTarget.style.boxShadow = 'none')}
       />
     </div>
   );

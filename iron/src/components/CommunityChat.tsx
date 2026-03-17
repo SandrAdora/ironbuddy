@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { io, Socket } from 'socket.io-client';
 import {
@@ -69,35 +70,110 @@ function Avatar({ name, src, size = 'md' }: { name: string; src?: string; size?:
   );
 }
 
-// ── Emoji sets ────────────────────────────────────────────────────────────────
 
-const REACTION_EMOJIS = ['👍','❤️','😂','😮','😢','🔥','💪','🎉','👏','😍','🤔','😅','🙏','💯','🥲','😎','🤯','🫡'];
+// ── Custom emoji picker ───────────────────────────────────────────────────────
 
-const INPUT_EMOJIS = [
-  '😀','😂','😍','🥰','😎','🤔','😅','😢','😮','🔥','💪','🎉','👍','👏','❤️',
-  '🙏','💯','😤','🤣','😭','🥳','😜','🤗','😏','🫶','✨','🌟','💥','🏋️','⚡',
+const EMOJI_CATEGORIES: { label: string; emojis: string[] }[] = [
+  { label: '😀', emojis: ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🫢','🫣','🤫','🤔','🫠','🤐','🤨','😐','😑','😶','🫥','😏','😒','🙄','😬','🤥','🫨','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','🫤','😟','🙁','☹️','😮','😯','😲','😳','🥺','🫣','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖'] },
+  { label: '👋', emojis: ['👋','🤚','🖐','✋','🖖','🫱','🫲','🫳','🫴','👌','🤌','🤏','✌️','🤞','🫰','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','🫵','👍','👎','✊','👊','🤛','🤜','👏','🙌','🫶','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦵','🦿','🦶','👂','🦻','👃','🫀','🫁','🧠','🦷','🦴','👀','👁','👅','👄','🫦','💋','👣'] },
+  { label: '🐶', emojis: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐻‍❄️','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🕷','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🦣','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🦬','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐕‍🦺','🐈','🐈‍⬛','🐓','🦃','🦤','🦚','🦜','🦢','🦩','🕊','🐇','🦝','🦨','🦡','🦫','🦦','🦥','🐁','🐀','🐿','🦔'] },
+  { label: '🍎', emojis: ['🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶','🫑','🧄','🧅','🥔','🍠','🫘','🌰','🥜','🍞','🥐','🥖','🫓','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🌭','🍔','🍟','🍕','🫔','🌮','🌯','🥙','🧆','🥚','🍜','🍝','🍛','🍣','🍱','🍤','🍙','🍚','🍘','🍥','🥮','🍢','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥛','🍼','🫖','☕','🍵','🧋','🥤','🧃','🍶','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧉','🍾','🧊'] },
+  { label: '⚽', emojis: ['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🎣','🤿','🎽','🎿','🛷','🥌','🎯','🪃','🎱','🎮','🕹','🎲','🧩','🧸','🪆','♟','🃏','🀄','🎴','🎭','🎨','🖼','🎰','🚂','🚃','🚄','🚅','🚆','🚇','🚈','🚉','🚊','🚝','🚞','🚋','🚌','🚍','🚎','🚐','🚑','🚒','🚓','🚔','🚕','🚖','🚗','🚘','🚙','🛻','🚚','🚛','🚜','🏎','🏍','🛵','🦽','🦼','🛺','🚲','🛴','🛹','🛼','🚏','🛣','🛤','🛞','⛽','🚨','🚥','🚦','🛑','🚧'] },
+  { label: '💡', emojis: ['💡','🔦','🕯','🪔','💰','💴','💵','💶','💷','💸','💳','🪙','💹','📈','📉','📊','📋','📌','📍','📎','🖇','📏','📐','✂️','🗃','🗄','🗑','🔒','🔓','🔏','🔐','🔑','🗝','🔨','🪓','⛏','⚒','🛠','🗡','⚔️','🛡','🪚','🔫','🪃','🏹','🛡','🪝','🔧','🪛','🔩','⚙️','🗜','⚖️','🦯','🔗','⛓','🪤','🧲','🔋','🪫','🔌','💻','🖥','🖨','⌨️','🖱','🖲','💾','💿','📀','🧮','📱','📲','☎️','📞','📟','📠','📺','📻','🧭','⏱','⏰','🕰','⌛','⏳','📡','🔭','🔬','🩺','💊','🩹','🩼','💉','🩸','🩻','🏧','🚮','🚰','♿','🚹','🚺','🚻','🚼','🚾','🛗','⚠️','🚸','⛔','🚫','🚳','🚭','🚯','🚱','🚷','📵','🔞','🔕'] },
+  { label: '❤️', emojis: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❤️‍🔥','❤️‍🩹','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','🈵','🈹','🈲','🅰️','🅱️','🆎','🆑','🅾️','🆘','❌','⭕','🛑','⛔','📛','🚫','✅','☑️','✔️','❎','➕','➖','➗','✖️','🔱','📛','🔰','⭕','✅','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔺','🔻','🔷','🔶','🔹','🔸','🔲','🔳','🏁','🚩','🎌','🏴','🏳️','🏳️‍🌈','🏳️‍⚧️','🏴‍☠️'] },
 ];
 
-// ── Emoji picker (shared) ─────────────────────────────────────────────────────
+function CustomEmojiPicker({ onPick }: { onPick: (emoji: string) => void }) {
+  const [activeCategory, setActiveCategory] = useState(0);
+  const [search, setSearch] = useState('');
 
-function EmojiGrid({ emojis, onPick, className = '' }: { emojis: string[]; onPick: (e: string) => void; className?: string }) {
+  const allEmojis = EMOJI_CATEGORIES.flatMap((c) => c.emojis);
+  const displayed = search
+    ? allEmojis.filter((e) => e.includes(search))
+    : EMOJI_CATEGORIES[activeCategory].emojis;
+
   return (
     <div
-      className={`bg-[#1a1a2e] border border-white/15 rounded-2xl p-2 shadow-xl z-50 ${className}`}
-      onClick={(ev) => ev.stopPropagation()}
+      className="bg-[#111827] border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+      style={{ width: 320, height: 400 }}
+      onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex flex-wrap gap-1 max-w-[220px]">
-        {emojis.map((e) => (
-          <button
-            key={e}
-            onClick={() => onPick(e)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 active:scale-90 transition-all text-lg"
-          >
-            {e}
-          </button>
-        ))}
+      {/* Search */}
+      <div className="px-3 pt-3 pb-2">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search emoji…"
+          className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-yellow-300/40"
+        />
+      </div>
+      {/* Category tabs */}
+      {!search && (
+        <div className="flex gap-0.5 px-2 pb-1 overflow-x-auto scrollbar-hide">
+          {EMOJI_CATEGORIES.map((cat, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveCategory(i)}
+              className={`shrink-0 w-9 h-8 flex items-center justify-center rounded-lg text-base transition-colors ${
+                activeCategory === i ? 'bg-yellow-300/20 text-yellow-300' : 'hover:bg-white/10 text-gray-400'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      )}
+      {/* Emoji grid */}
+      <div className="flex-1 overflow-y-auto p-2">
+        <div className="grid grid-cols-8 gap-0.5">
+          {displayed.map((e, i) => (
+            <button
+              key={i}
+              onClick={() => onPick(e)}
+              className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 active:scale-90 transition-all text-xl"
+            >
+              {e}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
+  );
+}
+
+// ── Portal emoji picker ───────────────────────────────────────────────────────
+// Renders the picker via a portal so it escapes overflow:hidden containers.
+
+function PortalPicker({
+  anchorRef,
+  onPick,
+  align = 'right',
+}: {
+  anchorRef: React.RefObject<HTMLElement | null>;
+  onPick: (emoji: string) => void;
+  align?: 'left' | 'right';
+}) {
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (!anchorRef.current) return;
+    const rect = anchorRef.current.getBoundingClientRect();
+    const pickerH = 400;
+    const pickerW = 320;
+    // Open above the anchor; clamp so it doesn't go off the top of the screen
+    const top = Math.max(8, rect.top - pickerH - 8);
+    const left = align === 'right'
+      ? Math.max(8, Math.min(rect.right - pickerW, window.innerWidth - pickerW - 8))
+      : Math.max(8, rect.left);
+    setPos({ top, left });
+  }, [anchorRef, align]);
+
+  return createPortal(
+    <div style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 9999 }}>
+      <CustomEmojiPicker onPick={onPick} />
+    </div>,
+    document.body,
   );
 }
 
@@ -206,6 +282,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
   const [usersLoading, setUsersLoading]     = useState(false);
   const [userSearch, setUserSearch]         = useState('');
   const [startingChat, setStartingChat]     = useState<number | null>(null); // user id being started
+  const [startChatError, setStartChatError] = useState('');
   const [input, setInput]                   = useState('');
   const [sending, setSending]               = useState(false);
   const [uploading, setUploading]           = useState(false);
@@ -216,8 +293,10 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
   const [loading, setLoading]               = useState(true);
   const [showInputEmoji, setShowInputEmoji] = useState(false);
   const [reactionPickerFor, setReactionPickerFor] = useState<number | null>(null); // message id
+  const reactionAnchorRef = useRef<HTMLButtonElement | null>(null);
 
   const messagesEndRef  = useRef<HTMLDivElement>(null);
+  const emojiButtonRef  = useRef<HTMLButtonElement>(null);
   const fileInputRef    = useRef<HTMLInputElement>(null);
   const socketRef       = useRef<Socket | null>(null);
   const typingTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -378,12 +457,16 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
 
   const startChatWithUser = async (user: PublicUser) => {
     setStartingChat(user.id);
+    setStartChatError('');
     try {
       const convo = await apiStartConversation(token, user.id);
       handleConversationStarted(convo);
       setLeftTab('messages');
-    } catch {
-      // ignore
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('hidden') || msg.includes('403')) {
+        setStartChatError('Your profile is hidden. Make yourself visible in Settings to start new conversations.');
+      }
     } finally {
       setStartingChat(null);
     }
@@ -734,7 +817,13 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                   </p>
                 </div>
               ) : (
-                filteredUsers.map((u) => {
+                <>
+                  {startChatError && (
+                    <div className="mx-3 mt-3 px-4 py-3 bg-red-500/10 border border-red-400/20 rounded-xl text-xs text-red-300">
+                      🫥 {startChatError}
+                    </div>
+                  )}
+                {filteredUsers.map((u) => {
                   const existingConvo = conversations.find((c) => c.other_user?.id === u.id);
                   return (
                     <button
@@ -757,7 +846,8 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                       </span>
                     </button>
                   );
-                })
+                })}
+                </>
               )
             )}
 
@@ -848,28 +938,24 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                           {/* React button — visible on hover */}
                           <div className="relative">
                             <button
-                              onClick={(ev) => { ev.stopPropagation(); setReactionPickerFor(showPicker ? null : msg.id); setShowInputEmoji(false); }}
+                              onClick={(ev) => {
+                                ev.stopPropagation();
+                                reactionAnchorRef.current = ev.currentTarget;
+                                setReactionPickerFor(showPicker ? null : msg.id);
+                                setShowInputEmoji(false);
+                              }}
                               className="opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-sm"
                               title="React"
                             >
                               😊
                             </button>
-                            <AnimatePresence>
-                              {showPicker && (
-                                <motion.div
-                                  initial={{ opacity: 0, scale: 0.85 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  exit={{ opacity: 0, scale: 0.85 }}
-                                  transition={{ duration: 0.15 }}
-                                  className={`absolute bottom-9 ${isMe ? 'right-0' : 'left-0'} z-50`}
-                                >
-                                  <EmojiGrid
-                                    emojis={REACTION_EMOJIS}
-                                    onPick={(e) => handleReaction(msg, e)}
-                                  />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
+                            {showPicker && (
+                              <PortalPicker
+                                anchorRef={reactionAnchorRef}
+                                align={isMe ? 'right' : 'left'}
+                                onPick={(e) => handleReaction(msg, e)}
+                              />
+                            )}
                           </div>
                         </div>
 
@@ -959,29 +1045,20 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                 {/* Emoji picker for input */}
                 <div className="relative shrink-0">
                   <button
+                    ref={emojiButtonRef}
                     onClick={(ev) => { ev.stopPropagation(); setShowInputEmoji((v) => !v); setReactionPickerFor(null); }}
                     title="Add emoji"
                     className="p-2.5 text-gray-400 hover:text-yellow-300 hover:bg-white/10 rounded-xl transition-all"
                   >
                     😊
                   </button>
-                  <AnimatePresence>
-                    {showInputEmoji && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.85, y: 8 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.85, y: 8 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute bottom-12 left-0 z-50"
-                      >
-                        <EmojiGrid
-                          emojis={INPUT_EMOJIS}
-                          onPick={(e) => { setInput((v) => v + e); setShowInputEmoji(false); }}
-                          className="max-w-[260px]"
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {showInputEmoji && (
+                    <PortalPicker
+                      anchorRef={emojiButtonRef}
+                      align="right"
+                      onPick={(e) => { setInput((v) => v + e); setShowInputEmoji(false); }}
+                    />
+                  )}
                 </div>
 
                 <input

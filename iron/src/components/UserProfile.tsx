@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n, { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../i18n';
 import { useUser } from '../context/userContext';
-import { apiUploadFile, apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, type AIMealItem, type AIMealPlan, type WorkoutSession } from '../api';
+import { apiUploadFile, apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, apiSaveProfile, type AIMealItem, type AIMealPlan, type WorkoutSession } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import CoachChat from './CoachChat';
@@ -45,13 +45,13 @@ const fadeUp = (delay = 0) => ({
 
 // ── Donut data ─────────────────────────────────────────────────
 function buildGoalData(goal: string) {
-  const map: Record<string, { name: string; value: number; color: string }[]> = {
-    'Weight Loss':    [{ name: 'Fat Loss', value: 60, color: '#facc15' }, { name: 'Cardio', value: 25, color: '#a3e635' }, { name: 'Strength', value: 15, color: '#38bdf8' }],
-    'Muscle Gain':   [{ name: 'Strength', value: 55, color: '#facc15' }, { name: 'Hypertrophy', value: 30, color: '#fb923c' }, { name: 'Recovery', value: 15, color: '#a78bfa' }],
-    'Endurance':     [{ name: 'Cardio', value: 60, color: '#facc15' }, { name: 'Stamina', value: 25, color: '#34d399' }, { name: 'Mobility', value: 15, color: '#60a5fa' }],
-    'General Fitness':[{ name: 'Cardio', value: 35, color: '#facc15' }, { name: 'Strength', value: 35, color: '#34d399' }, { name: 'Flexibility', value: 30, color: '#f472b6' }],
+  const map: Record<string, { key: string; value: number; color: string }[]> = {
+    'Weight Loss':    [{ key: 'goals.seg.fat_loss', value: 60, color: '#facc15' }, { key: 'goals.seg.cardio', value: 25, color: '#a3e635' }, { key: 'goals.seg.strength', value: 15, color: '#38bdf8' }],
+    'Muscle Gain':   [{ key: 'goals.seg.strength', value: 55, color: '#facc15' }, { key: 'goals.seg.hypertrophy', value: 30, color: '#fb923c' }, { key: 'goals.seg.recovery', value: 15, color: '#a78bfa' }],
+    'Endurance':     [{ key: 'goals.seg.cardio', value: 60, color: '#facc15' }, { key: 'goals.seg.stamina', value: 25, color: '#34d399' }, { key: 'goals.seg.mobility', value: 15, color: '#60a5fa' }],
+    'General Fitness':[{ key: 'goals.seg.cardio', value: 35, color: '#facc15' }, { key: 'goals.seg.strength', value: 35, color: '#34d399' }, { key: 'goals.seg.flexibility', value: 30, color: '#f472b6' }],
   };
-  return map[goal] ?? [{ name: 'Set a Goal', value: 100, color: '#374151' }];
+  return map[goal] ?? [{ key: 'goals.seg.set_goal', value: 100, color: '#374151' }];
 }
 
 // ── AI Meal Plan cache ──────────────────────────────────────────
@@ -64,23 +64,25 @@ function mealCacheKey(userId: number) {
 interface MealCache {
   plan: AIMealPlan;
   goal: string;
+  language: string;
   generated_at: string; // ISO date string
 }
 
-function loadMealCache(userId: number, goal: string): AIMealPlan | null {
+function loadMealCache(userId: number, goal: string, language: string): AIMealPlan | null {
   try {
     const raw = localStorage.getItem(mealCacheKey(userId));
     if (!raw) return null;
     const cache: MealCache = JSON.parse(raw);
     if (cache.goal !== goal) return null;
+    if ((cache.language ?? 'en') !== language) return null;
     const ageMs = Date.now() - new Date(cache.generated_at).getTime();
     if (ageMs > MEAL_CACHE_DAYS * 24 * 60 * 60 * 1000) return null;
     return cache.plan;
   } catch { return null; }
 }
 
-function saveMealCache(userId: number, goal: string, plan: AIMealPlan) {
-  const cache: MealCache = { plan, goal, generated_at: new Date().toISOString() };
+function saveMealCache(userId: number, goal: string, language: string, plan: AIMealPlan) {
+  const cache: MealCache = { plan, goal, language, generated_at: new Date().toISOString() };
   localStorage.setItem(mealCacheKey(userId), JSON.stringify(cache));
 }
 
@@ -126,8 +128,13 @@ function scaleIngredient(ing: string, multiplier: number): string {
   return result;
 }
 
-function scaleKcal(kcal: string, multiplier: number): string {
-  return kcal.replace(/\d+/, (n) => String(Math.round(parseInt(n) * multiplier)));
+function scaleKcal(kcal: number | string, multiplier: number): string {
+  const num = typeof kcal === 'number' ? kcal : parseInt(String(kcal).replace(/\D/g, '')) || 0;
+  return `${Math.round(num * multiplier)} kcal`;
+}
+
+function scaleMacro(val: number | undefined, multiplier: number): number {
+  return Math.round((val ?? 0) * multiplier);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -136,11 +143,11 @@ function calcBMI(weight: number | null, height: number | null) {
   return weight / Math.pow(height / 100, 2);
 }
 
-function bmiCategory(bmi: number): { label: string; color: string } {
-  if (bmi < 18.5) return { label: 'Underweight', color: '#60a5fa' };
-  if (bmi < 25)   return { label: 'Normal',      color: '#4ade80' };
-  if (bmi < 30)   return { label: 'Overweight',  color: '#fb923c' };
-  return               { label: 'Obese',         color: '#f87171' };
+function bmiCategory(bmi: number): { key: string; color: string } {
+  if (bmi < 18.5) return { key: 'bmi.underweight', color: '#60a5fa' };
+  if (bmi < 25)   return { key: 'bmi.normal',      color: '#4ade80' };
+  if (bmi < 30)   return { key: 'bmi.overweight',  color: '#fb923c' };
+  return               { key: 'bmi.obese',         color: '#f87171' };
 }
 
 export default function UserProfile() {
@@ -167,12 +174,14 @@ export default function UserProfile() {
   const [viewingAvatar, setViewingAvatar] = useState(false);
   const [mealServings, setMealServings] = useState<Record<string, number>>({});
   const [savedMeals, setSavedMeals] = useState<Record<string, boolean>>({});
+  const [loggedMeals, setLoggedMeals] = useState<Record<string, boolean>>({});
   const [savedAsRecipes, setSavedAsRecipes] = useState<Record<string, boolean>>({});
   const getSrv = (name: string) => mealServings[name] ?? 1;
   const setSrv = (name: string, n: number) =>
     setMealServings((p) => ({ ...p, [name]: Math.max(1, Math.min(10, n)) }));
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [mealTimeTab, setMealTimeTab] = useState<'breakfast' | 'lunch' | 'dinner' | 'snacks'>('breakfast');
+  const [nutritionOpen, setNutritionOpen] = useState(false);
 
   // AI Meal Plan state
   const [aiMealPlan, setAiMealPlan] = useState<AIMealPlan | null>(null);
@@ -212,6 +221,7 @@ export default function UserProfile() {
     setEditingAccount(false);
   };
 
+
   // Password change state
   const [pwCurrent, setPwCurrent] = useState('');
   const [pwNew, setPwNew] = useState('');
@@ -241,10 +251,28 @@ export default function UserProfile() {
   const [prefIngNew, setPrefIngNew] = useState('');
 
   const userId = getUserIdFromToken(token ?? '');
+  const todayKey = `ironbuddy_daily_log_${userId}_${new Date().toISOString().split('T')[0]}`;
+
+  function getDailyLog(): { name: string; kcal: number; protein_g: number; carbs_g: number; fat_g: number }[] {
+    try { return JSON.parse(localStorage.getItem(todayKey) || '[]'); } catch { return []; }
+  }
+  function logMealToday(meal: AIMealItem, servings: number) {
+    const log = getDailyLog();
+    const kcalNum = typeof meal.kcal === 'number' ? meal.kcal : parseInt(String(meal.kcal).replace(/\D/g, '')) || 0;
+    const entry = {
+      name: meal.meal,
+      kcal: Math.round(kcalNum * servings),
+      protein_g: Math.round((meal.protein_g ?? 0) * servings),
+      carbs_g: Math.round((meal.carbs_g ?? 0) * servings),
+      fat_g: Math.round((meal.fat_g ?? 0) * servings),
+    };
+    localStorage.setItem(todayKey, JSON.stringify([...log.filter((e) => e.name !== meal.meal), entry]));
+  }
 
   const fetchAIMeals = async (force = false) => {
+    const lang = profile.language ?? 'en';
     if (!force) {
-      const cached = loadMealCache(userId ?? 0, profile.fitnessGoals);
+      const cached = loadMealCache(userId ?? 0, profile.fitnessGoals, lang);
       if (cached) { setAiMealPlan(cached); return; }
     }
     setAiMealLoading(true);
@@ -253,7 +281,7 @@ export default function UserProfile() {
       const { email: _e, password: _p, onboarded: _o, ...profileData } = profile;
       const plan = await apiGetAIMealPlan(profileData as Record<string, unknown>);
       setAiMealPlan(plan);
-      saveMealCache(userId ?? 0, profile.fitnessGoals, plan);
+      saveMealCache(userId ?? 0, profile.fitnessGoals, lang, plan);
     } catch (err: unknown) {
       setAiMealError(err instanceof Error ? err.message : 'Failed to generate meal plan');
     } finally {
@@ -266,6 +294,8 @@ export default function UserProfile() {
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [finishing, setFinishing] = useState(false);
+  const [notesInput, setNotesInput] = useState('');
+  const [showNotesPrompt, setShowNotesPrompt] = useState(false);
 
   const handleAvatarClick = () => {
     if (profile.profilePicture) {
@@ -298,7 +328,7 @@ export default function UserProfile() {
   // On mount: load meal plan from cache so the dashboard card is populated immediately
   useEffect(() => {
     if (!aiMealPlan && userId) {
-      const cached = loadMealCache(userId, profile.fitnessGoals);
+      const cached = loadMealCache(userId, profile.fitnessGoals, profile.language ?? 'en');
       if (cached) setAiMealPlan(cached);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -341,15 +371,17 @@ export default function UserProfile() {
     } catch { /* silently ignore */ }
   };
 
-  const finishWorkout = async () => {
+  const finishWorkout = async (notes?: string) => {
     if (!token || !activeSession) return;
     setFinishing(true);
+    setShowNotesPrompt(false);
     try {
       const duration = Math.round(elapsedSec / 60);
-      const finished = await apiFinishSession(token, activeSession.id, duration);
+      const finished = await apiFinishSession(token, activeSession.id, duration, notes);
       setSessions((p) => p.map((s) => s.id === finished.id ? finished : s));
       setActiveSession(null);
       setElapsedSec(0);
+      setNotesInput('');
     } catch { /* silently ignore */ }
     finally { setFinishing(false); }
   };
@@ -407,7 +439,7 @@ export default function UserProfile() {
             onClick={handleAvatarClick}
             disabled={avatarUploading}
             className="relative w-24 h-24 rounded-2xl border-2 border-yellow-300 overflow-hidden group focus:outline-none shadow-[0_0_20px_rgba(250,204,21,0.2)]"
-            title={profile.profilePicture ? 'View photo' : 'Upload photo'}
+            title={profile.profilePicture ? t('profile.view_photo') : t('profile.upload_photo')}
           >
             {profile.profilePicture ? (
               <img src={profile.profilePicture} alt="avatar" className="w-full h-full object-cover" />
@@ -418,22 +450,22 @@ export default function UserProfile() {
             )}
             <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               {avatarUploading ? (
-                <span className="text-white text-xs font-bold">Uploading…</span>
+                <span className="text-white text-xs font-bold">{t('common.uploading')}</span>
               ) : profile.profilePicture ? (
                 <>
                   <span className="text-lg">🔍</span>
-                  <span className="text-white text-[10px] font-bold uppercase tracking-wide">View</span>
+                  <span className="text-white text-[10px] font-bold uppercase tracking-wide">{t('common.view')}</span>
                 </>
               ) : (
                 <>
                   <span className="text-lg">📷</span>
-                  <span className="text-white text-[10px] font-bold uppercase tracking-wide">Upload</span>
+                  <span className="text-white text-[10px] font-bold uppercase tracking-wide">{t('common.upload')}</span>
                 </>
               )}
             </div>
           </button>
           <p className="mt-3 font-black text-[--color-iron-gold] uppercase text-sm tracking-widest text-center">
-            {profile.name || 'Athlete'}
+            {profile.name || t('common.athlete')}
           </p>
           <p className="text-gray-500 text-xs mt-0.5 text-center truncate w-full px-2">{profile.email}</p>
         </div>
@@ -442,7 +474,7 @@ export default function UserProfile() {
         <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-4 space-y-2 border border-white/10">
           {/* Editable Goal */}
           <div className="flex justify-between items-center">
-            <span className="text-xs text-gray-500 uppercase font-bold">Goal</span>
+            <span className="text-xs text-gray-500 uppercase font-bold">{t('sidebar.goal')}</span>
             {editingGoal ? (
               <select
                 autoFocus
@@ -451,10 +483,10 @@ export default function UserProfile() {
                 onBlur={() => setEditingGoal(false)}
                 className="text-xs bg-gray-900 border border-yellow-300/50 rounded px-1.5 py-1 text-white outline-none [&>option]:bg-gray-900 [&>option]:text-white"
               >
-                <option value="Weight Loss">Weight Loss</option>
-                <option value="Muscle Gain">Muscle Gain</option>
-                <option value="Endurance">Endurance</option>
-                <option value="General Fitness">General Fitness</option>
+                <option value="Weight Loss">{t('goals.weight_loss')}</option>
+                <option value="Muscle Gain">{t('goals.muscle_gain')}</option>
+                <option value="Endurance">{t('goals.endurance')}</option>
+                <option value="General Fitness">{t('goals.general_fitness')}</option>
               </select>
             ) : (
               <button
@@ -477,10 +509,10 @@ export default function UserProfile() {
                 onBlur={() => setEditingLevel(false)}
                 className="text-xs bg-gray-900 border border-yellow-300/50 rounded px-1.5 py-1 text-white outline-none [&>option]:bg-gray-900 [&>option]:text-white"
               >
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
-                <option value="Unsure">Unsure</option>
+                <option value="Beginner">{t('level.beginner')}</option>
+                <option value="Intermediate">{t('level.intermediate')}</option>
+                <option value="Advanced">{t('level.advanced')}</option>
+                <option value="Unsure">{t('level.unsure')}</option>
               </select>
             ) : (
               <button
@@ -492,12 +524,12 @@ export default function UserProfile() {
               </button>
             )}
           </div>
-          <SidebarStat label="Height" value={profile.height ? `${profile.height} cm` : '—'} />
-          <SidebarStat label="Gender" value={profile.gender || '—'} />
+          <SidebarStat label={t('sidebar.height')} value={profile.height ? `${profile.height} cm` : '—'} />
+          <SidebarStat label={t('sidebar.gender')} value={profile.gender || '—'} />
 
           {/* Editable Weight */}
           <div className="flex justify-between items-center pt-1">
-            <span className="text-xs text-gray-500 uppercase font-bold">Weight</span>
+            <span className="text-xs text-gray-500 uppercase font-bold">{t('sidebar.weight')}</span>
             {editingWeight ? (
               <div className="flex items-center gap-1">
                 <input
@@ -527,11 +559,11 @@ export default function UserProfile() {
         {/* BMI Badge */}
         {bmi && bmiInfo && (
           <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 mb-4 border border-white/10 flex items-center justify-between">
-            <span className="text-xs text-gray-500 uppercase font-bold">BMI</span>
+            <span className="text-xs text-gray-500 uppercase font-bold">{t('sidebar.bmi')}</span>
             <div className="flex items-center gap-2">
               <span className="text-sm font-black text-white">{bmi.toFixed(1)}</span>
               <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ color: bmiInfo.color, background: `${bmiInfo.color}22` }}>
-                {bmiInfo.label}
+                {t(bmiInfo.key)}
               </span>
             </div>
           </div>
@@ -564,7 +596,7 @@ export default function UserProfile() {
           to={"/" }
           className="mt-6 w-full py-2.5 text-black font-bold rounded-lg uppercase text-sm"
         >
-          Sign Out
+          {t('common.sign_out')}
         </Link>
       </motion.aside>
 
@@ -576,7 +608,7 @@ export default function UserProfile() {
             onClick={handleAvatarClick}
             disabled={avatarUploading}
             className="relative w-12 h-12 rounded-xl border-2 border-yellow-300 overflow-hidden shrink-0 group focus:outline-none"
-            title={profile.profilePicture ? 'View photo' : 'Upload photo'}
+            title={profile.profilePicture ? t('profile.view_photo') : t('profile.upload_photo')}
           >
             {profile.profilePicture ? (
               <img src={profile.profilePicture} alt="avatar" className="w-full h-full object-cover" />
@@ -591,7 +623,7 @@ export default function UserProfile() {
           </button>
           <div className="min-w-0">
             <p className="font-black text-[--color-iron-gold] uppercase text-sm tracking-widest truncate">
-              {profile.name || 'Athlete'}
+              {profile.name || t('common.athlete')}
             </p>
             <p className="text-gray-500 text-xs truncate">{profile.email}</p>
           </div>
@@ -599,11 +631,11 @@ export default function UserProfile() {
         {/* Stats chips row */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {[
-            { label: 'Goal', value: profile.fitnessGoals || '—' },
-            { label: 'Level', value: profile.experienceLevel || '—' },
-            { label: 'Weight', value: profile.weight ? `${profile.weight} kg` : '—' },
-            { label: 'Height', value: profile.height ? `${profile.height} cm` : '—' },
-            ...(bmi && bmiInfo ? [{ label: 'BMI', value: `${bmi.toFixed(1)} · ${bmiInfo.label}` }] : []),
+            { label: t('sidebar.goal'),   value: profile.fitnessGoals || '—' },
+            { label: t('sidebar.level'),  value: profile.experienceLevel || '—' },
+            { label: t('sidebar.weight'), value: profile.weight ? `${profile.weight} kg` : '—' },
+            { label: t('sidebar.height'), value: profile.height ? `${profile.height} cm` : '—' },
+            ...(bmi && bmiInfo ? [{ label: t('sidebar.bmi'), value: `${bmi.toFixed(1)} · ${t(bmiInfo.key)}` }] : []),
           ].map((s) => (
             <div key={s.label} className="shrink-0 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex flex-col items-center">
               <span className="text-[10px] text-gray-500 uppercase font-bold">{s.label}</span>
@@ -615,7 +647,7 @@ export default function UserProfile() {
 
       {/* ── Mobile bottom nav (mobile only) ─────────────── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[--color-gym-dark]/95 backdrop-blur-xl border-t border-white/10 flex items-center gap-1 px-2 py-2 overflow-x-auto">
-        {NAV.map((item) => (
+        {NAV_IDS.map((item) => (
           <button
             key={item.id}
             onClick={() => setActive(item.id)}
@@ -625,7 +657,7 @@ export default function UserProfile() {
                 : 'text-gray-500'}`}
           >
             <span className="text-xl">{item.icon}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wide">{item.label}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wide">{t(item.key)}</span>
             {item.id === 'community' && communityUnread > 0 && (
               <span className="absolute -top-0.5 right-0 bg-yellow-300 text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center leading-none">
                 {communityUnread > 9 ? '9+' : communityUnread}
@@ -638,7 +670,7 @@ export default function UserProfile() {
           className="shrink-0 flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-gray-500 transition-all duration-200"
         >
           <span className="text-xl">🚪</span>
-          <span className="text-[10px] font-bold uppercase tracking-wide">Out</span>
+          <span className="text-[10px] font-bold uppercase tracking-wide">{t('common.out')}</span>
         </Link>
       </nav>
 
@@ -656,11 +688,11 @@ export default function UserProfile() {
               <span className="text-xl shrink-0 animate-pulse">🏋️</span>
               <div className="min-w-0">
                 <p className="font-black uppercase text-xs tracking-wide truncate">{activeSession.workout_name}</p>
-                <p className="text-black/60 text-xs font-bold">In progress · {fmtElapsed(elapsedSec)}</p>
+                <p className="text-black/60 text-xs font-bold">{t('session.in_progress')}{fmtElapsed(elapsedSec)}</p>
               </div>
             </div>
             <button
-              onClick={finishWorkout}
+              onClick={() => setShowNotesPrompt(true)}
               disabled={finishing}
               className="shrink-0 px-4 py-1.5 bg-black text-yellow-300 font-black rounded-xl uppercase text-xs
                 hover:bg-gray-900 active:scale-95 transition-all disabled:opacity-50"
@@ -679,18 +711,18 @@ export default function UserProfile() {
           {active === 'dashboard' && (
             <motion.div key="dashboard" {...fadeUp(0)} className="space-y-8">
               <motion.div {...fadeUp(0)}>
-                <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Overview</p>
+                <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.title')}</p>
                 <h1 className="text-2xl md:text-3xl font-black uppercase italic mt-1">
-                  Welcome back, <span className="text-[--color-iron-gold]">{profile.name?.split(' ')[0] || 'Athlete'}</span> 💪
+                  {t('dashboard.welcome')} <span className="text-[--color-iron-gold]">{profile.name?.split(' ')[0] || t('common.athlete')}</span> 💪
                 </h1>
               </motion.div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 {[
-                  { label: 'Workouts', value: String(totalWorkouts), icon: '🏋️' },
-                  { label: 'Streak', value: streak > 0 ? `${streak} day${streak !== 1 ? 's' : ''}` : '—', icon: '🔥' },
-                  { label: 'Goal', value: profile.fitnessGoals || '—', icon: '🎯' },
-                  { label: 'BMI', value: bmi ? `${bmi.toFixed(1)} — ${bmiInfo?.label}` : '—', icon: '⚖️' },
+                  { label: t('dashboard.workouts'), value: String(totalWorkouts), icon: '🏋️' },
+                  { label: t('dashboard.streak'), value: streak > 0 ? `${streak} ${streak !== 1 ? t('dashboard.days') : t('dashboard.day')}` : '—', icon: '🔥' },
+                  { label: t('dashboard.goal'), value: profile.fitnessGoals || '—', icon: '🎯' },
+                  { label: t('dashboard.bmi'), value: bmi ? `${bmi.toFixed(1)} — ${bmiInfo ? t(bmiInfo.key) : ''}` : '—', icon: '⚖️' },
                 ].map((s, i) => (
                   <motion.div key={s.label} {...fadeUp(0.1 + i * 0.08)}
                     className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-5 flex items-center gap-3
@@ -715,14 +747,11 @@ export default function UserProfile() {
                 />
               </div>
 
-              {/* Achievements */}
-              <AchievementsCard onboarded={profile.onboarded} />
-
               {/* Workout Starter */}
               <motion.div {...fadeUp(0.35)}
                 className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6
                   hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)] transition-all duration-300">
-                <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest mb-4">🏋️ Start a Workout</p>
+                <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest mb-4">{t('dashboard.start_workout')}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     onClick={() => { setActive('workouts'); setWorkoutTab('ai'); }}
@@ -731,8 +760,8 @@ export default function UserProfile() {
                   >
                     <span className="text-3xl">🤖</span>
                     <div>
-                      <p className="font-black text-[--color-iron-gold] uppercase text-sm">AI Workout Plan</p>
-                      <p className="text-gray-400 text-xs mt-0.5">Generated for your goal</p>
+                      <p className="font-black text-[--color-iron-gold] uppercase text-sm">{t('dashboard.ai_plan')}</p>
+                      <p className="text-gray-400 text-xs mt-0.5">{t('dashboard.ai_plan_desc')}</p>
                     </div>
                   </button>
                   <button
@@ -742,8 +771,8 @@ export default function UserProfile() {
                   >
                     <span className="text-3xl">✏️</span>
                     <div>
-                      <p className="font-black text-white uppercase text-sm">My Workouts</p>
-                      <p className="text-gray-400 text-xs mt-0.5">Your custom routines</p>
+                      <p className="font-black text-white uppercase text-sm">{t('dashboard.my_workouts')}</p>
+                      <p className="text-gray-400 text-xs mt-0.5">{t('dashboard.my_workouts_desc')}</p>
                     </div>
                   </button>
                 </div>
@@ -761,7 +790,7 @@ export default function UserProfile() {
           {/* ── GOALS ── */}
           {active === 'goals' && (
             <motion.div key="goals" {...fadeUp(0)} className="space-y-6">
-              <SectionHeader title="Goals" sub="Your fitness focus breakdown" />
+              <SectionHeader title={t('goals.title')} sub={t('goals.subtitle')} />
               <GoalDonut goalData={goalData} goal={profile.fitnessGoals} large />
             </motion.div>
           )}
@@ -772,19 +801,19 @@ export default function UserProfile() {
               {/* Sub-tabs */}
               <div className="flex gap-2 flex-wrap">
                 {([
-                  { id: 'ai', label: '🥗 AI Suggestions' },
-                  { id: 'my', label: '🍽️ My Meals' },
-                  { id: 'custom', label: '👨‍🍳 My Recipes' },
-                  { id: 'recipes', label: '🎬 Recipe Videos' },
-                  { id: 'ingredients', label: '🧂 Preferences' },
+                  { id: 'ai', label: t('meals.ai_tab') },
+                  { id: 'my', label: t('meals.my_tab') },
+                  { id: 'custom', label: t('meals.recipes_tab') },
+                  { id: 'recipes', label: t('meals.videos_tab') },
+                  { id: 'ingredients', label: t('meals.prefs_tab') },
                 ] as const).map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setMealTab(tab.id)}
-                    className={`px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide transition-all duration-200 ${
+                    className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide transition-all duration-200 ${
                       mealTab === tab.id
-                        ? 'bg-yellow-300 text-black shadow-[0_0_16px_rgba(253,224,71,0.3)]'
-                        : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-white/20'
+                        ? 'bg-gradient-to-r from-yellow-400 to-amber-400 text-black shadow-[0_0_20px_rgba(251,191,36,0.45)] scale-[1.03]'
+                        : 'bg-white/8 border border-white/15 text-gray-300 hover:text-white hover:border-yellow-300/30 hover:bg-yellow-300/8'
                     }`}
                   >
                     {tab.label}
@@ -796,25 +825,55 @@ export default function UserProfile() {
                 {mealTab === 'ai' && (
                   <motion.div key="ai-meals" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }} className="space-y-4">
 
+                    {/* ── Today's Macro Tracker ── */}
+                    {(() => {
+                      const log = getDailyLog();
+                      if (log.length === 0) return null;
+                      const totKcal = log.reduce((s, e) => s + e.kcal, 0);
+                      const totP    = log.reduce((s, e) => s + e.protein_g, 0);
+                      const totC    = log.reduce((s, e) => s + e.carbs_g, 0);
+                      const totF    = log.reduce((s, e) => s + e.fat_g, 0);
+                      return (
+                        <div className="bg-teal-500/5 border border-teal-500/20 rounded-2xl px-4 py-3 flex items-center gap-4 flex-wrap">
+                          <span className="text-sm font-black text-teal-300 uppercase tracking-wide">📊 Today's Log</span>
+                          <div className="flex items-center gap-3 flex-wrap text-xs font-bold">
+                            <span className="text-white">{totKcal} kcal</span>
+                            <span className="text-gray-600">·</span>
+                            <span className="text-red-300">P {totP}g</span>
+                            <span className="text-sky-300">C {totC}g</span>
+                            <span className="text-orange-300">F {totF}g</span>
+                            <span className="text-gray-500 text-[10px]">({log.length} meal{log.length !== 1 ? 's' : ''} logged)</span>
+                          </div>
+                          <button
+                            onClick={() => { localStorage.removeItem(todayKey); setLoggedMeals({}); }}
+                            className="ml-auto text-[10px] text-gray-600 hover:text-red-400 transition-colors font-bold uppercase tracking-wide"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      );
+                    })()}
+
                     {/* Header row */}
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div>
-                        <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Weekly Plan · {profile.fitnessGoals || 'Your Goal'}</p>
-                        <h2 className="text-2xl font-black uppercase italic mt-1">🥗 AI Meal Plan</h2>
+                        <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('meals.weekly_plan')} · {profile.fitnessGoals || '—'}</p>
+                        <h2 className="text-2xl font-black uppercase italic mt-1">🥗 {t('meals.title')}</h2>
                         {getMealCacheAge(userId ?? 0) !== null && (
                           <p className="text-gray-500 text-xs mt-1">
-                            Generated {getMealCacheAge(userId ?? 0)} day{getMealCacheAge(userId ?? 0) === 1 ? '' : 's'} ago
-                            · refreshes weekly
+                            {getMealCacheAge(userId ?? 0) === 1 ? t('meals.day_ago', { count: 1 }) : t('meals.days_ago', { count: getMealCacheAge(userId ?? 0) ?? 0 })}
+                            {' · '}{t('meals.refreshes_weekly')}
                           </p>
                         )}
                       </div>
                       <button
                         onClick={() => fetchAIMeals(true)}
                         disabled={aiMealLoading}
-                        className="shrink-0 px-4 py-2 bg-yellow-300/10 border border-yellow-300/30 text-yellow-300 font-black rounded-xl uppercase text-xs
-                          hover:bg-yellow-300/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-40"
+                        className="shrink-0 px-5 py-2.5 bg-gradient-to-r from-yellow-400 to-amber-400 text-black font-black rounded-xl uppercase text-xs tracking-wide
+                          shadow-[0_0_20px_rgba(251,191,36,0.35)] hover:shadow-[0_0_28px_rgba(251,191,36,0.55)] hover:scale-[1.04] active:scale-95
+                          transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
                       >
-                        {aiMealLoading ? '⏳ Generating…' : '🔄 Regenerate'}
+                        {aiMealLoading ? `⏳ ${t('meals.generating')}` : `🔄 ${t('meals.regenerate')}`}
                       </button>
                     </div>
 
@@ -839,26 +898,133 @@ export default function UserProfile() {
                     {!aiMealLoading && aiMealPlan && (
                       <>
                         {/* Meal time sub-tabs */}
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="flex gap-1.5 p-1 bg-white/5 border border-white/10 rounded-2xl">
                           {([
-                            { id: 'breakfast', label: '☀️ Breakfast' },
-                            { id: 'lunch',     label: '🌤️ Lunch' },
-                            { id: 'dinner',    label: '🌙 Dinner' },
-                            { id: 'snacks',    label: '🍎 Snacks' },
+                            { id: 'breakfast', emoji: '☀️', label: t('meals.breakfast') },
+                            { id: 'lunch',     emoji: '🌤️', label: t('meals.lunch') },
+                            { id: 'dinner',    emoji: '🌙', label: t('meals.dinner') },
+                            { id: 'snacks',    emoji: '🍎', label: t('meals.snacks') },
                           ] as const).map((tab) => (
                             <button
                               key={tab.id}
                               onClick={() => setMealTimeTab(tab.id)}
-                              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide transition-all duration-200 ${
+                              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-1 sm:px-3 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wide transition-all duration-200 ${
                                 mealTimeTab === tab.id
-                                  ? 'bg-yellow-300 text-black shadow-[0_0_16px_rgba(253,224,71,0.3)]'
-                                  : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-white/20'
+                                  ? 'bg-gradient-to-br from-yellow-400/90 to-amber-500/80 text-black shadow-[0_2px_12px_rgba(251,191,36,0.4)]'
+                                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
                               }`}
                             >
-                              {tab.label}
+                              <span>{tab.emoji}</span>
+                              <span className="hidden sm:inline">{tab.label}</span>
                             </button>
                           ))}
                         </div>
+
+                        {/* Daily nutrition summary — collapsible dropdown */}
+                        {(() => {
+                          const dayMeals = [
+                            (aiMealPlan.breakfast ?? [])[0],
+                            (aiMealPlan.lunch ?? [])[0],
+                            (aiMealPlan.dinner ?? [])[0],
+                            (aiMealPlan.snacks ?? [])[0],
+                          ].filter(Boolean);
+                          const hasNutrition = dayMeals.some(m => m.protein_g || m.carbs_g || m.fat_g);
+                          if (!hasNutrition) return null;
+                          const totalKcal = dayMeals.reduce((s, m) => s + (typeof m.kcal === 'number' ? m.kcal : parseInt(String(m.kcal)) || 0), 0);
+                          const totalP = dayMeals.reduce((s, m) => s + (m.protein_g ?? 0), 0);
+                          const totalC = dayMeals.reduce((s, m) => s + (m.carbs_g ?? 0), 0);
+                          const totalF = dayMeals.reduce((s, m) => s + (m.fat_g ?? 0), 0);
+                          const pct = (val: number, total: number) => total ? Math.round((val / total) * 100) : 0;
+                          const kcalFromP = totalP * 4;
+                          const kcalFromC = totalC * 4;
+                          const kcalFromF = totalF * 9;
+                          return (
+                            <div className="border border-white/10 rounded-2xl overflow-hidden">
+                              {/* Header / toggle */}
+                              <button
+                                onClick={() => setNutritionOpen(o => !o)}
+                                className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white/5 hover:bg-white/8 transition-colors"
+                              >
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{t('meals.daily_total')}</span>
+                                  <span className="text-xs bg-yellow-400/15 text-yellow-300 font-black px-2.5 py-0.5 rounded-full border border-yellow-400/20">🔥 {totalKcal} kcal</span>
+                                  <span className="text-xs bg-red-500/10 text-red-300 font-bold px-2 py-0.5 rounded-full">P {totalP}g</span>
+                                  <span className="text-xs bg-sky-500/10 text-sky-300 font-bold px-2 py-0.5 rounded-full">C {totalC}g</span>
+                                  <span className="text-xs bg-orange-500/10 text-orange-300 font-bold px-2 py-0.5 rounded-full">F {totalF}g</span>
+                                </div>
+                                <span className={`text-gray-400 transition-transform duration-300 text-xs ${nutritionOpen ? 'rotate-180' : ''}`}>▼</span>
+                              </button>
+
+                              {/* Expandable body */}
+                              <AnimatePresence initial={false}>
+                                {nutritionOpen && (
+                                  <motion.div
+                                    key="nutrition-body"
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                                    className="overflow-hidden"
+                                  >
+                                    <div className="px-4 py-4 space-y-4 border-t border-white/10 bg-black/20">
+                                      {/* Macro bars */}
+                                      {[
+                                        { label: 'Protein', val: totalP, kcal: kcalFromP, pct: pct(kcalFromP, totalKcal), color: 'bg-red-400', text: 'text-red-300', border: 'border-red-400/30', bg: 'bg-red-500/10', emoji: '🥩' },
+                                        { label: 'Carbs',   val: totalC, kcal: kcalFromC, pct: pct(kcalFromC, totalKcal), color: 'bg-sky-400',  text: 'text-sky-300',  border: 'border-sky-400/30',  bg: 'bg-sky-500/10',  emoji: '🌾' },
+                                        { label: 'Fat',     val: totalF, kcal: kcalFromF, pct: pct(kcalFromF, totalKcal), color: 'bg-orange-400', text: 'text-orange-300', border: 'border-orange-400/30', bg: 'bg-orange-500/10', emoji: '🫒' },
+                                      ].map(macro => (
+                                        <div key={macro.label}>
+                                          <div className="flex items-center justify-between mb-1.5">
+                                            <span className={`text-xs font-black ${macro.text} flex items-center gap-1.5`}>
+                                              {macro.emoji} {macro.label}
+                                            </span>
+                                            <div className="flex items-center gap-2">
+                                              <span className={`text-[11px] font-bold ${macro.text} ${macro.bg} border ${macro.border} px-2 py-0.5 rounded-full`}>{macro.val}g</span>
+                                              <span className="text-[11px] text-gray-500 font-bold">{macro.kcal} kcal · {macro.pct}%</span>
+                                            </div>
+                                          </div>
+                                          <div className="h-2 bg-white/8 rounded-full overflow-hidden">
+                                            <motion.div
+                                              initial={{ width: 0 }}
+                                              animate={{ width: `${macro.pct}%` }}
+                                              transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
+                                              className={`h-full ${macro.color} rounded-full`}
+                                            />
+                                          </div>
+                                        </div>
+                                      ))}
+
+                                      {/* Per-meal breakdown */}
+                                      <div className="pt-2 border-t border-white/10">
+                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Per Meal</p>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                          {[
+                                            { label: t('meals.breakfast'), emoji: '☀️', meal: (aiMealPlan.breakfast ?? [])[0] },
+                                            { label: t('meals.lunch'),     emoji: '🌤️', meal: (aiMealPlan.lunch ?? [])[0] },
+                                            { label: t('meals.dinner'),    emoji: '🌙', meal: (aiMealPlan.dinner ?? [])[0] },
+                                            { label: t('meals.snacks'),    emoji: '🍎', meal: (aiMealPlan.snacks ?? [])[0] },
+                                          ].filter(x => x.meal).map(({ label, emoji, meal }) => {
+                                            const k = typeof meal!.kcal === 'number' ? meal!.kcal : parseInt(String(meal!.kcal)) || 0;
+                                            return (
+                                              <div key={label} className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-center">
+                                                <div className="text-lg mb-0.5">{emoji}</div>
+                                                <div className="text-[10px] text-gray-400 font-black uppercase mb-1">{label}</div>
+                                                <div className="text-xs text-yellow-300 font-black">{k} kcal</div>
+                                                <div className="text-[10px] text-gray-500 mt-0.5">
+                                                  P{meal!.protein_g ?? '—'} · C{meal!.carbs_g ?? '—'} · F{meal!.fat_g ?? '—'}
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          );
+                        })()}
 
                         <AnimatePresence mode="wait">
                           <motion.div
@@ -882,24 +1048,30 @@ export default function UserProfile() {
                                       <p className="text-gray-400 text-xs mt-0.5">{m.desc}</p>
                                     </div>
                                   </div>
-                                  <div className="flex items-center justify-between gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
-                                    <span className="text-xs text-gray-500 uppercase font-bold">Servings</span>
-                                    <div className="flex items-center gap-2">
+                                  <div className="flex items-center justify-between gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-2.5">
+                                    <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{t('meals.servings')}</span>
+                                    <div className="flex items-center gap-1.5">
                                       <button onClick={() => setSrv(m.meal, srv - 1)} disabled={srv <= 1}
-                                        className="w-7 h-7 rounded-lg bg-white/10 hover:bg-yellow-300/20 hover:text-yellow-300 text-white font-black text-sm
-                                          flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-90">−</button>
-                                      <span className="text-white font-black text-sm w-4 text-center">{srv}</span>
+                                        className="w-7 h-7 rounded-lg bg-white/10 border border-white/10 hover:bg-red-500/20 hover:border-red-400/40 hover:text-red-300 text-gray-300 font-black text-sm
+                                          flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed active:scale-90">−</button>
+                                      <span className="text-white font-black text-sm w-5 text-center tabular-nums">{srv}</span>
                                       <button onClick={() => setSrv(m.meal, srv + 1)} disabled={srv >= 10}
-                                        className="w-7 h-7 rounded-lg bg-white/10 hover:bg-yellow-300/20 hover:text-yellow-300 text-white font-black text-sm
-                                          flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-90">+</button>
-                                      {srv > 1 && <span className="text-xs text-gray-500 font-bold ml-1">× {srv}</span>}
+                                        className="w-7 h-7 rounded-lg bg-white/10 border border-white/10 hover:bg-green-500/20 hover:border-green-400/40 hover:text-green-300 text-gray-300 font-black text-sm
+                                          flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed active:scale-90">+</button>
                                     </div>
-                                    <span className="text-xs bg-yellow-300/10 text-yellow-300 font-bold px-2.5 py-1 rounded-full shrink-0">
+                                    <span className="text-xs bg-yellow-400/15 text-yellow-300 font-black px-3 py-1 rounded-full border border-yellow-400/20 shrink-0">
                                       {scaleKcal(m.kcal, srv)}
                                     </span>
                                   </div>
+                                  {(m.protein_g || m.carbs_g || m.fat_g) && (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      <span className="text-[11px] bg-red-500/10 text-red-300 font-bold px-2 py-0.5 rounded-full">P {scaleMacro(m.protein_g, srv)}g</span>
+                                      <span className="text-[11px] bg-sky-500/10 text-sky-300 font-bold px-2 py-0.5 rounded-full">C {scaleMacro(m.carbs_g, srv)}g</span>
+                                      <span className="text-[11px] bg-orange-500/10 text-orange-300 font-bold px-2 py-0.5 rounded-full">F {scaleMacro(m.fat_g, srv)}g</span>
+                                    </div>
+                                  )}
                                   <div className="border-t border-white/10 pt-3 space-y-1.5">
-                                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">🛒 Ingredients</p>
+                                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">{t('meals.ingredients')}</p>
                                     <div className="flex flex-wrap gap-1.5 mb-2">
                                       {getMealIngredients(m).map((ing, j) => (
                                         <span key={j} className="flex items-center gap-1 bg-white/10 border border-white/15 rounded-full px-2.5 py-0.5 text-[11px] text-gray-300">
@@ -928,7 +1100,7 @@ export default function UserProfile() {
                                             setNewIngInputs((p) => ({ ...p, [m.meal]: '' }));
                                           }
                                         }}
-                                        placeholder="Add ingredient…"
+                                        placeholder={t('meals.add_ingredient')}
                                         className="flex-1 bg-black/30 border border-white/15 rounded-lg px-2.5 py-1 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-yellow-300/50"
                                       />
                                       <button
@@ -938,13 +1110,13 @@ export default function UserProfile() {
                                           setEditedIngredients((prev) => ({ ...prev, [m.meal]: [...getMealIngredients(m), val] }));
                                           setNewIngInputs((p) => ({ ...p, [m.meal]: '' }));
                                         }}
-                                        className="px-2.5 py-1 bg-white/10 border border-white/15 rounded-lg text-[11px] hover:bg-white/20 transition-all font-bold"
+                                        className="px-3 py-1 bg-yellow-400/15 border border-yellow-400/30 text-yellow-300 rounded-lg text-[11px] hover:bg-yellow-400/25 transition-all font-black"
                                       >+</button>
                                     </div>
                                   </div>
                                   {m.steps && m.steps.length > 0 && <MealSteps steps={m.steps} />}
                                   {token && (
-                                    <div className="flex flex-col gap-2">
+                                    <div className="flex gap-2 pt-1">
                                       <button
                                         disabled={!!savedMeals[m.meal]}
                                         onClick={async () => {
@@ -955,17 +1127,18 @@ export default function UserProfile() {
                                               kcal: scaleKcal(m.kcal, getSrv(m.meal)),
                                               description: m.desc,
                                               recipe_url: '',
+                                              ingredients: [],
                                             });
                                             setSavedMeals(prev => ({ ...prev, [m.meal]: true }));
                                           } catch { /* ignore */ }
                                         }}
-                                        className={`w-full py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200
+                                        className={`flex-1 py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95
                                           ${savedMeals[m.meal]
-                                            ? 'bg-green-500/20 text-green-400 border border-green-500/30 cursor-default'
-                                            : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-yellow-300/10 hover:text-yellow-300 hover:border-yellow-300/30 active:scale-95'
+                                            ? 'bg-green-500/15 text-green-400 border border-green-500/30 cursor-default'
+                                            : 'bg-gradient-to-r from-yellow-400/20 to-amber-400/15 text-yellow-300 border border-yellow-400/30 hover:from-yellow-400/30 hover:to-amber-400/25 hover:shadow-[0_0_14px_rgba(251,191,36,0.25)]'
                                           }`}
                                       >
-                                        {savedMeals[m.meal] ? '✓ Saved to My Meals' : '💾 Save to My Meals'}
+                                        {savedMeals[m.meal] ? '✓ Saved' : t('meals.save_meal')}
                                       </button>
                                       <button
                                         disabled={!!savedAsRecipes[m.meal]}
@@ -989,13 +1162,27 @@ export default function UserProfile() {
                                           setSavedAsRecipes(prev => ({ ...prev, [m.meal]: true }));
                                           setMealTab('custom');
                                         }}
-                                        className={`w-full py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200
+                                        className={`flex-1 py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95
                                           ${savedAsRecipes[m.meal]
-                                            ? 'bg-green-500/20 text-green-400 border border-green-500/30 cursor-default'
-                                            : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-yellow-300/10 hover:text-yellow-300 hover:border-yellow-300/30 active:scale-95'
+                                            ? 'bg-green-500/15 text-green-400 border border-green-500/30 cursor-default'
+                                            : 'bg-gradient-to-r from-violet-500/20 to-indigo-500/15 text-violet-300 border border-violet-500/30 hover:from-violet-500/30 hover:to-indigo-500/25 hover:shadow-[0_0_14px_rgba(139,92,246,0.25)]'
                                           }`}
                                       >
-                                        {savedAsRecipes[m.meal] ? '✓ Saved to My Recipes' : '👨‍🍳 Add to My Recipes'}
+                                        {savedAsRecipes[m.meal] ? '✓ Saved' : t('meals.add_recipe')}
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          logMealToday(m, getSrv(m.meal));
+                                          setLoggedMeals(prev => ({ ...prev, [m.meal]: true }));
+                                        }}
+                                        className={`px-3 py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95
+                                          ${loggedMeals[m.meal]
+                                            ? 'bg-teal-500/15 text-teal-400 border border-teal-500/30 cursor-default'
+                                            : 'bg-teal-500/10 text-teal-300 border border-teal-500/25 hover:bg-teal-500/20'
+                                          }`}
+                                        title="Log to today's macro tracker"
+                                      >
+                                        {loggedMeals[m.meal] ? '✓' : '📊'}
                                       </button>
                                     </div>
                                   )}
@@ -1010,8 +1197,8 @@ export default function UserProfile() {
                     {!aiMealLoading && !aiMealPlan && !aiMealError && (
                       <div className="bg-white/5 border border-white/10 rounded-2xl p-12 flex flex-col items-center gap-4 text-center">
                         <span className="text-5xl">🥗</span>
-                        <p className="text-[--color-iron-gold] font-black uppercase">No plan yet</p>
-                        <p className="text-gray-400 text-sm">Click <strong className="text-white">Regenerate</strong> to generate your personalised weekly meal plan.</p>
+                        <p className="text-[--color-iron-gold] font-black uppercase">{t('meals.no_plan')}</p>
+                        <p className="text-gray-400 text-sm">{t('meals.no_plan_desc')}</p>
                       </div>
                     )}
                   </motion.div>
@@ -1034,12 +1221,12 @@ export default function UserProfile() {
                 {mealTab === 'ingredients' && (
                   <motion.div key="ingredients" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }} className="space-y-6">
                     <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
-                      <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">🧂 Ingredient Preferences</p>
-                      <p className="text-gray-400 text-xs">Add ingredients you love or dislike — the AI will use these when generating your meal plan.</p>
+                      <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">{t('meals.ingredient_prefs')}</p>
+                      <p className="text-gray-400 text-xs">{t('meals.ingredient_prefs_desc')}</p>
 
                       {/* Preferred */}
                       <div className="space-y-2">
-                        <p className="text-xs font-black uppercase text-green-400 tracking-wide">✅ Preferred</p>
+                        <p className="text-xs font-black uppercase text-green-400 tracking-wide">{t('meals.preferred')}</p>
                         <div className="flex flex-wrap gap-1.5">
                           {(profile.preferredIngredients ?? []).filter((_, i, a) => a.indexOf(_) === i && !_.startsWith('!')).map((ing, i) => (
                             <span key={i} className="flex items-center gap-1 bg-green-500/10 border border-green-400/20 text-green-300 rounded-full px-3 py-1 text-xs font-semibold">
@@ -1053,7 +1240,7 @@ export default function UserProfile() {
 
                       {/* Disliked */}
                       <div className="space-y-2">
-                        <p className="text-xs font-black uppercase text-red-400 tracking-wide">❌ Disliked / Avoid</p>
+                        <p className="text-xs font-black uppercase text-red-400 tracking-wide">{t('meals.disliked')}</p>
                         <div className="flex flex-wrap gap-1.5">
                           {(profile.preferredIngredients ?? []).filter((x) => x.startsWith('!')).map((ing, i) => (
                             <span key={i} className="flex items-center gap-1 bg-red-500/10 border border-red-400/20 text-red-300 rounded-full px-3 py-1 text-xs font-semibold">
@@ -1072,7 +1259,7 @@ export default function UserProfile() {
                           value={prefIngNew}
                           onChange={(e) => setPrefIngNew(e.target.value)}
                           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('pref-add-btn')?.click(); } }}
-                          placeholder="e.g. chicken, broccoli…"
+                          placeholder={t('meals.prefs_placeholder')}
                           className="flex-1 bg-black/30 border border-white/15 rounded-xl px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-yellow-300/50"
                         />
                         <button id="pref-add-btn"
@@ -1083,7 +1270,7 @@ export default function UserProfile() {
                             setPrefIngNew('');
                           }}
                           className="px-4 py-2 bg-green-500/20 border border-green-400/30 text-green-300 font-black rounded-xl text-xs hover:bg-green-500/30 transition-all"
-                        >✅ Like</button>
+                        >{t('meals.like_btn')}</button>
                         <button
                           onClick={() => {
                             const val = prefIngNew.trim();
@@ -1092,7 +1279,7 @@ export default function UserProfile() {
                             setPrefIngNew('');
                           }}
                           className="px-4 py-2 bg-red-500/20 border border-red-400/30 text-red-300 font-black rounded-xl text-xs hover:bg-red-500/30 transition-all"
-                        >❌ Dislike</button>
+                        >{t('meals.dislike_btn')}</button>
                       </div>
                     </div>
                   </motion.div>
@@ -1107,9 +1294,9 @@ export default function UserProfile() {
               {/* Sub-tabs */}
               <div className="flex gap-2 flex-wrap">
                 {([
-                  { id: 'ai', label: '🤖 AI Plan' },
-                  { id: 'my', label: '✏️ My Workouts' },
-                  { id: 'videos', label: '🎬 Videos' },
+                  { id: 'ai', key: 'workouts.ai_tab' },
+                  { id: 'my', key: 'workouts.my_tab' },
+                  { id: 'videos', key: 'workouts.videos_tab' },
                 ] as const).map((tab) => (
                   <button
                     key={tab.id}
@@ -1120,7 +1307,7 @@ export default function UserProfile() {
                         : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-white/20'
                     }`}
                   >
-                    {tab.label}
+                    {t(tab.key)}
                   </button>
                 ))}
               </div>
@@ -1134,11 +1321,11 @@ export default function UserProfile() {
                         className="w-full py-3 bg-yellow-300 text-black font-black rounded-xl uppercase text-sm
                           hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
                       >
-                        ▶ Start AI Workout
+                        {t('workouts.start_ai')}
                       </button>
                     ) : (
                       <div className="flex items-center gap-3 bg-yellow-300/10 border border-yellow-300/30 rounded-xl px-4 py-3">
-                        <span className="text-yellow-300 font-black text-sm">🏋️ Workout in progress — {fmtElapsed(elapsedSec)}</span>
+                        <span className="text-yellow-300 font-black text-sm">{t('workouts.in_progress')}{fmtElapsed(elapsedSec)}</span>
                       </div>
                     )}
                     <WorkoutPlanView profile={profile} token={token ?? undefined} />
@@ -1172,7 +1359,7 @@ export default function UserProfile() {
           {/* ── PROGRESS ── */}
           {active === 'progress' && (
             <motion.div key="progress" {...fadeUp(0)} className="space-y-6">
-              <SectionHeader title="Progress" sub="Track your transformation" />
+              <SectionHeader title={t('progress.title')} sub={t('progress.subtitle')} />
               <ProgressTab
                 token={token!}
                 sessions={sessions}
@@ -1184,7 +1371,7 @@ export default function UserProfile() {
           {/* ── SETTINGS ── */}
           {active === 'settings' && (
             <motion.div key="settings" {...fadeUp(0)} className="space-y-6">
-              <SectionHeader title="Settings" sub="Account & Security" />
+              <SectionHeader title={t('settings.title')} sub={t('settings.sub')} />
 
               <div className="flex flex-col lg:flex-row gap-6">
                 {/* ── Settings sidebar nav ── */}
@@ -1229,13 +1416,13 @@ export default function UserProfile() {
                     <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-5">
                       {/* Header row */}
                       <div className="flex items-center justify-between">
-                        <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">Profile Details</p>
+                        <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">{t('profile.details')}</p>
                         {!editingAccount ? (
                           <button
                             onClick={openAccountEdit}
                             className="px-4 py-1.5 bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-white/30 font-bold rounded-xl uppercase text-xs transition-all"
                           >
-                            ✏️ Edit
+                            ✏️ {t('common.edit')}
                           </button>
                         ) : (
                           <div className="flex gap-2">
@@ -1243,13 +1430,13 @@ export default function UserProfile() {
                               onClick={() => setEditingAccount(false)}
                               className="px-4 py-1.5 bg-white/5 border border-white/10 text-gray-400 hover:text-white font-bold rounded-xl uppercase text-xs transition-all"
                             >
-                              Cancel
+                              {t('common.cancel')}
                             </button>
                             <button
                               onClick={saveAccount}
                               className="px-4 py-1.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all"
                             >
-                              Save
+                              {t('common.save')}
                             </button>
                           </div>
                         )}
@@ -1257,85 +1444,85 @@ export default function UserProfile() {
 
                       {/* Email — always read-only */}
                       <div className="flex justify-between items-center py-2 border-b border-white/5">
-                        <span className="text-xs text-gray-500 uppercase font-bold">Email</span>
+                        <span className="text-xs text-gray-500 uppercase font-bold">{t('profile.email')}</span>
                         <span className="text-sm text-gray-400 font-semibold truncate max-w-[60%] text-right">{profile.email || '—'}</span>
                       </div>
 
                       {editingAccount ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <AccountField label="Name" value={accountDraft.name} onChange={(v) => setAccountDraft((d) => ({ ...d, name: v }))} placeholder="Your name" />
+                          <AccountField label={t('profile.name')} value={accountDraft.name} onChange={(v) => setAccountDraft((d) => ({ ...d, name: v }))} placeholder={t('profile.name')} />
                           <div className="flex flex-col gap-1">
-                            <label className="text-xs text-gray-500 uppercase font-bold">Goal</label>
+                            <label className="text-xs text-gray-500 uppercase font-bold">{t('profile.goal')}</label>
                             <select
                               value={accountDraft.fitnessGoals}
                               onChange={(e) => setAccountDraft((d) => ({ ...d, fitnessGoals: e.target.value }))}
                               className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-yellow-300/60 focus:outline-none transition-all [&>option]:bg-gray-900"
                             >
-                              <option value="">— Select —</option>
-                              <option value="Weight Loss">Weight Loss</option>
-                              <option value="Muscle Gain">Muscle Gain</option>
-                              <option value="Endurance">Endurance</option>
-                              <option value="General Fitness">General Fitness</option>
+                              <option value="">{t('common.select')}</option>
+                              <option value="Weight Loss">{t('goals.weight_loss')}</option>
+                              <option value="Muscle Gain">{t('goals.muscle_gain')}</option>
+                              <option value="Endurance">{t('goals.endurance')}</option>
+                              <option value="General Fitness">{t('goals.general_fitness')}</option>
                             </select>
                           </div>
                           <div className="flex flex-col gap-1">
-                            <label className="text-xs text-gray-500 uppercase font-bold">Level</label>
+                            <label className="text-xs text-gray-500 uppercase font-bold">{t('profile.level')}</label>
                             <select
                               value={accountDraft.experienceLevel}
                               onChange={(e) => setAccountDraft((d) => ({ ...d, experienceLevel: e.target.value }))}
                               className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-yellow-300/60 focus:outline-none transition-all [&>option]:bg-gray-900"
                             >
-                              <option value="">— Select —</option>
-                              <option value="Beginner">Beginner</option>
-                              <option value="Intermediate">Intermediate</option>
-                              <option value="Advanced">Advanced</option>
-                              <option value="Unsure">Unsure</option>
+                              <option value="">{t('common.select')}</option>
+                              <option value="Beginner">{t('level.beginner')}</option>
+                              <option value="Intermediate">{t('level.intermediate')}</option>
+                              <option value="Advanced">{t('level.advanced')}</option>
+                              <option value="Unsure">{t('level.unsure')}</option>
                             </select>
                           </div>
                           <div className="flex flex-col gap-1">
-                            <label className="text-xs text-gray-500 uppercase font-bold">Gender</label>
+                            <label className="text-xs text-gray-500 uppercase font-bold">{t('profile.gender')}</label>
                             <select
                               value={accountDraft.gender}
                               onChange={(e) => setAccountDraft((d) => ({ ...d, gender: e.target.value }))}
                               className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-yellow-300/60 focus:outline-none transition-all [&>option]:bg-gray-900"
                             >
-                              <option value="">— Select —</option>
-                              <option value="Male">Male</option>
-                              <option value="Female">Female</option>
-                              <option value="Other">Other</option>
-                              <option value="Prefer not to say">Prefer not to say</option>
+                              <option value="">{t('common.select')}</option>
+                              <option value="Male">{t('gender.male')}</option>
+                              <option value="Female">{t('gender.female')}</option>
+                              <option value="Other">{t('gender.other')}</option>
+                              <option value="Prefer not to say">{t('gender.prefer_not')}</option>
                             </select>
                           </div>
-                          <AccountField label="Height (cm)" value={accountDraft.height} onChange={(v) => setAccountDraft((d) => ({ ...d, height: v }))} placeholder="e.g. 175" type="number" />
-                          <AccountField label="Weight (kg)" value={accountDraft.weight} onChange={(v) => setAccountDraft((d) => ({ ...d, weight: v }))} placeholder="e.g. 75" type="number" />
-                          <AccountField label="Date of Birth" value={accountDraft.birthdate} onChange={(v) => setAccountDraft((d) => ({ ...d, birthdate: v }))} type="date" />
+                          <AccountField label={t('profile.height_cm')} value={accountDraft.height} onChange={(v) => setAccountDraft((d) => ({ ...d, height: v }))} placeholder={t('profile.height_placeholder')} type="number" />
+                          <AccountField label={t('profile.weight_kg')} value={accountDraft.weight} onChange={(v) => setAccountDraft((d) => ({ ...d, weight: v }))} placeholder={t('profile.weight_placeholder')} type="number" />
+                          <AccountField label={t('profile.dob')} value={accountDraft.birthdate} onChange={(v) => setAccountDraft((d) => ({ ...d, birthdate: v }))} type="date" />
                           <div className="flex flex-col gap-1">
-                            <label className="text-xs text-gray-500 uppercase font-bold">Equipment</label>
+                            <label className="text-xs text-gray-500 uppercase font-bold">{t('profile.equipment')}</label>
                             <select
                               value={accountDraft.equipments}
                               onChange={(e) => setAccountDraft((d) => ({ ...d, equipments: e.target.value }))}
                               className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-yellow-300/60 focus:outline-none transition-all [&>option]:bg-gray-900"
                             >
-                              <option value="">— Select —</option>
-                              <option value="No Equipment">No Equipment</option>
-                              <option value="Dumbbells">Dumbbells</option>
-                              <option value="Barbell & Rack">Barbell & Rack</option>
-                              <option value="Full Gym">Full Gym</option>
-                              <option value="Resistance Bands">Resistance Bands</option>
+                              <option value="">{t('common.select')}</option>
+                              <option value="No Equipment">{t('equipment.none')}</option>
+                              <option value="Dumbbells">{t('equipment.dumbbells')}</option>
+                              <option value="Barbell & Rack">{t('equipment.barbell')}</option>
+                              <option value="Full Gym">{t('equipment.full_gym')}</option>
+                              <option value="Resistance Bands">{t('equipment.bands')}</option>
                             </select>
                           </div>
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
                           {[
-                            { label: 'Name', value: profile.name || '—' },
-                            { label: 'Goal', value: profile.fitnessGoals || '—' },
-                            { label: 'Level', value: profile.experienceLevel || '—' },
-                            { label: 'Gender', value: profile.gender || '—' },
-                            { label: 'Height', value: profile.height ? `${profile.height} cm` : '—' },
-                            { label: 'Weight', value: profile.weight ? `${profile.weight} kg` : '—' },
-                            { label: 'Date of Birth', value: profile.birthdate || '—' },
-                            { label: 'Equipment', value: profile.equipments || '—' },
+                            { label: t('profile.name'), value: profile.name || '—' },
+                            { label: t('profile.goal'), value: profile.fitnessGoals || '—' },
+                            { label: t('profile.level'), value: profile.experienceLevel || '—' },
+                            { label: t('profile.gender'), value: profile.gender || '—' },
+                            { label: t('sidebar.height'), value: profile.height ? `${profile.height} cm` : '—' },
+                            { label: t('sidebar.weight'), value: profile.weight ? `${profile.weight} kg` : '—' },
+                            { label: t('profile.dob'), value: profile.birthdate || '—' },
+                            { label: t('profile.equipment'), value: profile.equipments || '—' },
                           ].map((item) => (
                             <div key={item.label} className="flex justify-between items-center py-2 border-b border-white/5">
                               <span className="text-xs text-gray-500 uppercase font-bold">{item.label}</span>
@@ -1356,17 +1543,29 @@ export default function UserProfile() {
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{profile.communityVisible ? '👁️' : '🫥'}</span>
                         <div>
-                          <p className="text-sm font-black text-white uppercase tracking-wide">Community Visibility</p>
+                          <p className="text-sm font-black text-white uppercase tracking-wide">{t('profile.community_visible')}</p>
                           <p className="text-xs text-gray-400 mt-0.5">
                             {profile.communityVisible
-                              ? 'You are visible — others can find and message you.'
-                              : 'You are hidden — no one can find you in the community.'}
+                              ? t('profile.visible_desc')
+                              : t('profile.hidden_desc')}
                           </p>
                         </div>
                       </div>
                       <button
                         disabled={visibilityLoading}
-                        onClick={() => setProfile((p) => ({ ...p, communityVisible: !p.communityVisible }))}
+                        onClick={async () => {
+                          const next = !profile.communityVisible;
+                          setProfile((p) => ({ ...p, communityVisible: next }));
+                          setVisibilityLoading(true);
+                          try {
+                            const { email: _e, password: _p, onboarded: _o, ...profileData } = { ...profile, communityVisible: next };
+                            await apiSaveProfile(token!, profileData as Record<string, unknown>);
+                          } catch { /* revert on failure */
+                            setProfile((p) => ({ ...p, communityVisible: !next }));
+                          } finally {
+                            setVisibilityLoading(false);
+                          }
+                        }}
                         className={`relative w-14 h-7 rounded-full transition-colors duration-300 focus:outline-none shrink-0 ${
                           profile.communityVisible ? 'bg-yellow-300 shadow-[0_0_12px_rgba(253,224,71,0.4)]' : 'bg-white/10 border border-white/20'
                         }`}
@@ -1388,15 +1587,15 @@ export default function UserProfile() {
                           initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
                           className="text-green-400 text-sm bg-green-400/10 border border-green-400/20 rounded-xl px-4 py-3"
                         >
-                          Password changed successfully!
+                          {t('password.success')}
                         </motion.p>
                       ) : (
                         <form
                           onSubmit={async (e) => {
                             e.preventDefault();
                             setPwError('');
-                            if (pwNew.length < 8) { setPwError('New password must be at least 8 characters'); return; }
-                            if (pwNew !== pwConfirm) { setPwError('Passwords do not match'); return; }
+                            if (pwNew.length < 8) { setPwError(t('password.error_length')); return; }
+                            if (pwNew !== pwConfirm) { setPwError(t('password.error_match')); return; }
                             setPwSaving(true);
                             try {
                               await apiChangePassword(token!, pwCurrent, pwNew);
@@ -1404,16 +1603,16 @@ export default function UserProfile() {
                               setPwCurrent(''); setPwNew(''); setPwConfirm('');
                               setTimeout(() => setPwSuccess(false), 4000);
                             } catch (err: unknown) {
-                              setPwError(err instanceof Error ? err.message : 'Failed to change password');
+                              setPwError(err instanceof Error ? err.message : t('password.error_failed'));
                             } finally {
                               setPwSaving(false);
                             }
                           }}
                           className="space-y-3"
                         >
-                          <PwField label="Current Password" value={pwCurrent} onChange={setPwCurrent} />
-                          <PwField label="New Password" value={pwNew} onChange={setPwNew} placeholder="Min. 8 characters" />
-                          <PwField label="Confirm New Password" value={pwConfirm} onChange={setPwConfirm} placeholder="Repeat new password" />
+                          <PwField label={t('password.current')} value={pwCurrent} onChange={setPwCurrent} />
+                          <PwField label={t('password.new')} value={pwNew} onChange={setPwNew} placeholder={t('password.new_placeholder')} />
+                          <PwField label={t('password.confirm')} value={pwConfirm} onChange={setPwConfirm} placeholder={t('password.confirm_placeholder')} />
                           {pwError && <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-2">{pwError}</p>}
                           <button
                             type="submit"
@@ -1421,7 +1620,7 @@ export default function UserProfile() {
                             className="w-full py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-sm
                               hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 mt-1"
                           >
-                            {pwSaving ? 'Saving…' : 'Update Password'}
+                            {pwSaving ? t('common.saving') : t('password.update')}
                           </button>
                         </form>
                       )}
@@ -1434,20 +1633,20 @@ export default function UserProfile() {
                   <motion.div key="legal" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
                     <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
                       <div className="flex items-center justify-between">
-                        <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">Health & Liability Disclaimer</p>
+                        <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">{t('legal.title')}</p>
                         {profile.disclaimerAcceptedAt ? (
                           <span className="text-xs bg-green-400/10 text-green-400 border border-green-400/20 font-bold px-3 py-1 rounded-full">
-                            ✓ Agreed
+                            {t('legal.agreed')}
                           </span>
                         ) : (
                           <span className="text-xs bg-red-400/10 text-red-400 border border-red-400/20 font-bold px-3 py-1 rounded-full">
-                            Not signed
+                            {t('legal.not_signed')}
                           </span>
                         )}
                       </div>
                       {profile.disclaimerAcceptedAt && (
                         <p className="text-xs text-gray-500">
-                          Accepted on{' '}
+                          {t('legal.accepted_on')}{' '}
                           <span className="text-gray-300 font-semibold">
                             {new Date(profile.disclaimerAcceptedAt).toLocaleString()}
                           </span>
@@ -1455,31 +1654,23 @@ export default function UserProfile() {
                       )}
                       <div className="text-xs text-gray-500 leading-relaxed space-y-3 border-t border-white/10 pt-4">
                         <p>
-                          IronBuddy provides AI-generated fitness and nutrition suggestions for{' '}
-                          <span className="text-gray-300 font-semibold">informational purposes only</span>. The content
-                          produced by IRON does not constitute medical advice, diagnosis, or treatment and is{' '}
-                          <span className="text-gray-300 font-semibold">
-                            not a substitute for professional medical, nutritional, or fitness guidance
-                          </span>{' '}
-                          from a qualified practitioner.
+                          {t('legal.intro')}{' '}
+                          <span className="text-gray-300 font-semibold">{t('legal.informational')}</span>{t('legal.intro2')}{' '}
+                          <span className="text-gray-300 font-semibold">{t('legal.not_substitute')}</span>
+                          {t('legal.intro3')}
                         </p>
                         <ul className="space-y-1.5 list-none">
-                          {[
-                            'You are 18 years of age or older, or have obtained parental/guardian consent.',
-                            'You have consulted a physician before beginning any exercise or diet program, or accept full responsibility for not doing so.',
-                            'You understand that physical exercise carries inherent risk of injury or death and voluntarily assume all such risks.',
-                            'You understand that recommendations are generated by an AI and may not account for your full medical history.',
-                          ].map((item, i) => (
+                          {[0, 1, 2, 3].map((i) => (
                             <li key={i} className="flex gap-2">
                               <span className="text-[--color-iron-gold] shrink-0">▸</span>
-                              <span>{item}</span>
+                              <span>{t(`legal.item_${i}`)}</span>
                             </li>
                           ))}
                         </ul>
                         <p className="border-t border-white/10 pt-3">
-                          The developer of IronBuddy accepts{' '}
-                          <span className="text-gray-300">no liability</span> for any injury, illness, loss, or damage
-                          arising directly or indirectly from use of this application or its AI-generated content.
+                          {t('legal.outro')}{' '}
+                          <span className="text-gray-300">{t('legal.no_liability')}</span>{' '}
+                          {t('legal.outro2')}
                         </p>
                       </div>
                     </div>
@@ -1546,20 +1737,20 @@ export default function UserProfile() {
                 {settingsTab === 'delete_account' && (
                   <motion.div key="danger" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
                     <div className="bg-red-900/10 backdrop-blur-md border border-red-500/20 rounded-2xl p-6 space-y-6">
-                      <p className="text-red-400 font-black uppercase text-sm tracking-widest">⚠️ Danger Zone</p>
+                      <p className="text-red-400 font-black uppercase text-sm tracking-widest">{t('danger.title')}</p>
 
                       {/* Deactivate */}
                       <div className="space-y-2">
-                        <p className="text-white font-bold text-sm">Deactivate Account</p>
-                        <p className="text-gray-400 text-xs">Your account will be hidden. You can reactivate it by signing in again.</p>
+                        <p className="text-white font-bold text-sm">{t('danger.deactivate')}</p>
+                        <p className="text-gray-400 text-xs">{t('danger.deactivate_desc')}</p>
                         {dangerAction !== 'deactivate' ? (
                           <button onClick={() => { setDangerAction('deactivate'); setDangerError(''); setDangerPassword(''); }}
                             className="px-5 py-2 bg-orange-500/20 border border-orange-400/30 text-orange-300 font-black rounded-xl uppercase text-xs hover:bg-orange-500/30 transition-all">
-                            Deactivate
+                            {t('danger.deactivate_btn')}
                           </button>
                         ) : (
                           <div className="space-y-3">
-                            <PwField label="Confirm your password" value={dangerPassword} onChange={setDangerPassword} placeholder="Enter password" />
+                            <PwField label={t('danger.password_label')} value={dangerPassword} onChange={setDangerPassword} placeholder={t('danger.password_placeholder')} />
                             {dangerError && <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded-xl px-3 py-2">{dangerError}</p>}
                             <div className="flex gap-2">
                               <button disabled={dangerLoading} onClick={async () => {
@@ -1572,9 +1763,9 @@ export default function UserProfile() {
                                   setDangerError(err instanceof Error ? err.message : 'Failed');
                                 } finally { setDangerLoading(false); }
                               }} className="px-5 py-2 bg-orange-500 text-black font-black rounded-xl uppercase text-xs hover:bg-orange-400 active:scale-95 transition-all disabled:opacity-50">
-                                {dangerLoading ? 'Processing…' : 'Confirm Deactivate'}
+                                {dangerLoading ? t('common.processing') : t('danger.confirm_deactivate')}
                               </button>
-                              <button onClick={() => setDangerAction(null)} className="px-5 py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all">Cancel</button>
+                              <button onClick={() => setDangerAction(null)} className="px-5 py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all">{t('danger.cancel')}</button>
                             </div>
                           </div>
                         )}
@@ -1584,16 +1775,16 @@ export default function UserProfile() {
 
                       {/* Delete */}
                       <div className="space-y-2">
-                        <p className="text-white font-bold text-sm">Delete Account</p>
-                        <p className="text-gray-400 text-xs">Permanently delete your account and all data. This cannot be undone.</p>
+                        <p className="text-white font-bold text-sm">{t('danger.delete')}</p>
+                        <p className="text-gray-400 text-xs">{t('danger.delete_desc')}</p>
                         {dangerAction !== 'delete' ? (
                           <button onClick={() => { setDangerAction('delete'); setDangerError(''); setDangerPassword(''); }}
                             className="px-5 py-2 bg-red-500/20 border border-red-400/30 text-red-300 font-black rounded-xl uppercase text-xs hover:bg-red-500/30 transition-all">
-                            Delete Account
+                            {t('danger.delete_btn')}
                           </button>
                         ) : (
                           <div className="space-y-3">
-                            <PwField label="Confirm your password" value={dangerPassword} onChange={setDangerPassword} placeholder="Enter password" />
+                            <PwField label={t('danger.password_label')} value={dangerPassword} onChange={setDangerPassword} placeholder={t('danger.password_placeholder')} />
                             {dangerError && <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded-xl px-3 py-2">{dangerError}</p>}
                             <div className="flex gap-2">
                               <button disabled={dangerLoading} onClick={async () => {
@@ -1606,9 +1797,9 @@ export default function UserProfile() {
                                   setDangerError(err instanceof Error ? err.message : 'Failed');
                                 } finally { setDangerLoading(false); }
                               }} className="px-5 py-2 bg-red-600 text-white font-black rounded-xl uppercase text-xs hover:bg-red-500 active:scale-95 transition-all disabled:opacity-50">
-                                {dangerLoading ? 'Deleting…' : '🗑️ Permanently Delete'}
+                                {dangerLoading ? t('common.processing') : t('danger.confirm_delete')}
                               </button>
-                              <button onClick={() => setDangerAction(null)} className="px-5 py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all">Cancel</button>
+                              <button onClick={() => setDangerAction(null)} className="px-5 py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all">{t('danger.cancel')}</button>
                             </div>
                           </div>
                         )}
@@ -1619,11 +1810,61 @@ export default function UserProfile() {
               </AnimatePresence>
                 </div>{/* end content panel */}
               </div>{/* end sidebar + content flex */}
+
             </motion.div>
           )}
 
         </AnimatePresence>
       </main>
+
+      {/* ── Finish workout notes prompt ────────────────────── */}
+      <AnimatePresence>
+        {showNotesPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="card-gold max-w-sm w-full"
+            >
+              <div className="bg-[#0d0d10] p-6 rounded-[calc(1.25rem-1px)] space-y-4">
+                <div>
+                  <p className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.3em] uppercase">Workout Complete 🎉</p>
+                  <h3 className="text-lg font-black uppercase italic mt-0.5">How did it go?</h3>
+                </div>
+                <textarea
+                  value={notesInput}
+                  onChange={(e) => setNotesInput(e.target.value)}
+                  placeholder="Optional notes — e.g. felt strong, increased bench to 80kg…"
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm
+                    focus:border-yellow-300/60 focus:outline-none transition-all placeholder:text-gray-600 resize-none"
+                />
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => finishWorkout()}
+                    className="flex-1 py-3 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all"
+                  >
+                    Skip
+                  </button>
+                  <button
+                    onClick={() => finishWorkout(notesInput.trim() || undefined)}
+                    className="flex-1 py-3 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs hover:brightness-110 hover:scale-[1.02] active:scale-95 transition-all"
+                  >
+                    Save & Finish ✓
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Profile photo lightbox ────────────────────────── */}
       <AnimatePresence>
@@ -1649,7 +1890,7 @@ export default function UserProfile() {
                 className="w-full max-h-[70vh] object-contain rounded-2xl border-2 border-yellow-300/40 shadow-[0_0_40px_rgba(250,204,21,0.2)]"
               />
               <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">
-                {profile.name || 'Athlete'}
+                {profile.name || t('common.athlete')}
               </p>
               <div className="flex gap-3 w-full">
                 <button
@@ -1657,14 +1898,14 @@ export default function UserProfile() {
                   className="flex-1 py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs
                     hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200"
                 >
-                  📷 Change Photo
+                  📷 {t('profile.upload_photo')}
                 </button>
                 <button
                   onClick={() => setViewingAvatar(false)}
                   className="flex-1 py-2.5 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs
                     hover:text-white transition-all"
                 >
-                  Close
+                  {t('common.close')}
                 </button>
               </div>
             </motion.div>
@@ -1695,7 +1936,8 @@ function SectionHeader({ title, sub }: { title: string; sub: string }) {
   );
 }
 
-function GoalDonut({ goalData, goal, large }: { goalData: { name: string; value: number; color: string }[]; goal: string; large?: boolean }) {
+function GoalDonut({ goalData, goal, large }: { goalData: { key: string; value: number; color: string }[]; goal: string; large?: boolean }) {
+  const { t } = useTranslation();
   const size = large ? 280 : 200;
   return (
     <motion.div
@@ -1720,18 +1962,21 @@ function GoalDonut({ goalData, goal, large }: { goalData: { name: string; value:
       </ResponsiveContainer>
       <div className="flex flex-wrap gap-3 justify-center">
         {goalData.map((d) => (
-          <span key={d.name} className="flex items-center gap-1.5 text-xs text-gray-300 font-semibold">
+          <span key={d.key} className="flex items-center gap-1.5 text-xs text-gray-300 font-semibold">
             <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: d.color }} />
-            {d.name}
+            {t(d.key)}
           </span>
         ))}
       </div>
-      <p className="text-xs text-gray-500">{goal || 'No goal set yet'}</p>
+      <p className="text-xs text-gray-500">
+        {goal ? t(`goals.${goal.toLowerCase().replace(/ /g, '_')}`) : t('goals.no_goal')}
+      </p>
     </motion.div>
   );
 }
 
 function MealSteps({ steps }: { steps: string[] }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
     <div className="border-t border-white/10 pt-3">
@@ -1739,7 +1984,7 @@ function MealSteps({ steps }: { steps: string[] }) {
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-yellow-300 transition-colors"
       >
-        👨‍🍳 How to prepare
+        {t('meals.how_to_prepare')}
         <span className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>▾</span>
       </button>
       <AnimatePresence>
@@ -1767,6 +2012,7 @@ function MealSteps({ steps }: { steps: string[] }) {
 }
 
 function MealCard({ meals, onNavigate }: { meals: AIMealItem[] | null; onNavigate: () => void }) {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -1776,9 +2022,9 @@ function MealCard({ meals, onNavigate }: { meals: AIMealItem[] | null; onNavigat
         hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)] transition-all duration-300"
     >
       <button onClick={onNavigate} className="flex items-center justify-between group text-left">
-        <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">🥗 AI Meal Suggestions</p>
+        <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">{t('meals.ai_tab')}</p>
         <span className="text-gray-600 group-hover:text-yellow-300 text-xs font-bold uppercase tracking-wide transition-colors">
-          View all →
+          {t('meals.view_all')}
         </span>
       </button>
       {meals === null ? (
@@ -1788,14 +2034,14 @@ function MealCard({ meals, onNavigate }: { meals: AIMealItem[] | null; onNavigat
             hover:border-yellow-300/30 hover:bg-yellow-300/5 transition-all duration-150"
         >
           <span className="text-3xl">🥗</span>
-          <p className="text-gray-400 text-xs">Tap to generate your AI meal plan</p>
+          <p className="text-gray-400 text-xs">{t('meals.tap_to_generate')}</p>
         </button>
       ) : (
         <>
           {[
-            { label: '☀️ Breakfast', meal: meals[0] },
-            { label: '🌤️ Lunch',     meal: meals[1] },
-            { label: '🌙 Dinner',    meal: meals[2] },
+            { label: `☀️ ${t('meals.breakfast')}`, meal: meals[0] },
+            { label: `🌤️ ${t('meals.lunch')}`,     meal: meals[1] },
+            { label: `🌙 ${t('meals.dinner')}`,    meal: meals[2] },
           ].map(({ label, meal }) => meal && (
             <button
               key={meal.meal}
@@ -1859,33 +2105,3 @@ function PwField({ label, value, onChange, placeholder }: { label: string; value
   );
 }
 
-function AchievementsCard({ onboarded }: { onboarded: boolean }) {
-  const achievements = [
-    { icon: '🏋️', label: 'First Login', done: true },
-    { icon: '📋', label: 'Profile Complete', done: onboarded },
-    { icon: '🔥', label: '7-Day Streak', done: false },
-    { icon: '💪', label: '10 Workouts', done: false },
-    { icon: '🥗', label: 'Nutrition Set', done: false },
-    { icon: '🏆', label: 'First Goal', done: false },
-  ];
-  return (
-    <motion.div {...fadeUp(0.3)}
-      className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6
-        hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)] transition-all duration-300">
-      <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest mb-5">🏆 Achievements</p>
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-        {achievements.map((a, i) => (
-          <motion.div key={a.label}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.35, delay: 0.35 + i * 0.06 }}
-            className={`flex flex-col items-center gap-2 p-3 rounded-xl border text-center transition-all duration-300 ${
-              a.done ? 'bg-yellow-300/10 border-yellow-300/30 shadow-[0_0_10px_rgba(253,224,71,0.15)]' : 'bg-white/5 border-white/5 opacity-30'}`}>
-            <span className="text-2xl">{a.icon}</span>
-            <p className={`text-xs font-bold uppercase leading-tight ${a.done ? 'text-[--color-iron-gold]' : 'text-gray-400'}`}>{a.label}</p>
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-  );
-}
