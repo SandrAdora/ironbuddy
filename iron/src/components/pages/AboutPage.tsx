@@ -1,53 +1,7 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Link } from 'react-router-dom';
-
-const features = [
-  {
-    icon: '🦾',
-    title: 'AI Coach',
-    desc: 'Chat with your personal AI fitness coach 24/7. Get custom workout advice, nutrition tips, and motivation tailored to your goals and body.',
-  },
-  {
-    icon: '💪',
-    title: 'Workout Plans',
-    desc: 'AI-generated training programs built around your equipment, experience level, and goals — from fat loss to muscle building.',
-  },
-  {
-    icon: '🥗',
-    title: 'Meal Plans',
-    desc: 'Personalised weekly nutrition plans with step-by-step preparation instructions and ingredient scaling for any serving size.',
-  },
-  {
-    icon: '📈',
-    title: 'Progress Tracking',
-    desc: 'Log your weight, track workout sessions, and visualise your gains with charts showing streaks, volume, and body trends.',
-  },
-  {
-    icon: '💬',
-    title: 'Community',
-    desc: 'Connect with other athletes, share progress, send direct messages and react to posts — because every champion needs a crew.',
-  },
-  {
-    icon: '🎬',
-    title: 'Workout Videos',
-    desc: 'Curated exercise video library so you always know exactly how to perform every movement safely and effectively.',
-  },
-];
-
-const stats = [
-  { value: '10+', label: 'AI Features' },
-  { value: '∞', label: 'Workout Plans' },
-  { value: '24/7', label: 'Coach Access' },
-  { value: '100%', label: 'Personalised' },
-];
-
-const steps = [
-  { step: '01', title: 'Create Your Profile', desc: 'Tell us your goal, experience level, equipment and dietary preferences.' },
-  { step: '02', title: 'Get Your Plan', desc: 'Our AI builds a personalised workout and meal plan in seconds.' },
-  { step: '03', title: 'Train & Track', desc: 'Log sessions, track weight, and watch your progress compound over time.' },
-  { step: '04', title: 'Stay Connected', desc: 'Chat with your AI coach anytime and link up with the community.' },
-];
+import { useTranslation } from 'react-i18next';
 
 function FadeIn({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef(null);
@@ -66,12 +20,43 @@ function FadeIn({ children, delay = 0, className = '' }: { children: React.React
 }
 
 export default function About() {
+  const { t } = useTranslation();
+
+  const stats = [
+    { value: '10+', label: t('about.stats.features') },
+    { value: '∞',   label: t('about.stats.plans') },
+    { value: '24/7', label: t('about.stats.access') },
+    { value: '100%', label: t('about.stats.personalised') },
+  ];
+
+  const features = [
+    { icon: '🦾', title: t('about.features.ai_coach_title'),  desc: t('about.features.ai_coach_desc') },
+    { icon: '💪', title: t('about.features.workouts_title'),  desc: t('about.features.workouts_desc') },
+    { icon: '🥗', title: t('about.features.meals_title'),     desc: t('about.features.meals_desc') },
+    { icon: '📈', title: t('about.features.progress_title'),  desc: t('about.features.progress_desc') },
+    { icon: '💬', title: t('about.features.community_title'), desc: t('about.features.community_desc') },
+    { icon: '🎬', title: t('about.features.videos_title'),    desc: t('about.features.videos_desc') },
+  ];
+
+  const missionCards = [
+    { icon: '🎯', text: t('about.mission_cards.goals') },
+    { icon: '🧠', text: t('about.mission_cards.ai') },
+    { icon: '🔄', text: t('about.mission_cards.adapts') },
+    { icon: '🤝', text: t('about.mission_cards.community') },
+  ];
+
+  const steps = [
+    { step: '01', title: t('about.steps.s1_title'), desc: t('about.steps.s1_desc') },
+    { step: '02', title: t('about.steps.s2_title'), desc: t('about.steps.s2_desc') },
+    { step: '03', title: t('about.steps.s3_title'), desc: t('about.steps.s3_desc') },
+    { step: '04', title: t('about.steps.s4_title'), desc: t('about.steps.s4_desc') },
+  ];
+
   return (
     <div className="min-h-screen bg-[--color-gym-dark] text-white overflow-x-hidden">
 
       {/* ── Hero ── */}
       <section className="relative pt-36 pb-24 px-6 flex flex-col items-center text-center overflow-hidden">
-        {/* Background glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-yellow-300/5 rounded-full blur-[120px] pointer-events-none" />
 
         <motion.p
@@ -80,7 +65,7 @@ export default function About() {
           transition={{ duration: 0.5 }}
           className="text-[--color-iron-gold] text-xs font-black tracking-[0.4em] uppercase mb-4"
         >
-          Your AI Fitness Companion
+          {t('about.badge')}
         </motion.p>
 
         <motion.h1
@@ -89,11 +74,11 @@ export default function About() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-5xl md:text-7xl font-black uppercase italic leading-none mb-6"
         >
-          About{' '}
+          {t('about.title_pre')}
           <span className="text-[--color-iron-gold] drop-shadow-[0_0_30px_rgba(250,204,21,0.5)]">
             Iron
           </span>
-          Buddy
+          Buddy{t('about.title_suf')}
         </motion.h1>
 
         <motion.p
@@ -102,9 +87,7 @@ export default function About() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="text-gray-400 text-lg max-w-2xl leading-relaxed"
         >
-          IronBuddy is a next-generation fitness platform powered by AI. We combine smart coaching,
-          personalised nutrition, and community to help every athlete — beginner or elite — unlock
-          their full potential.
+          {t('about.tagline')}
         </motion.p>
 
         <motion.div
@@ -118,13 +101,13 @@ export default function About() {
               hover:bg-yellow-200 hover:scale-[1.03] active:scale-95 transition-all duration-200
               shadow-[0_0_30px_rgba(253,224,71,0.3)]"
           >
-            Get Started
+            {t('about.cta_start')}
           </Link>
           <Link to="/contact"
             className="px-8 py-3 bg-white/5 border border-white/10 text-white font-black rounded-xl uppercase text-sm
               hover:bg-white/10 hover:border-white/20 active:scale-95 transition-all duration-200"
           >
-            Contact Us
+            {t('about.cta_contact')}
           </Link>
         </motion.div>
       </section>
@@ -152,30 +135,18 @@ export default function About() {
       {/* ── Mission ── */}
       <section className="max-w-5xl mx-auto px-6 py-24 grid md:grid-cols-2 gap-16 items-center">
         <FadeIn>
-          <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.4em] uppercase mb-3">Our Mission</p>
+          <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.4em] uppercase mb-3">{t('about.mission.label')}</p>
           <h2 className="text-4xl font-black uppercase italic leading-tight mb-6">
-            Fitness for<br />
-            <span className="text-[--color-iron-gold]">Everyone.</span>
+            {t('about.mission.title1')}<br />
+            <span className="text-[--color-iron-gold]">{t('about.mission.title2')}</span>
           </h2>
-          <p className="text-gray-400 leading-relaxed mb-4">
-            We believe world-class fitness coaching shouldn't be reserved for people who can afford
-            a personal trainer. IronBuddy puts an expert AI coach, a nutritionist, and a training
-            partner in your pocket — completely free.
-          </p>
-          <p className="text-gray-400 leading-relaxed">
-            Whether you're picking up a barbell for the first time or chasing a new PR, IRON adapts
-            to where you are and builds a path to where you want to be.
-          </p>
+          <p className="text-gray-400 leading-relaxed mb-4">{t('about.mission.p1')}</p>
+          <p className="text-gray-400 leading-relaxed">{t('about.mission.p2')}</p>
         </FadeIn>
 
         <FadeIn delay={0.15}>
           <div className="grid grid-cols-2 gap-4">
-            {[
-              { icon: '🎯', text: 'Goal-driven plans' },
-              { icon: '🧠', text: 'AI-powered advice' },
-              { icon: '🔄', text: 'Adapts over time' },
-              { icon: '🤝', text: 'Community support' },
-            ].map((item) => (
+            {missionCards.map((item) => (
               <div key={item.text}
                 className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col gap-2
                   hover:border-yellow-300/30 hover:bg-yellow-300/5 transition-all duration-300"
@@ -192,8 +163,8 @@ export default function About() {
       <section className="bg-white/3 border-y border-white/10 py-24 px-6">
         <div className="max-w-5xl mx-auto">
           <FadeIn className="text-center mb-16">
-            <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.4em] uppercase mb-3">What's Inside</p>
-            <h2 className="text-4xl font-black uppercase italic">Everything You Need</h2>
+            <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.4em] uppercase mb-3">{t('about.features.label')}</p>
+            <h2 className="text-4xl font-black uppercase italic">{t('about.features.title')}</h2>
           </FadeIn>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -215,14 +186,12 @@ export default function About() {
       {/* ── How it works ── */}
       <section className="max-w-4xl mx-auto px-6 py-24">
         <FadeIn className="text-center mb-16">
-          <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.4em] uppercase mb-3">Simple Process</p>
-          <h2 className="text-4xl font-black uppercase italic">How It Works</h2>
+          <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.4em] uppercase mb-3">{t('about.steps.label')}</p>
+          <h2 className="text-4xl font-black uppercase italic">{t('about.steps.title')}</h2>
         </FadeIn>
 
         <div className="relative">
-          {/* Vertical line */}
           <div className="absolute left-6 top-0 bottom-0 w-px bg-white/10 hidden md:block" />
-
           <div className="space-y-10">
             {steps.map((s, i) => (
               <FadeIn key={s.step} delay={i * 0.12}>
@@ -254,17 +223,17 @@ export default function About() {
               🦾
             </motion.span>
             <h2 className="text-3xl font-black uppercase italic mb-4">
-              Ready to Start Training?
+              {t('about.cta2.title')}
             </h2>
             <p className="text-gray-400 mb-8 max-w-md mx-auto">
-              Join IronBuddy today and get a personalised AI workout plan, meal plan, and coach — all in one place.
+              {t('about.cta2.desc')}
             </p>
             <Link to="/signup"
               className="inline-block px-10 py-4 bg-yellow-300 !text-black font-black rounded-xl uppercase text-sm
                 hover:bg-yellow-200 hover:scale-[1.03] active:scale-95 transition-all duration-200
                 shadow-[0_0_40px_rgba(253,224,71,0.3)]"
             >
-              Create Free Account
+              {t('about.cta2.btn')}
             </Link>
           </div>
         </section>

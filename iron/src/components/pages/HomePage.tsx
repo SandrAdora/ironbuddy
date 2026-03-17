@@ -1,17 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '../../context/userContext.js';
 import { Link, useNavigate } from "react-router-dom";
 import React from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiRequestPasswordReset } from '../../api';
 import { useTranslation } from 'react-i18next';
-
-const NAV_SECTIONS = [
-  { id: 'hero',          key: 'home' },
-  { id: 'how-it-works',  key: 'how_it_works' },
-  { id: 'features',      key: 'features' },
-  { id: 'cta',           key: 'join' },
-];
 
 export default function Home() {
   const { login, logout, token } = useUser();
@@ -30,37 +23,6 @@ export default function Home() {
   const [forgotSending, setForgotSending] = useState(false);
   const [forgotDone, setForgotDone]       = useState(false);
   const [forgotError, setForgotError]     = useState('');
-
-  // Section nav
-  const [navVisible, setNavVisible]       = useState(false);
-  const [activeSection, setActiveSection] = useState('hero');
-  // langRef kept for future use
-  const langRef = useRef<HTMLDivElement>(null); void langRef;
-
-  useEffect(() => {
-    const onScroll = () => setNavVisible(window.scrollY > 80);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  useEffect(() => {
-    const observers: IntersectionObserver[] = [];
-    NAV_SECTIONS.forEach(({ id }) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const obs = new IntersectionObserver(
-        ([entry]) => { if (entry.isIntersecting) setActiveSection(id); },
-        { rootMargin: '-40% 0px -55% 0px' }
-      );
-      obs.observe(el);
-      observers.push(obs);
-    });
-    return () => observers.forEach(o => o.disconnect());
-  }, []);
-
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -124,45 +86,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[--color-gym-dark] text-white">
-
-      {/* ── Section Nav ─────────────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {navVisible && (
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.25 }}
-            className="fixed z-40 left-0 right-0 flex justify-center"
-            style={{ top: '68px' }}
-          >
-            <div
-              className="flex items-center gap-1 px-3 py-2 rounded-2xl"
-              style={{
-                background: 'rgba(10,10,13,0.92)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                backdropFilter: 'blur(20px)',
-                boxShadow: '0 4px 32px rgba(0,0,0,0.6)',
-              }}
-            >
-              {NAV_SECTIONS.map(({ id, key }) => (
-                <button
-                  key={id}
-                  onClick={() => scrollTo(id)}
-                  className="px-3.5 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-200"
-                  style={{
-                    color: activeSection === id ? '#facc15' : 'rgba(255,255,255,0.45)',
-                    background: activeSection === id ? 'rgba(250,204,21,0.1)' : 'transparent',
-                    border: activeSection === id ? '1px solid rgba(250,204,21,0.2)' : '1px solid transparent',
-                  }}
-                >
-                  {t(`home.section_nav.${key}`)}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ── Hero ────────────────────────────────────────────────────────────────── */}
       <section id="hero" className="relative min-h-screen flex items-center pt-16 overflow-hidden">
@@ -317,7 +240,7 @@ export default function Home() {
               >
                 <div className="absolute -top-4 left-6 text-[10px] font-black tracking-widest text-[--color-iron-gold] bg-[#0a0a0d] px-2">{step}</div>
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mb-4"
-                  style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.15)' }}>
+                  style={{ background: 'rgba(200, 138, 13, 0.08)', border: '1px solid rgba(250,204,21,0.15)' }}>
                   {icon}
                 </div>
                 <h3 className="text-lg font-black uppercase italic mb-2">{title}</h3>
@@ -378,7 +301,7 @@ export default function Home() {
           <Link
             to="/signup"
             className="inline-block px-10 py-4 font-black rounded-2xl uppercase tracking-wider text-sm transition-all duration-200
-              bg-yellow-300 text-black hover:brightness-110 hover:shadow-[0_0_36px_rgba(250,204,21,0.5)] hover:scale-[1.03] active:scale-95"
+               text-black hover:brightness-110 hover:shadow-[0_0_36px_rgba(250,204,21,0.5)] hover:scale-[1.03] active:scale-95"
           >
             {t('home.cta.btn')}
           </Link>

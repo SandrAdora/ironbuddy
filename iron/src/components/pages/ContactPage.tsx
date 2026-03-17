@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import type { JSX } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export default function Contact(): JSX.Element {
+  const { t } = useTranslation();
   const [name, setName]       = useState('');
   const [email, setEmail]     = useState('');
   const [message, setMessage] = useState('');
@@ -49,11 +51,11 @@ export default function Contact(): JSX.Element {
         >
           <div className="inline-flex items-center gap-3 mb-4">
             <div className="h-px w-8" style={{ background: 'linear-gradient(90deg, transparent, rgba(250,204,21,0.6))' }} />
-            <span className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.35em] uppercase opacity-80">Get In Touch</span>
+            <span className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.35em] uppercase opacity-80">{t('contact.badge')}</span>
             <div className="h-px w-8" style={{ background: 'linear-gradient(90deg, rgba(250,204,21,0.6), transparent)' }} />
           </div>
-          <h1 className="text-4xl font-black uppercase italic text-white">Contact Us</h1>
-          <p className="text-gray-500 text-sm mt-2">Questions or support? We'll get back to you.</p>
+          <h1 className="text-4xl font-black uppercase italic text-white">{t('contact.title')}</h1>
+          <p className="text-gray-500 text-sm mt-2">{t('contact.subtitle')}</p>
         </motion.div>
 
         {/* Card */}
@@ -70,23 +72,23 @@ export default function Contact(): JSX.Element {
                   style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)' }}>
                   ✅
                 </div>
-                <p className="text-white font-black uppercase tracking-wide text-lg">Message Sent!</p>
-                <p className="text-gray-400 text-sm">We'll be in touch soon.</p>
+                <p className="text-white font-black uppercase tracking-wide text-lg">{t('contact.sent_title')}</p>
+                <p className="text-gray-400 text-sm">{t('contact.sent_desc')}</p>
                 <button
                   onClick={() => setStatus('idle')}
                   className="mt-2 px-8 py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs
                     hover:brightness-110 hover:scale-[1.02] active:scale-95 transition-all"
                 >
-                  Send Another
+                  {t('contact.send_another')}
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 <FormField
-                  label="Name"
+                  label={t('contact.name')}
                   value={name}
                   onChange={setName}
-                  placeholder="Your name"
+                  placeholder={t('contact.name_placeholder')}
                   required
                 />
                 <FormField
@@ -98,11 +100,11 @@ export default function Contact(): JSX.Element {
                   required
                 />
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.18em] ml-0.5">Message</label>
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.18em] ml-0.5">{t('contact.message')}</label>
                   <textarea
                     rows={5} required value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="How can we help you?"
+                    placeholder={t('contact.message_placeholder')}
                     className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-gray-600 resize-none
                       bg-white/[0.04] border border-white/10
                       focus:border-yellow-300/50 focus:bg-white/[0.06]
@@ -126,7 +128,7 @@ export default function Contact(): JSX.Element {
                     hover:brightness-110 hover:shadow-[0_0_28px_rgba(250,204,21,0.5)] hover:scale-[1.02]
                     active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {status === 'sending' ? 'Sending…' : 'Send Message →'}
+                  {status === 'sending' ? t('contact.submitting') : t('contact.submit')}
                 </button>
               </form>
             )}
