@@ -376,11 +376,11 @@ export default function ProgressTab({ token, sessions, currentWeight }: Props) {
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 8 }}
-                  className="flex items-center justify-between text-sm"
+                  className="flex items-center justify-between text-sm px-3 py-1.5 rounded-lg bg-yellow-300/5 border border-yellow-300/10"
                 >
-                  <span className="text-gray-400">{l.logged_at}</span>
+                  <span className="text-yellow-200/70">{l.logged_at}</span>
                   <div className="flex items-center gap-3">
-                    <span className="text-white font-black">{l.weight} kg</span>
+                    <span className="text-yellow-300 font-black">{l.weight} kg</span>
                     <button
                       onClick={() => handleDeleteWeight(l.id)}
                       className="text-gray-600 hover:text-red-400 text-xs transition-colors"
