@@ -355,5 +355,79 @@
       "features": "Features",
       "join": "Join Free"
     }
+  },
+  "about": {
+    "title_pre": "About ",
+    "title_suf": "",
+    "badge": "Your AI Fitness Companion",
+    "tagline": "IronBuddy is a next-generation fitness platform powered by AI. We combine smart coaching, personalised nutrition, and community to help every athlete — beginner or elite — unlock their full potential.",
+    "cta_start": "Get Started",
+    "cta_contact": "Contact Us",
+    "stats": {
+      "features": "AI Features",
+      "plans": "Workout Plans",
+      "access": "Coach Access",
+      "personalised": "Personalised"
+    },
+    "mission": {
+      "label": "Our Mission",
+      "title1": "Fitness for",
+      "title2": "Everyone.",
+      "p1": "We believe world-class fitness coaching shouldn't be reserved for people who can afford a personal trainer. IronBuddy puts an expert AI coach, a nutritionist, and a training partner in your pocket — completely free.",
+      "p2": "Whether you're picking up a barbell for the first time or chasing a new PR, IRON adapts to where you are and builds a path to where you want to be."
+    },
+    "mission_cards": {
+      "goals": "Goal-driven plans",
+      "ai": "AI-powered advice",
+      "adapts": "Adapts over time",
+      "community": "Community support"
+    },
+    "features": {
+      "label": "What's Inside",
+      "title": "Everything You Need",
+      "ai_coach_title": "AI Coach",
+      "ai_coach_desc": "Chat with your personal AI fitness coach 24/7. Get custom workout advice, nutrition tips, and motivation tailored to your goals and body.",
+      "workouts_title": "Workout Plans",
+      "workouts_desc": "AI-generated training programs built around your equipment, experience level, and goals — from fat loss to muscle building.",
+      "meals_title": "Meal Plans",
+      "meals_desc": "Personalised weekly nutrition plans with step-by-step preparation instructions and ingredient scaling for any serving size.",
+      "progress_title": "Progress Tracking",
+      "progress_desc": "Log your weight, track workout sessions, and visualise your gains with charts showing streaks, volume, and body trends.",
+      "community_title": "Community",
+      "community_desc": "Connect with other athletes, share progress, send direct messages and react to posts — because every champion needs a crew.",
+      "videos_title": "Workout Videos",
+      "videos_desc": "Curated exercise video library so you always know exactly how to perform every movement safely and effectively."
+    },
+    "steps": {
+      "label": "Simple Process",
+      "title": "How It Works",
+      "s1_title": "Create Your Profile",
+      "s1_desc": "Tell us your goal, experience level, equipment and dietary preferences.",
+      "s2_title": "Get Your Plan",
+      "s2_desc": "Our AI builds a personalised workout and meal plan in seconds.",
+      "s3_title": "Train & Track",
+      "s3_desc": "Log sessions, track weight, and watch your progress compound over time.",
+      "s4_title": "Stay Connected",
+      "s4_desc": "Chat with your AI coach anytime and link up with the community."
+    },
+    "cta2": {
+      "title": "Ready to Start Training?",
+      "desc": "Join IronBuddy today and get a personalised AI workout plan, meal plan, and coach — all in one place.",
+      "btn": "Create Free Account"
+    }
+  },
+  "contact": {
+    "badge": "Get In Touch",
+    "title": "Contact Us",
+    "subtitle": "Questions or support? We'll get back to you.",
+    "name": "Name",
+    "name_placeholder": "Your name",
+    "message": "Message",
+    "message_placeholder": "How can we help you?",
+    "submit": "Send Message →",
+    "submitting": "Sending…",
+    "sent_title": "Message Sent!",
+    "sent_desc": "We'll be in touch soon.",
+    "send_another": "Send Another"
   }
 }

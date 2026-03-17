@@ -355,5 +355,79 @@
       "features": "Funkciók",
       "join": "Csatlakozás"
     }
+  },
+  "about": {
+    "title_pre": "Az ",
+    "title_suf": "ról",
+    "badge": "Az AI fitness kísérőd",
+    "tagline": "Az IronBuddy egy következő generációs fitness platform, amelyet MI hajt. Kombináljuk az okos edzést, a személyre szabott táplálkozást és a közösséget, hogy minden sportolónak – kezdőnek vagy elitnek – segítsünk kiaknázni a teljes potenciálját.",
+    "cta_start": "Kezdés",
+    "cta_contact": "Kapcsolat",
+    "stats": {
+      "features": "MI funkciók",
+      "plans": "Edzéstervek",
+      "access": "Coach hozzáférés",
+      "personalised": "Személyre szabott"
+    },
+    "mission": {
+      "label": "A küldetésünk",
+      "title1": "Fitness",
+      "title2": "Mindenkinek.",
+      "p1": "Hisszük, hogy a világszínvonalú fitness edzés nem csak azok számára elérhető, akik megengedhetnek maguknak személyi edzőt. Az IronBuddy egy szakértő MI coach-ot és edzőpartnert tesz a zsebedbe – teljesen ingyen.",
+      "p2": "Akár először nyúlsz súlyrúdhoz, akár új személyi rekordot kergetsz, az IRON alkalmazkodik ahhoz, ahol vagy, és utat épít oda, ahol lenni szeretnél."
+    },
+    "mission_cards": {
+      "goals": "Célvezérelt tervek",
+      "ai": "MI-alapú tanácsok",
+      "adapts": "Idővel alkalmazkodik",
+      "community": "Közösségi támogatás"
+    },
+    "features": {
+      "label": "Mi van benne",
+      "title": "Minden, amire szükséged van",
+      "ai_coach_title": "MI Edző",
+      "ai_coach_desc": "Csevegj személyes MI fitnesscoach-oddal 24/7. Kapj egyéni edzési tanácsokat, táplálkozási tippeket és motivációt.",
+      "workouts_title": "Edzéstervek",
+      "workouts_desc": "MI által generált edzésprogramok felszerelésed, tapasztalati szinted és céljaid köré – zsírégetéstől izomépítésig.",
+      "meals_title": "Étkezési tervek",
+      "meals_desc": "Személyre szabott heti táplálkozási tervek lépésről lépésre szóló elkészítési utasításokkal.",
+      "progress_title": "Fejlődéskövetés",
+      "progress_desc": "Rögzítsd a súlyodat, kövesd az edzésszekciókat és vizualizáld a fejlődésed grafikonokkal.",
+      "community_title": "Közösség",
+      "community_desc": "Kapcsolódj más sportolókhoz, oszd meg a fejlődésed és küldj közvetlen üzeneteket – mert minden bajnoknak szüksége van csapatra.",
+      "videos_title": "Edzésvideók",
+      "videos_desc": "Válogatott gyakorlatvideó-könyvtár, hogy mindig pontosan tudd, hogyan végezd el biztonságosan az egyes mozdulatokat."
+    },
+    "steps": {
+      "label": "Egyszerű folyamat",
+      "title": "Hogyan működik",
+      "s1_title": "Hozd létre a profilodat",
+      "s1_desc": "Mondd el nekünk a célodat, tapasztalati szintedet, felszerelésedet és étkezési preferenciáidat.",
+      "s2_title": "Kapd meg a tervedet",
+      "s2_desc": "Az MI másodpercek alatt személyre szabott edzés- és étkezési tervet készít.",
+      "s3_title": "Edzz és kövesd",
+      "s3_desc": "Rögzítsd a szekciókat, kövesd a súlyodat és figyeld, ahogy a fejlődésed halmozódik.",
+      "s4_title": "Maradj kapcsolatban",
+      "s4_desc": "Csevegj bármikor az MI coach-oddal és kapcsolódj a közösséghez."
+    },
+    "cta2": {
+      "title": "Készen állsz az edzés megkezdésére?",
+      "desc": "Csatlakozz az IronBuddy-hoz és kapj személyre szabott MI edzéstervet, étkezési tervet és coach-ot – mindezt egy helyen.",
+      "btn": "Ingyenes fiók létrehozása"
+    }
+  },
+  "contact": {
+    "badge": "Vedd fel velünk a kapcsolatot",
+    "title": "Kapcsolat",
+    "subtitle": "Kérdések vagy támogatás? Hamarosan visszajelzünk.",
+    "name": "Név",
+    "name_placeholder": "A neved",
+    "message": "Üzenet",
+    "message_placeholder": "Hogyan segíthetünk?",
+    "submit": "Üzenet küldése →",
+    "submitting": "Küldés…",
+    "sent_title": "Üzenet elküldve!",
+    "sent_desc": "Hamarosan felvesszük veled a kapcsolatot.",
+    "send_another": "Újabb küldése"
   }
 }

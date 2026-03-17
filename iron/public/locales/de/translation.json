@@ -355,5 +355,79 @@
       "features": "Funktionen",
       "join": "Kostenlos starten"
     }
+  },
+  "about": {
+    "title_pre": "Über ",
+    "title_suf": "",
+    "badge": "Dein KI-Fitness-Begleiter",
+    "tagline": "IronBuddy ist eine Fitness-Plattform der nächsten Generation, powered by KI. Wir verbinden smartes Coaching, personalisierte Ernährung und Community, um jedem Athleten – Anfänger oder Elite – sein volles Potenzial zu ermöglichen.",
+    "cta_start": "Loslegen",
+    "cta_contact": "Kontakt",
+    "stats": {
+      "features": "KI-Funktionen",
+      "plans": "Trainingspläne",
+      "access": "Coach-Zugang",
+      "personalised": "Personalisiert"
+    },
+    "mission": {
+      "label": "Unsere Mission",
+      "title1": "Fitness für",
+      "title2": "Alle.",
+      "p1": "Wir glauben, dass erstklassiges Fitness-Coaching nicht nur für Menschen reserviert sein sollte, die sich einen Personal Trainer leisten können. IronBuddy legt einen KI-Coach, einen Ernährungsberater und einen Trainingspartner in deine Tasche – völlig kostenlos.",
+      "p2": "Egal ob du zum ersten Mal eine Hantelstange in die Hand nimmst oder einen neuen PR jagst – IRON passt sich an deinen Stand an und baut einen Weg zu deinem Ziel."
+    },
+    "mission_cards": {
+      "goals": "Zielorientierte Pläne",
+      "ai": "KI-gestützte Beratung",
+      "adapts": "Passt sich an",
+      "community": "Community-Support"
+    },
+    "features": {
+      "label": "Was drin ist",
+      "title": "Alles, was du brauchst",
+      "ai_coach_title": "KI-Coach",
+      "ai_coach_desc": "Chatte mit deinem persönlichen KI-Fitnesscoach 24/7. Erhalte individuelle Trainingsberatung, Ernährungstipps und Motivation.",
+      "workouts_title": "Trainingspläne",
+      "workouts_desc": "KI-generierte Trainingsprogramme rund um deine Ausrüstung, dein Erfahrungsniveau und deine Ziele – von Fettabbau bis Muskelaufbau.",
+      "meals_title": "Ernährungspläne",
+      "meals_desc": "Personalisierte Wochenernährungspläne mit Schritt-für-Schritt-Zubereitungsanleitungen und Zutatenanpassung.",
+      "progress_title": "Fortschrittsverfolgung",
+      "progress_desc": "Protokolliere dein Gewicht, verfolge Trainings-Sessions und visualisiere deine Fortschritte mit Charts.",
+      "community_title": "Community",
+      "community_desc": "Verbinde dich mit anderen Athleten, teile Fortschritte, sende Direktnachrichten – denn jeder Champion braucht eine Crew.",
+      "videos_title": "Trainingsvideos",
+      "videos_desc": "Kuratierte Übungsvideobibliothek, damit du immer genau weißt, wie du jede Bewegung sicher ausführst."
+    },
+    "steps": {
+      "label": "Einfacher Prozess",
+      "title": "So funktioniert es",
+      "s1_title": "Profil erstellen",
+      "s1_desc": "Teile uns dein Ziel, Erfahrungslevel, Ausrüstung und Ernährungspräferenzen mit.",
+      "s2_title": "Deinen Plan erhalten",
+      "s2_desc": "Unsere KI erstellt in Sekunden einen personalisierten Trainings- und Ernährungsplan.",
+      "s3_title": "Trainieren & verfolgen",
+      "s3_desc": "Protokolliere Sessions, verfolge dein Gewicht und beobachte wie dein Fortschritt wächst.",
+      "s4_title": "Verbunden bleiben",
+      "s4_desc": "Chatte jederzeit mit deinem KI-Coach und verbinde dich mit der Community."
+    },
+    "cta2": {
+      "title": "Bereit, mit dem Training zu beginnen?",
+      "desc": "Trete IronBuddy bei und erhalte einen personalisierten KI-Trainingsplan, Ernährungsplan und Coach – alles an einem Ort.",
+      "btn": "Kostenloses Konto erstellen"
+    }
+  },
+  "contact": {
+    "badge": "Kontakt aufnehmen",
+    "title": "Kontakt",
+    "subtitle": "Fragen oder Support? Wir melden uns bei dir.",
+    "name": "Name",
+    "name_placeholder": "Dein Name",
+    "message": "Nachricht",
+    "message_placeholder": "Wie können wir dir helfen?",
+    "submit": "Nachricht senden →",
+    "submitting": "Senden…",
+    "sent_title": "Nachricht gesendet!",
+    "sent_desc": "Wir melden uns bald bei dir.",
+    "send_another": "Weitere senden"
   }
 }

@@ -355,5 +355,79 @@
       "features": "Funciones",
       "join": "Unirse gratis"
     }
+  },
+  "about": {
+    "title_pre": "Sobre ",
+    "title_suf": "",
+    "badge": "Tu compañero fitness con IA",
+    "tagline": "IronBuddy es una plataforma fitness de nueva generación impulsada por IA. Combinamos coaching inteligente, nutrición personalizada y comunidad para ayudar a cada atleta — principiante o élite — a alcanzar su máximo potencial.",
+    "cta_start": "Empezar",
+    "cta_contact": "Contáctanos",
+    "stats": {
+      "features": "Funciones IA",
+      "plans": "Planes de entrenamiento",
+      "access": "Acceso al Coach",
+      "personalised": "Personalizado"
+    },
+    "mission": {
+      "label": "Nuestra Misión",
+      "title1": "Fitness para",
+      "title2": "Todos.",
+      "p1": "Creemos que el coaching fitness de primer nivel no debería estar reservado para quienes pueden pagar un entrenador personal. IronBuddy pone un coach IA experto en tu bolsillo — completamente gratis.",
+      "p2": "Ya sea que levantes una barra por primera vez o busques un nuevo PR, IRON se adapta a donde estás y construye un camino hacia donde quieres llegar."
+    },
+    "mission_cards": {
+      "goals": "Planes orientados a objetivos",
+      "ai": "Consejos impulsados por IA",
+      "adapts": "Se adapta con el tiempo",
+      "community": "Apoyo comunitario"
+    },
+    "features": {
+      "label": "Qué hay dentro",
+      "title": "Todo lo que necesitas",
+      "ai_coach_title": "Coach IA",
+      "ai_coach_desc": "Chatea con tu coach IA personal 24/7. Obtén consejos de entrenamiento, nutrición y motivación adaptados a tus objetivos.",
+      "workouts_title": "Planes de entrenamiento",
+      "workouts_desc": "Programas generados por IA en torno a tu equipo, nivel y objetivos — desde pérdida de grasa hasta ganancia muscular.",
+      "meals_title": "Planes de comidas",
+      "meals_desc": "Planes nutricionales semanales personalizados con instrucciones paso a paso y ajuste de ingredientes.",
+      "progress_title": "Seguimiento del progreso",
+      "progress_desc": "Registra tu peso, sigue tus sesiones y visualiza tus ganancias con gráficos.",
+      "community_title": "Comunidad",
+      "community_desc": "Conéctate con otros atletas, comparte tu progreso y envía mensajes directos — porque cada campeón necesita un equipo.",
+      "videos_title": "Vídeos de entrenamiento",
+      "videos_desc": "Biblioteca de vídeos de ejercicios seleccionados para que siempre sepas cómo realizar cada movimiento de forma segura."
+    },
+    "steps": {
+      "label": "Proceso sencillo",
+      "title": "Cómo funciona",
+      "s1_title": "Crea tu perfil",
+      "s1_desc": "Cuéntanos tu objetivo, nivel, equipo y preferencias dietéticas.",
+      "s2_title": "Obtén tu plan",
+      "s2_desc": "Nuestra IA crea un plan de entrenamiento y alimentación personalizado en segundos.",
+      "s3_title": "Entrena y sigue",
+      "s3_desc": "Registra sesiones, sigue tu peso y observa cómo tu progreso se acumula.",
+      "s4_title": "Mantente conectado",
+      "s4_desc": "Chatea con tu coach IA en cualquier momento y conéctate con la comunidad."
+    },
+    "cta2": {
+      "title": "¿Listo para empezar a entrenar?",
+      "desc": "Únete a IronBuddy hoy y obtén un plan de entrenamiento IA, plan alimenticio y coach — todo en un lugar.",
+      "btn": "Crear cuenta gratuita"
+    }
+  },
+  "contact": {
+    "badge": "Ponerse en contacto",
+    "title": "Contáctanos",
+    "subtitle": "¿Preguntas o soporte? Te responderemos.",
+    "name": "Nombre",
+    "name_placeholder": "Tu nombre",
+    "message": "Mensaje",
+    "message_placeholder": "¿Cómo podemos ayudarte?",
+    "submit": "Enviar mensaje →",
+    "submitting": "Enviando…",
+    "sent_title": "¡Mensaje enviado!",
+    "sent_desc": "Nos pondremos en contacto pronto.",
+    "send_another": "Enviar otro"
   }
 }
