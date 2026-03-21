@@ -1300,3 +1300,135 @@ class BodyMeasurementDetailView(APIView):
             return Response({'error': 'Not found'}, status=404)
         m.delete()
         return Response(status=204)
+
+
+# ── Exercise Library ──────────────────────────────────────────────────────────
+
+import requests as _http
+
+BODY_PARTS = [
+    'back', 'cardio', 'chest', 'lower arms', 'lower legs',
+    'neck', 'shoulders', 'upper arms', 'upper legs', 'waist',
+]
+
+def _fetch_all_exercises_from_api():
+    """Fetch exercises from ExerciseDB per body part and save to local DB."""
+    from .models import Exercise
+
+    api_key = os.environ.get('EXERCISE_DB', '')
+    if not api_key:
+        return False, 'EXERCISE_DB API key not set'
+
+    headers = {
+        'X-RapidAPI-Key': api_key,
+        'X-RapidAPI-Host': 'exercisedb.p.rapidapi.com',
+    }
+
+    all_exercises = []
+    for body_part in BODY_PARTS:
+        try:
+            resp = _http.get(
+                f'https://exercisedb.p.rapidapi.com/exercises/bodyPart/{body_part.replace(" ", "%20")}',
+                headers=headers,
+                params={'limit': '50', 'offset': '0'},
+                timeout=15,
+            )
+            if resp.ok:
+                all_exercises.extend(resp.json() if isinstance(resp.json(), list) else [])
+        except Exception:
+            continue
+
+    if not all_exercises:
+        return False, 'No exercises returned from ExerciseDB API'
+
+    to_create = []
+    for ex in all_exercises:
+        to_create.append(Exercise(
+            exercise_id=ex.get('id', ''),
+            name=ex.get('name', ''),
+            body_part=ex.get('bodyPart', ''),
+            target=ex.get('target', ''),
+            secondary_muscles=ex.get('secondaryMuscles', []),
+            equipment=ex.get('equipment', ''),
+            gif_url=ex.get('gifUrl', ''),
+            instructions=ex.get('instructions', []),
+        ))
+
+    Exercise.objects.bulk_create(to_create, ignore_conflicts=True)
+    return True, len(to_create)
+
+
+class ExerciseListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .models import Exercise
+        from .serializers import ExerciseSerializer
+
+        # Seed DB on first use
+        if not Exercise.objects.exists():
+            ok, result = _fetch_all_exercises_from_api()
+            if not ok:
+                return Response({'error': result}, status=502)
+
+        qs = Exercise.objects.all()
+
+        body_part = request.query_params.get('body_part', '').strip()
+        target    = request.query_params.get('target', '').strip()
+        equipment = request.query_params.get('equipment', '').strip()
+        search    = request.query_params.get('search', '').strip()
+
+        if body_part:
+            qs = qs.filter(body_part__iexact=body_part)
+        if target:
+            qs = qs.filter(target__iexact=target)
+        if equipment:
+            qs = qs.filter(equipment__iexact=equipment)
+        if search:
+            qs = qs.filter(name__icontains=search)
+
+        # Pagination
+        limit  = int(request.query_params.get('limit', 20))
+        offset = int(request.query_params.get('offset', 0))
+        total  = qs.count()
+        page   = qs[offset:offset + limit]
+
+        serializer = ExerciseSerializer(page, many=True)
+        return Response({'count': total, 'results': serializer.data})
+
+
+class ExerciseDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, exercise_id):
+        from .models import Exercise
+        from .serializers import ExerciseSerializer
+        try:
+            ex = Exercise.objects.get(exercise_id=exercise_id)
+        except Exercise.DoesNotExist:
+            return Response({'error': 'Exercise not found'}, status=404)
+        return Response(ExerciseSerializer(ex).data)
+
+
+class ExerciseMetaView(APIView):
+    """Returns lists of unique body_parts, targets, and equipment for filter dropdowns."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .models import Exercise
+        from django.db.models import functions
+
+        if not Exercise.objects.exists():
+            ok, result = _fetch_all_exercises_from_api()
+            if not ok:
+                return Response({'error': result}, status=502)
+
+        body_parts = sorted(set(Exercise.objects.values_list('body_part', flat=True)))
+        targets    = sorted(set(Exercise.objects.values_list('target', flat=True)))
+        equipment  = sorted(set(Exercise.objects.values_list('equipment', flat=True)))
+
+        return Response({
+            'body_parts': [b for b in body_parts if b],
+            'targets':    [t for t in targets if t],
+            'equipment':  [e for e in equipment if e],
+        })

@@ -171,6 +171,23 @@ class WeightLog(models.Model):
         return f"{self.user.username} – {self.weight} kg on {self.logged_at}"
 
 
+class Exercise(models.Model):
+    exercise_id = models.CharField(max_length=50, unique=True)  # ExerciseDB id
+    name = models.CharField(max_length=200)
+    body_part = models.CharField(max_length=100, blank=True)
+    target = models.CharField(max_length=100, blank=True)       # primary muscle
+    secondary_muscles = models.JSONField(default=list)
+    equipment = models.CharField(max_length=100, blank=True)
+    gif_url = models.URLField(max_length=500, blank=True)
+    instructions = models.JSONField(default=list)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:

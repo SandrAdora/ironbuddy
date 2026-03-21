@@ -39,7 +39,7 @@ export default defineConfig({
     // to the phone itself, not the dev machine.
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:8001',
         changeOrigin: true,
       },
       // File uploads go to the socket server
