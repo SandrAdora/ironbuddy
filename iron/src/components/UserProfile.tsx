@@ -13,6 +13,7 @@ import MyMeals from './MyMeals';
 import Recipes from './Recipes';
 import CustomRecipeBuilder from './CustomRecipeBuilder';
 import WorkoutVideos from './WorkoutVideos';
+import ExerciseLibrary from './ExerciseLibrary';
 import CommunityChat from './CommunityChat';
 import ProgressTab from './ProgressTab';
 
@@ -163,7 +164,7 @@ export default function UserProfile() {
   }, [profile.language]);
   const [active, setActive] = useState('dashboard');
   const [communityUnread, setCommunityUnread] = useState(0);
-  const [workoutTab, setWorkoutTab] = useState<'ai' | 'my' | 'videos'>('ai');
+  const [workoutTab, setWorkoutTab] = useState<'ai' | 'my' | 'videos' | 'library'>('ai');
   const [mealTab, setMealTab] = useState<'ai' | 'my' | 'recipes' | 'custom' | 'ingredients'>('ai');
   const [settingsTab, setSettingsTab] = useState<'account' | 'password' | 'legal' | 'delete_account' | 'languages'>('account');
   const [editingWeight, setEditingWeight] = useState(false);
@@ -1297,6 +1298,7 @@ export default function UserProfile() {
                   { id: 'ai', key: 'workouts.ai_tab' },
                   { id: 'my', key: 'workouts.my_tab' },
                   { id: 'videos', key: 'workouts.videos_tab' },
+                  { id: 'library', key: 'workouts.library_tab' },
                 ] as const).map((tab) => (
                   <button
                     key={tab.id}
@@ -1339,6 +1341,11 @@ export default function UserProfile() {
                 {workoutTab === 'videos' && (
                   <motion.div key="videos" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
                     <WorkoutVideos token={token!} />
+                  </motion.div>
+                )}
+                {workoutTab === 'library' && (
+                  <motion.div key="library" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
+                    <ExerciseLibrary token={token!} />
                   </motion.div>
                 )}
               </AnimatePresence>

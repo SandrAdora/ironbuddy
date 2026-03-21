@@ -185,3 +185,11 @@ class BodyMeasurementSerializer(serializers.ModelSerializer):
         model = BodyMeasurement
         fields = ['id', 'chest', 'waist', 'hips', 'arms', 'logged_at']
         read_only_fields = ['id']
+
+
+from .models import Exercise
+
+class ExerciseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Exercise
+        fields = ['id', 'exercise_id', 'name', 'body_part', 'target', 'secondary_muscles', 'equipment', 'gif_url', 'instructions']

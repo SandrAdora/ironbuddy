@@ -620,3 +620,55 @@ export async function apiDeleteBodyMeasurement(token: string, id: number): Promi
   });
   if (!res.ok) throw new Error('Failed to delete measurement');
 }
+
+
+// ── Exercise Library ─────────────────────────────────────────────────────────
+
+export interface Exercise {
+  id: number;
+  exercise_id: string;
+  name: string;
+  body_part: string;
+  target: string;
+  secondary_muscles: string[];
+  equipment: string;
+  gif_url: string;
+  instructions: string[];
+}
+
+export interface ExercisePage {
+  count: number;
+  results: Exercise[];
+}
+
+export interface ExerciseMeta {
+  body_parts: string[];
+  targets: string[];
+  equipment: string[];
+}
+
+export async function apiGetExercises(
+  token: string,
+  params: { body_part?: string; target?: string; equipment?: string; search?: string; limit?: number; offset?: number } = {}
+): Promise<ExercisePage> {
+  const q = new URLSearchParams();
+  if (params.body_part) q.set('body_part', params.body_part);
+  if (params.target)    q.set('target', params.target);
+  if (params.equipment) q.set('equipment', params.equipment);
+  if (params.search)    q.set('search', params.search);
+  q.set('limit',  String(params.limit  ?? 20));
+  q.set('offset', String(params.offset ?? 0));
+  const res = await fetch(`${BASE}/api/exercises/?${q}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch exercises');
+  return res.json();
+}
+
+export async function apiGetExerciseMeta(token: string): Promise<ExerciseMeta> {
+  const res = await fetch(`${BASE}/api/exercises/meta/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch exercise metadata');
+  return res.json();
+}

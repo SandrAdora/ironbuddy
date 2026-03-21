@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from api.views import CreateUserView, CoachChatView, WorkoutPlanView, AIMealPlanView, UserProfileView, CustomWorkoutListView, CustomWorkoutDetailView, CustomMealListView, CustomMealDetailView, UserRecipeListView, UserRecipeDetailView, WorkoutVideoListView, WorkoutVideoDetailView, UserListView, UserSearchView, UserDetailView, ConversationListView, ConversationDetailView, MessageListView, MessageDetailView, WorkoutSessionListView, WorkoutSessionDetailView, PasswordResetRequestView, PasswordResetConfirmView, PasswordChangeView, MessageReactionView, WeightLogListView, WeightLogDetailView, DeleteAccountView, DeactivateAccountView, ReactivatingTokenView, ContactView, BodyMeasurementListView, BodyMeasurementDetailView
+from api.views import CreateUserView, CoachChatView, WorkoutPlanView, AIMealPlanView, UserProfileView, CustomWorkoutListView, CustomWorkoutDetailView, CustomMealListView, CustomMealDetailView, UserRecipeListView, UserRecipeDetailView, WorkoutVideoListView, WorkoutVideoDetailView, UserListView, UserSearchView, UserDetailView, ConversationListView, ConversationDetailView, MessageListView, MessageDetailView, WorkoutSessionListView, WorkoutSessionDetailView, PasswordResetRequestView, PasswordResetConfirmView, PasswordChangeView, MessageReactionView, WeightLogListView, WeightLogDetailView, DeleteAccountView, DeactivateAccountView, ReactivatingTokenView, ContactView, BodyMeasurementListView, BodyMeasurementDetailView, ExerciseListView, ExerciseDetailView, ExerciseMetaView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
@@ -59,4 +59,7 @@ urlpatterns = [
     path("api/contact/", ContactView.as_view(), name="contact"),
     path("api/body-measurements/", BodyMeasurementListView.as_view(), name="body_measurements"),
     path("api/body-measurements/<int:pk>/", BodyMeasurementDetailView.as_view(), name="body_measurement_detail"),
+    path("api/exercises/", ExerciseListView.as_view(), name="exercises"),
+    path("api/exercises/meta/", ExerciseMetaView.as_view(), name="exercises_meta"),
+    path("api/exercises/<str:exercise_id>/", ExerciseDetailView.as_view(), name="exercise_detail"),
 ]
