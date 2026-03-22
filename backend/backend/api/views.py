@@ -309,28 +309,56 @@ class WorkoutPlanView(APIView):
 
     def post(self, request):
         profile = request.data.get('profile', {})
+        num_days = int(request.data.get('days', 4))
+        num_days = max(2, min(6, num_days))  # clamp 2–6
 
         api_key = os.environ.get('GROQ_API_KEY', '')
         if not api_key:
             return Response({'error': 'AI coach is not configured.'}, status=500)
 
-        name   = profile.get('name') or 'Athlete'
-        goal   = profile.get('fitnessGoals') or 'General Fitness'
-        level  = profile.get('experienceLevel') or 'Beginner'
+        name      = profile.get('name') or 'Athlete'
+        goal      = profile.get('fitnessGoals') or 'General Fitness'
+        level     = profile.get('experienceLevel') or 'Beginner'
         equipment = profile.get('equipments') or 'No Equipment'
         injuries  = ', '.join(profile.get('injuries') or []) or 'None'
 
-        prompt = f"""Create a personalized weekly workout plan for:
+        # Build exercise list from the library
+        from .models import Exercise
+        ex_qs = Exercise.objects.all()
+        # Filter by equipment if specified (first listed piece of equipment)
+        equip_filter = equipment.split(',')[0].strip().lower()
+        if equip_filter and equip_filter not in ('no equipment', 'none', ''):
+            from django.db.models import Q
+            ex_qs = ex_qs.filter(
+                Q(equipment__icontains=equip_filter) | Q(equipment__iexact='body weight')
+            )
+        exercises_for_prompt = ex_qs.values_list('name', 'body_part', 'target')[:200]
+        exercise_lines = '\n'.join(
+            f'- {n} (body part: {bp}, target: {tg})'
+            for n, bp, tg in exercises_for_prompt
+        )
+
+        prompt = f"""Create a personalized {num_days}-day workout plan for:
 - Name: {name}
 - Goal: {goal}
 - Level: {level}
 - Equipment: {equipment}
 - Injuries: {injuries}
 
+PREFERRED exercises from the library (use exact names when possible):
+{exercise_lines}
+
+RULES — you MUST follow all of these:
+1. Prefer exercises from the library list above, using the exact name shown.
+2. If the library does not have enough variety for a specific goal or muscle group, you MAY add exercises not in the list — but keep them realistic and appropriate.
+3. NO exercise may appear more than once across the entire plan. Every exercise across all {num_days} days must be unique.
+4. Each day must have a different muscle focus. Do not repeat the same muscle group on consecutive days.
+5. Choose exercises that match the user's goal: "{goal}".
+
 Return ONLY valid JSON in this exact format, no extra text:
 {{
   "plan_name": "...",
-  "frequency": "X days/week",
+  "frequency": "{num_days} days/week",
   "goal": "{goal}",
   "days": [
     {{
@@ -350,7 +378,7 @@ Return ONLY valid JSON in this exact format, no extra text:
     }}
   ]
 }}
-Include 3-5 workout days with 4-6 exercises each. For how_to, write 2-4 clear numbered steps explaining how to perform the exercise correctly."""
+Include exactly {num_days} days with 4-6 exercises each. Double-check: no exercise name appears in more than one day."""
 
         import json, re
         try:
@@ -368,6 +396,18 @@ Include 3-5 workout days with 4-6 exercises each. For how_to, write 2-4 clear nu
             raw = re.sub(r'^```(?:json)?\s*', '', raw)
             raw = re.sub(r'\s*```$', '', raw).strip()
             plan = json.loads(raw)
+
+            # Safety net: remove duplicate exercises across all days
+            seen = set()
+            for day in plan.get('days', []):
+                unique = []
+                for ex in day.get('exercises', []):
+                    key = ex.get('name', '').strip().lower()
+                    if key and key not in seen:
+                        seen.add(key)
+                        unique.append(ex)
+                day['exercises'] = unique
+
             return Response({'plan': plan})
         except json.JSONDecodeError as e:
             return Response({'error': f'AI returned invalid JSON: {str(e)}'}, status=500)
@@ -1385,7 +1425,13 @@ class ExerciseListView(APIView):
         if equipment:
             qs = qs.filter(equipment__iexact=equipment)
         if search:
-            qs = qs.filter(name__icontains=search)
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(name__icontains=search) |
+                Q(target__icontains=search) |
+                Q(body_part__icontains=search) |
+                Q(equipment__icontains=search)
+            )
 
         # Pagination
         limit  = int(request.query_params.get('limit', 20))
@@ -1432,3 +1478,21 @@ class ExerciseMetaView(APIView):
             'targets':    [t for t in targets if t],
             'equipment':  [e for e in equipment if e],
         })
+
+
+class ExerciseFetchMediaView(APIView):
+    """Triggers the fetch_exercise_media management command in a background thread."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        import threading
+        from django.core.management import call_command
+
+        force = request.data.get('force', False)
+
+        def run():
+            call_command('fetch_exercise_media', force=force)
+
+        t = threading.Thread(target=run, daemon=True)
+        t.start()
+        return Response({'status': 'started'})

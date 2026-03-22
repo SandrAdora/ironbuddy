@@ -90,13 +90,14 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-5">
+        <div className="hidden md:flex items-center gap-5 ml-auto">
 
           {/* Section scroll links — always visible on homepage */}
           {isHome && HOME_SECTIONS.map(({ id, key }) => (
             <button
               key={id}
               onClick={() => scrollTo(id)}
+              style={{ fontSize: '0.75rem' }}
               className={`${NAV_LINK} ${activeSection === id ?  ' text-xs text-[--color-iron-gold]' : ' text-yellow-400 hover:text-white'}`}
             >
               {t(key)}
@@ -122,10 +123,10 @@ export default function Navbar() {
           {token ? (
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-gray-400
-                border border-white/10 rounded-xl hover:text-white hover:border-white/25 hover:bg-white/5 transition-all duration-200"
+              className={`${NAV_LINK} text-gray-400 hover:text-white`}
             >
               {t('nav.sign_out')}
+              <span className={`${NAV_UNDERLINE} w-0 group-hover:w-full`} />
             </button>
           ) : (
             <Link
@@ -252,7 +253,8 @@ export default function Navbar() {
                 {token ? (
                   <button onClick={handleLogout}
                     className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider
-                      text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                      text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                  >
                     {t('nav.sign_out')}
                   </button>
                 ) : (

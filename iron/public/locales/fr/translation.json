@@ -206,7 +206,7 @@
     "videos": "Vidéos",
     "ai_tab": "🤖 Plan IA",
     "my_tab": "✏️ Mes entraînements",
-    "videos_tab": "🎬 Vidéos",
+    "library_tab": "📚 Bibliothèque d'exercices",
     "start_ai": "▶ Démarrer l'entraînement IA",
     "in_progress": "🏋️ Entraînement en cours — "
   },
@@ -351,7 +351,7 @@
     },
     "section_nav": {
       "home": "Accueil",
-      "how_it_works": "Comment ça marche",
+      "how_it_works": "Le Processus",
       "features": "Fonctionnalités",
       "join": "Rejoindre"
     }

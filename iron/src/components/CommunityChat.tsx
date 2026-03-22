@@ -42,11 +42,13 @@ function toCached(msg: DirectMessage, conversationId: number): CachedMessage {
     conversation_id: conversationId,
     sender_id: msg.sender_id,
     sender_name: msg.sender_name,
+    sender_profile_picture: msg.sender_profile_picture,
     content: msg.content,
     file_url: msg.file_url,
     file_type: msg.file_type,
     file_name: msg.file_name,
     created_at: msg.created_at,
+    reactions: msg.reactions ?? [],
   };
 }
 
@@ -94,6 +96,7 @@ function CustomEmojiPicker({ onPick }: { onPick: (emoji: string) => void }) {
 
   return (
     <div
+      data-emoji-picker
       className="bg-[#111827] border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
       style={{ width: 320, height: 400 }}
       onClick={(e) => e.stopPropagation()}
@@ -177,10 +180,59 @@ function PortalPicker({
   );
 }
 
+// ── Shared workout card ────────────────────────────────────────────────────────
+
+function WorkoutShareCard({ content }: { content: string }) {
+  const [expanded, setExpanded] = useState(false);
+  try {
+    const data = JSON.parse(content.slice('[WORKOUT_SHARE]'.length));
+    return (
+      <div className="rounded-xl overflow-hidden border border-yellow-300/25 mt-1" style={{ background: 'rgba(250,204,21,0.05)', minWidth: 220 }}>
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-yellow-300/15">
+          <span className="text-base">🏋️</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-yellow-400/70">Workout Plan</span>
+        </div>
+        <div className="px-3 py-2.5 space-y-1">
+          <p className="text-white font-black text-sm uppercase">{data.name}</p>
+          {data.description && <p className="text-gray-400 text-xs">{data.description}</p>}
+          <p className="text-gray-500 text-xs">{data.exercises?.length ?? 0} exercises</p>
+        </div>
+        {data.exercises?.length > 0 && (
+          <>
+            <button
+              onClick={() => setExpanded(v => !v)}
+              className="w-full text-left px-3 py-1.5 text-xs text-yellow-400/60 hover:text-yellow-400 transition-colors border-t border-yellow-300/10 font-bold"
+            >
+              {expanded ? '▲ Hide exercises' : '▼ Show exercises'}
+            </button>
+            {expanded && (
+              <div className="px-3 pb-3 space-y-1.5 border-t border-yellow-300/10 pt-2">
+                {data.exercises.map((ex: { name: string; sets: number; reps: string; muscle: string }, i: number) => (
+                  <div key={i} className="flex items-center justify-between text-xs">
+                    <span className="text-white font-semibold capitalize">{ex.name}</span>
+                    <span className="text-gray-500 ml-2 shrink-0">{ex.sets}×{ex.reps}{ex.muscle ? ` · ${ex.muscle}` : ''}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  } catch {
+    return <span className="whitespace-pre-wrap break-words">{content}</span>;
+  }
+}
+
 // ── Message content renderer ──────────────────────────────────────────────────
 
 function MessageContent({ msg }: { msg: DirectMessage }) {
   const parts: React.ReactNode[] = [];
+
+  // Shared workout plan
+  if (msg.content?.startsWith('[WORKOUT_SHARE]')) {
+    return <WorkoutShareCard content={msg.content} />;
+  }
 
   // File attachment
   if (msg.file_url) {
@@ -305,9 +357,13 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
   // Keep ref in sync so socket event handlers always see the latest activeConvo
   useEffect(() => { activeConvoRef.current = activeConvo; }, [activeConvo]);
 
-  // Close pickers on outside click
+  // Close pickers on outside click (skip if click is inside the emoji picker itself)
   useEffect(() => {
-    const handler = () => { setReactionPickerFor(null); setShowInputEmoji(false); };
+    const handler = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).closest('[data-emoji-picker]')) return;
+      setReactionPickerFor(null);
+      setShowInputEmoji(false);
+    };
     document.addEventListener('click', handler, true);
     return () => document.removeEventListener('click', handler, true);
   }, []);
@@ -342,7 +398,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
             ? {
                 ...c,
                 unread_count: activeConvoRef.current?.id === conversation_id ? 0 : c.unread_count + 1,
-                last_message: { content: message.content || (message.file_type ? `Sent a ${message.file_type}` : 'Sent a file'), sender_id: message.sender_id, created_at: message.created_at },
+                last_message: { content: message.content?.startsWith('[WORKOUT_SHARE]') ? '🏋️ Shared a workout plan' : message.content || (message.file_type ? `Sent a ${message.file_type}` : 'Sent a file'), sender_id: message.sender_id, created_at: message.created_at },
                 updated_at: message.created_at,
               }
             : c
@@ -777,7 +833,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                       </div>
                       {c.last_message && (
                         <p className={`text-xs truncate mt-0.5 ${c.unread_count > 0 ? 'text-gray-300 font-semibold' : 'text-gray-600'}`}>
-                          {c.last_message.sender_id === currentUserId ? 'You: ' : ''}{c.last_message.content}
+                          {c.last_message.sender_id === currentUserId ? 'You: ' : ''}{c.last_message.content?.startsWith('[WORKOUT_SHARE]') ? '🏋️ Shared a workout plan' : c.last_message.content}
                         </p>
                       )}
                     </div>

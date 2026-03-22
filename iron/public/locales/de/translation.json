@@ -207,7 +207,7 @@
     "ai_tab": "🤖 KI-Plan",
     "my_tab": "✏️ Meine Trainings",
     "videos_tab": "🎬 Videos",
-    "library_tab": "📚 Library",
+    "library_tab": "📚 Workout-Bibliothek",
     "start_ai": "▶ KI-Training starten",
     "in_progress": "🏋️ Training läuft — "
   },
@@ -352,7 +352,7 @@
     },
     "section_nav": {
       "home": "Start",
-      "how_it_works": "So funktioniert es",
+      "how_it_works": "Der Prozess",
       "features": "Funktionen",
       "join": "Kostenlos starten"
     }

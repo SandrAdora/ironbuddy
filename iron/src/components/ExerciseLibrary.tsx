@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   apiGetExercises, apiGetExerciseMeta, apiGetCustomWorkouts, apiUpdateCustomWorkout,
+  apiFetchExerciseMedia,
   Exercise, ExerciseMeta, CustomWorkout,
 } from '../api';
 import MuscleMap from './MuscleMap';
@@ -127,6 +128,15 @@ function ExerciseCardVisual({ bodyPart, target }: { bodyPart: string; target: st
   );
 }
 
+function FilterBadge({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span className="flex items-center gap-1 text-xs text-yellow-300 bg-yellow-300/10 border border-yellow-300/20 px-2.5 py-1 rounded-full">
+      {label}
+      <button onClick={onRemove} className="ml-0.5 text-yellow-400 hover:text-white leading-none">✕</button>
+    </span>
+  );
+}
+
 const ExerciseLibrary: React.FC<Props> = ({ token }) => {
   const [meta, setMeta]               = useState<ExerciseMeta | null>(null);
   const [exercises, setExercises]     = useState<Exercise[]>([]);
@@ -138,6 +148,7 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
 
   // Filters
   const [bodyPart, setBodyPart]       = useState('');
+  const [target, setTarget]           = useState('');
   const [equipment, setEquipment]     = useState('');
   const [search, setSearch]           = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -147,6 +158,9 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<number | ''>('');
   const [workoutFilterLabel, setWorkoutFilterLabel] = useState('');
 
+  // Filter panel
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
   // Detail modal
   const [selected, setSelected]       = useState<Exercise | null>(null);
 
@@ -154,10 +168,12 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
   const [addToWorkoutId, setAddToWorkoutId] = useState<number | ''>('');
   const [addStatus, setAddStatus]           = useState<'idle' | 'saving' | 'done' | 'error'>('idle');
 
-  // Load meta + workouts once
+
+  // Load meta + workouts once, and kick off background media fetch
   useEffect(() => {
     apiGetExerciseMeta(token).then(setMeta).catch(() => setError('Failed to load filter options'));
     apiGetCustomWorkouts(token).then(setWorkouts).catch(() => {});
+    apiFetchExerciseMedia(token).catch(() => {});
   }, [token]);
 
   const loadExercises = useCallback(async (currentOffset: number) => {
@@ -166,6 +182,7 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
     try {
       const data = await apiGetExercises(token, {
         body_part: bodyPart || undefined,
+        target:    target || undefined,
         equipment: equipment || undefined,
         search:    search || undefined,
         limit:     PAGE_SIZE,
@@ -179,12 +196,12 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
     } finally {
       setLoading(false);
     }
-  }, [token, bodyPart, equipment, search]);
+  }, [token, bodyPart, target, equipment, search]);
 
   useEffect(() => {
     setOffset(0);
     loadExercises(0);
-  }, [bodyPart, equipment, search, loadExercises]);
+  }, [bodyPart, target, equipment, search, loadExercises]);
 
   // Feature A: apply workout filter
   function applyWorkoutFilter(workoutId: number | '') {
@@ -209,6 +226,7 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
 
   function resetFilters() {
     setBodyPart('');
+    setTarget('');
     setEquipment('');
     setSearch('');
     setSearchInput('');
@@ -220,6 +238,7 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
     e.preventDefault();
     setSelectedWorkoutId('');
     setWorkoutFilterLabel('');
+    setTarget('');
     setSearch(searchInput);
   }
 
@@ -269,70 +288,123 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
     loadExercises(newOffset);
   }
 
+  const activeFilterCount = [bodyPart, target, equipment, selectedWorkoutId ? '1' : ''].filter(Boolean).length;
+
   return (
     <div className="space-y-4">
-      {/* ── Feature A: Workout filter dropdown ── */}
-      <div className="flex gap-2 items-center flex-wrap">
-        <CustomSelect
-          value={String(selectedWorkoutId)}
-          onChange={val => applyWorkoutFilter(val ? Number(val) : '')}
-          options={[
-            { value: '', label: '🏋️ All Workouts' },
-            ...workouts.map(w => ({ value: String(w.id), label: w.name })),
-          ]}
-          placeholder="🏋️ All Workouts"
-          className="flex-1 min-w-[180px]"
-          gold
+      {/* ── Search bar + Filter button ── */}
+      <form onSubmit={handleSearch} className="flex gap-2">
+        <input
+          value={searchInput}
+          onChange={e => setSearchInput(e.target.value)}
+          placeholder="Search exercises…"
+          className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-300/50"
         />
-        {workoutFilterLabel && (
-          <span className="text-xs text-yellow-300 bg-yellow-300/10 border border-yellow-300/20 px-2.5 py-1 rounded-full flex items-center gap-1">
-            Filtered for: <strong>{workoutFilterLabel}</strong>
-            <button onClick={resetFilters} className="ml-1 text-yellow-400 hover:text-white">✕</button>
-          </span>
-        )}
-      </div>
+        <button type="submit" className="px-4 py-2.5 bg-yellow-300 text-black rounded-xl text-sm font-black hover:bg-yellow-200 transition-colors">
+          Search
+        </button>
 
-      {/* ── Search + Filters ── */}
-      <div className="space-y-3">
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <input
-            value={searchInput}
-            onChange={e => setSearchInput(e.target.value)}
-            placeholder="Search exercises…"
-            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-300/50"
-          />
-          <button type="submit" className="px-4 py-2.5 bg-yellow-300 text-black rounded-xl text-sm font-black hover:bg-yellow-200 transition-colors">
-            Search
-          </button>
-          {(bodyPart || equipment || search) && (
-            <button type="button" onClick={resetFilters} className="px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-xs text-gray-400 hover:text-white transition-colors">
-              Clear
-            </button>
+        {/* Filter toggle button */}
+        <button
+          type="button"
+          onClick={() => setFiltersOpen(o => !o)}
+          className={`relative px-4 py-2.5 rounded-xl text-sm font-black border transition-all ${
+            filtersOpen || activeFilterCount > 0
+              ? 'bg-yellow-300 text-black border-yellow-300'
+              : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:border-white/20'
+          }`}
+        >
+          Filters
+          {activeFilterCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-yellow-400 text-black text-[10px] font-black rounded-full flex items-center justify-center">
+              {activeFilterCount}
+            </span>
           )}
-        </form>
+        </button>
 
+        {(activeFilterCount > 0 || search) && (
+          <button type="button" onClick={resetFilters} className="px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-xs text-gray-400 hover:text-white transition-colors">
+            Clear
+          </button>
+        )}
+      </form>
+
+      {/* ── Expandable filter panel ── */}
+      <AnimatePresence>
+        {filtersOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+          >
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-4 bg-white/3 border border-white/10 rounded-2xl">
+              <div className="space-y-1">
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Workout</p>
+                <CustomSelect
+                  value={String(selectedWorkoutId)}
+                  onChange={val => applyWorkoutFilter(val ? Number(val) : '')}
+                  options={[
+                    { value: '', label: 'All Workouts' },
+                    ...workouts.map(w => ({ value: String(w.id), label: w.name })),
+                  ]}
+                  placeholder="All Workouts"
+                  gold
+                />
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Body Part</p>
+                <CustomSelect
+                  value={bodyPart}
+                  onChange={val => { setBodyPart(val); setTarget(''); setSelectedWorkoutId(''); setWorkoutFilterLabel(''); }}
+                  options={[
+                    { value: '', label: 'All' },
+                    ...(meta?.body_parts ?? []).map(bp => ({ value: bp, label: capitalize(bp) })),
+                  ]}
+                  placeholder="All"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Muscle</p>
+                <CustomSelect
+                  value={target}
+                  onChange={val => { setTarget(val); setBodyPart(''); setSelectedWorkoutId(''); setWorkoutFilterLabel(''); }}
+                  options={[
+                    { value: '', label: 'All' },
+                    ...(meta?.targets ?? []).map(t => ({ value: t, label: capitalize(t) })),
+                  ]}
+                  placeholder="All"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Equipment</p>
+                <CustomSelect
+                  value={equipment}
+                  onChange={setEquipment}
+                  options={[
+                    { value: '', label: 'All' },
+                    ...(meta?.equipment ?? []).map(eq => ({ value: eq, label: capitalize(eq) })),
+                  ]}
+                  placeholder="All"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Active filter badges */}
+      {(workoutFilterLabel || bodyPart || target || equipment) && (
         <div className="flex gap-2 flex-wrap">
-          <CustomSelect
-            value={bodyPart}
-            onChange={val => { setBodyPart(val); setSelectedWorkoutId(''); setWorkoutFilterLabel(''); }}
-            options={[
-              { value: '', label: 'All Body Parts' },
-              ...(meta?.body_parts ?? []).map(bp => ({ value: bp, label: capitalize(bp) })),
-            ]}
-            placeholder="All Body Parts"
-          />
-
-          <CustomSelect
-            value={equipment}
-            onChange={setEquipment}
-            options={[
-              { value: '', label: 'All Equipment' },
-              ...(meta?.equipment ?? []).map(eq => ({ value: eq, label: capitalize(eq) })),
-            ]}
-            placeholder="All Equipment"
-          />
+          {workoutFilterLabel && <FilterBadge label={`Workout: ${workoutFilterLabel}`} onRemove={() => { setSelectedWorkoutId(''); setWorkoutFilterLabel(''); setBodyPart(''); }} />}
+          {bodyPart  && <FilterBadge label={`Body: ${capitalize(bodyPart)}`}    onRemove={() => setBodyPart('')} />}
+          {target    && <FilterBadge label={`Muscle: ${capitalize(target)}`}    onRemove={() => setTarget('')} />}
+          {equipment && <FilterBadge label={`Equipment: ${capitalize(equipment)}`} onRemove={() => setEquipment('')} />}
         </div>
-      </div>
+      )}
 
       {/* Results count */}
       {!loading && !seeding && total > 0 && (
@@ -371,10 +443,13 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
               className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden text-left hover:border-yellow-300/30 transition-colors"
             >
               <div className="aspect-square overflow-hidden relative">
-                {ex.gif_url
-                  ? <img src={ex.gif_url} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />
-                  : <ExerciseCardVisual bodyPart={ex.body_part} target={ex.target} />
-                }
+                {ex.gif_url ? (
+                  <img src={ex.gif_url} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />
+                ) : ex.wger_image_url ? (
+                  <img src={ex.wger_image_url} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />
+                ) : (
+                  <ExerciseCardVisual bodyPart={ex.body_part} target={ex.target} />
+                )}
               </div>
               <div className="p-2.5 space-y-1">
                 <p className="text-white text-xs font-bold leading-tight line-clamp-2">{capitalize(ex.name)}</p>
@@ -429,11 +504,24 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
               <div className="p-5 space-y-5">
                 {/* Visual + Muscle Map */}
                 <div className="flex flex-col sm:flex-row gap-5 items-start">
-                  <div className="w-full sm:w-56 shrink-0 rounded-xl overflow-hidden aspect-square">
-                    {selected.gif_url
-                      ? <img src={selected.gif_url} alt={selected.name} className="w-full h-full object-cover" />
-                      : <ExerciseCardVisual bodyPart={selected.body_part} target={selected.target} />
-                    }
+                  <div className="w-full sm:w-80 shrink-0 rounded-xl overflow-hidden">
+                    {selected.youtube_video_id ? (
+                      <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+                        <iframe
+                          className="absolute inset-0 w-full h-full rounded-xl"
+                          src={`https://www.youtube.com/embed/${selected.youtube_video_id}?rel=0`}
+                          title={selected.name}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    ) : selected.wger_image_url ? (
+                      <img src={selected.wger_image_url} alt={selected.name} className="w-full rounded-xl object-cover" />
+                    ) : selected.gif_url ? (
+                      <img src={selected.gif_url} alt={selected.name} className="w-full aspect-square object-cover" />
+                    ) : (
+                      <div className="aspect-square"><ExerciseCardVisual bodyPart={selected.body_part} target={selected.target} /></div>
+                    )}
                   </div>
                   <div className="flex-1 flex flex-col items-center justify-center bg-white/3 rounded-xl p-4 min-h-[220px]">
                     <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Muscles Targeted</p>

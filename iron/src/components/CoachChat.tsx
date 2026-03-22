@@ -158,7 +158,8 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
             />
             <button
               onClick={addIngredient}
-              className="px-2.5 py-1 bg-white/10 border border-white/15 rounded-lg text-[11px] hover:bg-white/20 transition-all font-bold"
+              className="px-2.5 py-1 rounded-lg text-[11px] transition-all font-bold"
+              style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.35)', boxShadow: '0 0 8px rgba(250,204,21,0.15)' }}
             >
               +
             </button>
@@ -175,8 +176,8 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
           <button
             disabled={state === 'saving'}
             onClick={handleSave}
-            className="px-4 py-1.5 bg-yellow-300 text-black font-black rounded-lg uppercase text-[10px] tracking-wide
-              hover:bg-yellow-200 active:scale-95 transition-all disabled:opacity-50"
+            className="px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-50"
+            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }}
           >
             {state === 'saving' ? 'Saving…' : `💾 Save to ${meta.tab}`}
           </button>
@@ -184,16 +185,16 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
             <button
               disabled={savedAsRecipe}
               onClick={handleSaveAsRecipe}
-              className="px-4 py-1.5 bg-orange-400/80 text-black font-black rounded-lg uppercase text-[10px] tracking-wide
-                hover:bg-orange-300 active:scale-95 transition-all disabled:opacity-40"
+              className="px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-40"
+              style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }}
             >
               {savedAsRecipe ? '✓ Added to Recipes' : '👨‍🍳 Add to My Recipes'}
             </button>
           )}
           <button
             onClick={() => setState('declined')}
-            className="px-4 py-1.5 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-lg uppercase text-[10px] tracking-wide
-              hover:text-white transition-all"
+            className="px-4 py-1.5 font-bold rounded-lg uppercase text-[10px] tracking-wide transition-all"
+            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)', boxShadow: '0 0 8px rgba(250,204,21,0.12)' }}
           >
             Not Now
           </button>
@@ -271,7 +272,8 @@ export default function CoachChat({ profile, token }: Props) {
         {messages.length > 1 && (
           <button
             onClick={() => setMessages([{ role: 'assistant', content: welcome }])}
-            className="text-xs text-gray-500 hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-400/10 font-bold uppercase tracking-wide"
+            className="text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-lg transition-all duration-200 hover:scale-[1.02]"
+            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.3)', boxShadow: '0 0 8px rgba(250,204,21,0.15)' }}
           >
             {t('coach.clear')}
           </button>
@@ -363,16 +365,15 @@ export default function CoachChat({ profile, token }: Props) {
         <button
           onClick={send}
           disabled={loading || !input.trim()}
-          className="px-5 py-3 bg-yellow-300 text-black font-black rounded-xl uppercase text-sm
-            hover:bg-yellow-200 hover:shadow-[0_0_20px_rgba(253,224,71,0.5)] hover:scale-[1.02]
-            active:scale-95 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-5 py-3 font-black rounded-xl uppercase text-sm hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 12px rgba(250,204,21,0.3), 0 0 28px rgba(250,204,21,0.12)' }}
         >
           {t('coach.send')}
         </button>
       </div>
 
       {/* Quick prompts */}
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-3 hidden sm:flex flex-wrap gap-2">
         {[
           t('coach.quick_workout', { goal: profile.fitnessGoals || 'fitness' }),
           t('coach.quick_eat'),
@@ -382,8 +383,8 @@ export default function CoachChat({ profile, token }: Props) {
           <button
             key={prompt}
             onClick={() => { setInput(prompt); }}
-            className="text-xs text-gray-400 bg-white/5 backdrop-blur-sm border border-white/10 px-3 py-1.5 rounded-full
-              hover:border-yellow-300/40 hover:text-white transition-all duration-200"
+            className="text-xs px-3 py-1.5 rounded-full transition-all duration-200 hover:scale-[1.02]"
+            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.3)', boxShadow: '0 0 8px rgba(250,204,21,0.15)' }}
           >
             {prompt}
           </button>

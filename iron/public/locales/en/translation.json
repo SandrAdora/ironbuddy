@@ -207,7 +207,7 @@
     "ai_tab": "🤖 AI Plan",
     "my_tab": "✏️ My Workouts",
     "videos_tab": "🎬 Videos",
-    "library_tab": "📚 Library",
+    "library_tab": "📚 Workout Library",
     "start_ai": "▶ Start AI Workout",
     "in_progress": "🏋️ Workout in progress — "
   },
@@ -352,7 +352,7 @@
     },
     "section_nav": {
       "home": "Home",
-      "how_it_works": "How It Works",
+      "how_it_works": "The Process",
       "features": "Features",
       "join": "Join Free"
     }

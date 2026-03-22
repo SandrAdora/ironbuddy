@@ -164,7 +164,7 @@ export default function UserProfile() {
   }, [profile.language]);
   const [active, setActive] = useState('dashboard');
   const [communityUnread, setCommunityUnread] = useState(0);
-  const [workoutTab, setWorkoutTab] = useState<'ai' | 'my' | 'videos' | 'library'>('ai');
+  const [workoutTab, setWorkoutTab] = useState<'ai' | 'my' | 'library'>('ai');
   const [mealTab, setMealTab] = useState<'ai' | 'my' | 'recipes' | 'custom' | 'ingredients'>('ai');
   const [settingsTab, setSettingsTab] = useState<'account' | 'password' | 'legal' | 'delete_account' | 'languages'>('account');
   const [editingWeight, setEditingWeight] = useState(false);
@@ -182,6 +182,7 @@ export default function UserProfile() {
     setMealServings((p) => ({ ...p, [name]: Math.max(1, Math.min(10, n)) }));
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [mealTimeTab, setMealTimeTab] = useState<'breakfast' | 'lunch' | 'dinner' | 'snacks'>('breakfast');
+  const [mealSuggIdx, setMealSuggIdx] = useState<Record<string, number>>({});
   const [nutritionOpen, setNutritionOpen] = useState(false);
 
   // AI Meal Plan state
@@ -471,92 +472,6 @@ export default function UserProfile() {
           <p className="text-gray-500 text-xs mt-0.5 text-center truncate w-full px-2">{profile.email}</p>
         </div>
 
-        {/* Credentials */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-4 space-y-2 border border-white/10">
-          {/* Editable Goal */}
-          <div className="flex justify-between items-center">
-            <span className="text-xs text-gray-500 uppercase font-bold">{t('sidebar.goal')}</span>
-            {editingGoal ? (
-              <select
-                autoFocus
-                value={profile.fitnessGoals}
-                onChange={(e) => { setProfile((p) => ({ ...p, fitnessGoals: e.target.value })); setEditingGoal(false); }}
-                onBlur={() => setEditingGoal(false)}
-                className="text-xs bg-gray-900 border border-yellow-300/50 rounded px-1.5 py-1 text-white outline-none [&>option]:bg-gray-900 [&>option]:text-white"
-              >
-                <option value="Weight Loss">{t('goals.weight_loss')}</option>
-                <option value="Muscle Gain">{t('goals.muscle_gain')}</option>
-                <option value="Endurance">{t('goals.endurance')}</option>
-                <option value="General Fitness">{t('goals.general_fitness')}</option>
-              </select>
-            ) : (
-              <button
-                onClick={() => setEditingGoal(true)}
-                className="text-xs text-white font-semibold hover:text-[--color-iron-gold] transition-colors flex items-center gap-1 group"
-              >
-                {profile.fitnessGoals || '—'}
-                <span className="text-gray-600 group-hover:text-yellow-400 text-xs">✏️</span>
-              </button>
-            )}
-          </div>
-          {/* Editable Level */}
-          <div className="flex justify-between items-center">
-            <span className="text-xs text-gray-500 uppercase font-bold">Level</span>
-            {editingLevel ? (
-              <select
-                autoFocus
-                value={profile.experienceLevel}
-                onChange={(e) => { setProfile((p) => ({ ...p, experienceLevel: e.target.value })); setEditingLevel(false); }}
-                onBlur={() => setEditingLevel(false)}
-                className="text-xs bg-gray-900 border border-yellow-300/50 rounded px-1.5 py-1 text-white outline-none [&>option]:bg-gray-900 [&>option]:text-white"
-              >
-                <option value="Beginner">{t('level.beginner')}</option>
-                <option value="Intermediate">{t('level.intermediate')}</option>
-                <option value="Advanced">{t('level.advanced')}</option>
-                <option value="Unsure">{t('level.unsure')}</option>
-              </select>
-            ) : (
-              <button
-                onClick={() => setEditingLevel(true)}
-                className="text-xs text-white font-semibold hover:text-[--color-iron-gold] transition-colors flex items-center gap-1 group"
-              >
-                {profile.experienceLevel || '—'}
-                <span className="text-gray-600 group-hover:text-yellow-400 text-xs">✏️</span>
-              </button>
-            )}
-          </div>
-          <SidebarStat label={t('sidebar.height')} value={profile.height ? `${profile.height} cm` : '—'} />
-          <SidebarStat label={t('sidebar.gender')} value={profile.gender || '—'} />
-
-          {/* Editable Weight */}
-          <div className="flex justify-between items-center pt-1">
-            <span className="text-xs text-gray-500 uppercase font-bold">{t('sidebar.weight')}</span>
-            {editingWeight ? (
-              <div className="flex items-center gap-1">
-                <input
-                  autoFocus
-                  type="number"
-                  value={weightInput}
-                  onChange={(e) => setWeightInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') saveWeight(); if (e.key === 'Escape') setEditingWeight(false); }}
-                  className="w-16 text-xs bg-gray-700 border border-yellow-300/50 rounded px-1.5 py-1 text-white outline-none text-right"
-                />
-                <span className="text-xs text-gray-400">kg</span>
-                <button onClick={saveWeight} className="text-green-400 hover:text-green-300 text-xs font-bold ml-1">✓</button>
-                <button onClick={() => setEditingWeight(false)} className="text-gray-500 hover:text-gray-300 text-xs ml-0.5">✕</button>
-              </div>
-            ) : (
-              <button
-                onClick={() => { setWeightInput(String(profile.weight ?? '')); setEditingWeight(true); }}
-                className="text-xs text-white font-semibold hover:text-[--color-iron-gold] transition-colors flex items-center gap-1 group"
-              >
-                {profile.weight ? `${profile.weight} kg` : '—'}
-                <span className="text-gray-600 group-hover:text-yellow-400 text-xs">✏️</span>
-              </button>
-            )}
-          </div>
-        </div>
-
         {/* BMI Badge */}
         {bmi && bmiInfo && (
           <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 mb-4 border border-white/10 flex items-center justify-between">
@@ -629,8 +544,8 @@ export default function UserProfile() {
             <p className="text-gray-500 text-xs truncate">{profile.email}</p>
           </div>
         </div>
-        {/* Stats chips row */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {/* Stats chips row — desktop only */}
+        <div className="hidden md:flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {[
             { label: t('sidebar.goal'),   value: profile.fitnessGoals || '—' },
             { label: t('sidebar.level'),  value: profile.experienceLevel || '—' },
@@ -800,7 +715,7 @@ export default function UserProfile() {
           {active === 'meals' && (
             <motion.div key="meals" {...fadeUp(0)} className="space-y-6">
               {/* Sub-tabs */}
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex border-b border-white/10 overflow-x-auto">
                 {([
                   { id: 'ai', label: t('meals.ai_tab') },
                   { id: 'my', label: t('meals.my_tab') },
@@ -811,10 +726,11 @@ export default function UserProfile() {
                   <button
                     key={tab.id}
                     onClick={() => setMealTab(tab.id)}
-                    className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide transition-all duration-200 ${
+                    style={{ fontSize: '0.75rem' }}
+                    className={`shrink-0 px-4 py-2.5 text-xs font-black uppercase tracking-wide transition-all duration-200 border-b-2 -mb-px ${
                       mealTab === tab.id
-                        ? 'bg-gradient-to-r from-yellow-400 to-amber-400 text-black shadow-[0_0_20px_rgba(251,191,36,0.45)] scale-[1.03]'
-                        : 'bg-white/8 border border-white/15 text-gray-300 hover:text-white hover:border-yellow-300/30 hover:bg-yellow-300/8'
+                        ? 'border-[--color-iron-gold] text-[--color-iron-gold]'
+                        : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'
                     }`}
                   >
                     {tab.label}
@@ -870,9 +786,10 @@ export default function UserProfile() {
                       <button
                         onClick={() => fetchAIMeals(true)}
                         disabled={aiMealLoading}
-                        className="shrink-0 px-5 py-2.5 bg-gradient-to-r from-yellow-400 to-amber-400 text-black font-black rounded-xl uppercase text-xs tracking-wide
-                          shadow-[0_0_20px_rgba(251,191,36,0.35)] hover:shadow-[0_0_28px_rgba(251,191,36,0.55)] hover:scale-[1.04] active:scale-95
+                        className="shrink-0 px-4 py-2 text-yellow-300 font-black rounded-xl uppercase text-xs tracking-wide border border-yellow-300/40
+                          hover:border-yellow-300 hover:scale-[1.04] active:scale-95
                           transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
+                        style={{ background: '#060608', boxShadow: '0 0 12px rgba(253,224,71,0.25)' }}
                       >
                         {aiMealLoading ? `⏳ ${t('meals.generating')}` : `🔄 ${t('meals.regenerate')}`}
                       </button>
@@ -1034,12 +951,35 @@ export default function UserProfile() {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 8 }}
                             transition={{ duration: 0.18 }}
-                            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                            className="space-y-3"
                           >
-                            {(aiMealPlan[mealTimeTab] ?? []).map((m, i) => {
+                            {/* Suggestion dropdown */}
+                            {(aiMealPlan[mealTimeTab] ?? []).length > 1 && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest shrink-0">Suggestion</span>
+                                <select
+                                  value={mealSuggIdx[mealTimeTab] ?? 0}
+                                  onChange={e => setMealSuggIdx(p => ({ ...p, [mealTimeTab]: Number(e.target.value) }))}
+                                  className="flex-1 text-sm font-bold text-white border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-yellow-300/50 cursor-pointer"
+                                  style={{ background: '#060608' }}
+                                >
+                                  {(aiMealPlan[mealTimeTab] ?? []).map((m, i) => (
+                                    <option key={i} value={i} style={{ background: '#060608' }}>
+                                      {m.icon} {m.meal}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+
+                            {(() => {
+                              const meals = aiMealPlan[mealTimeTab] ?? [];
+                              const idx = mealSuggIdx[mealTimeTab] ?? 0;
+                              const m = meals[Math.min(idx, meals.length - 1)];
+                              if (!m) return null;
                               const srv = getSrv(m.meal);
                               return (
-                                <motion.div key={m.meal} {...fadeUp(0.05 * i)}
+                                <motion.div key={m.meal} {...fadeUp(0)}
                                   className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-4
                                     hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)] transition-all duration-300">
                                   <div className="flex items-start gap-3">
@@ -1133,11 +1073,11 @@ export default function UserProfile() {
                                             setSavedMeals(prev => ({ ...prev, [m.meal]: true }));
                                           } catch { /* ignore */ }
                                         }}
-                                        className={`flex-1 py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95
-                                          ${savedMeals[m.meal]
-                                            ? 'bg-green-500/15 text-green-400 border border-green-500/30 cursor-default'
-                                            : 'bg-gradient-to-r from-yellow-400/20 to-amber-400/15 text-yellow-300 border border-yellow-400/30 hover:from-yellow-400/30 hover:to-amber-400/25 hover:shadow-[0_0_14px_rgba(251,191,36,0.25)]'
-                                          }`}
+                                        className="flex-1 py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95"
+                                        style={savedMeals[m.meal]
+                                          ? { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', boxShadow: 'none', cursor: 'default' }
+                                          : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 24px rgba(250,204,21,0.08)' }
+                                        }
                                       >
                                         {savedMeals[m.meal] ? '✓ Saved' : t('meals.save_meal')}
                                       </button>
@@ -1163,11 +1103,11 @@ export default function UserProfile() {
                                           setSavedAsRecipes(prev => ({ ...prev, [m.meal]: true }));
                                           setMealTab('custom');
                                         }}
-                                        className={`flex-1 py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95
-                                          ${savedAsRecipes[m.meal]
-                                            ? 'bg-green-500/15 text-green-400 border border-green-500/30 cursor-default'
-                                            : 'bg-gradient-to-r from-violet-500/20 to-indigo-500/15 text-violet-300 border border-violet-500/30 hover:from-violet-500/30 hover:to-indigo-500/25 hover:shadow-[0_0_14px_rgba(139,92,246,0.25)]'
-                                          }`}
+                                        className="flex-1 py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95"
+                                        style={savedAsRecipes[m.meal]
+                                          ? { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', boxShadow: 'none', cursor: 'default' }
+                                          : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 24px rgba(250,204,21,0.08)' }
+                                        }
                                       >
                                         {savedAsRecipes[m.meal] ? '✓ Saved' : t('meals.add_recipe')}
                                       </button>
@@ -1176,11 +1116,11 @@ export default function UserProfile() {
                                           logMealToday(m, getSrv(m.meal));
                                           setLoggedMeals(prev => ({ ...prev, [m.meal]: true }));
                                         }}
-                                        className={`px-3 py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95
-                                          ${loggedMeals[m.meal]
-                                            ? 'bg-teal-500/15 text-teal-400 border border-teal-500/30 cursor-default'
-                                            : 'bg-teal-500/10 text-teal-300 border border-teal-500/25 hover:bg-teal-500/20'
-                                          }`}
+                                        className="px-3 py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95"
+                                        style={loggedMeals[m.meal]
+                                          ? { background: 'rgba(20,184,166,0.12)', color: '#2dd4bf', border: '1px solid rgba(20,184,166,0.3)', boxShadow: 'none', cursor: 'default' }
+                                          : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 24px rgba(250,204,21,0.08)' }
+                                        }
                                         title="Log to today's macro tracker"
                                       >
                                         {loggedMeals[m.meal] ? '✓' : '📊'}
@@ -1189,7 +1129,7 @@ export default function UserProfile() {
                                   )}
                                 </motion.div>
                               );
-                            })}
+                            })()}
                           </motion.div>
                         </AnimatePresence>
                       </>
@@ -1293,20 +1233,19 @@ export default function UserProfile() {
           {active === 'workouts' && (
             <motion.div key="workouts" {...fadeUp(0)} className="space-y-6">
               {/* Sub-tabs */}
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex border-b border-white/10">
                 {([
                   { id: 'ai', key: 'workouts.ai_tab' },
                   { id: 'my', key: 'workouts.my_tab' },
-                  { id: 'videos', key: 'workouts.videos_tab' },
                   { id: 'library', key: 'workouts.library_tab' },
                 ] as const).map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setWorkoutTab(tab.id)}
-                    className={`px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide transition-all duration-200 ${
+                    className={`px-4 py-2.5 text-xs sm:text-sm font-black uppercase tracking-wide transition-all duration-200 border-b-2 -mb-px ${
                       workoutTab === tab.id
-                        ? 'bg-yellow-300 text-black shadow-[0_0_16px_rgba(253,224,71,0.3)]'
-                        : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-white/20'
+                        ? 'border-yellow-300 text-yellow-300'
+                        : 'border-transparent text-gray-500 hover:text-gray-200'
                     }`}
                   >
                     {t(tab.key)}
@@ -1317,30 +1256,17 @@ export default function UserProfile() {
               <AnimatePresence mode="wait">
                 {workoutTab === 'ai' && (
                   <motion.div key="ai" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }} className="space-y-4">
-                    {!activeSession ? (
-                      <button
-                        onClick={() => startWorkout('AI Workout Plan', 'ai')}
-                        className="w-full py-3 bg-yellow-300 text-black font-black rounded-xl uppercase text-sm
-                          hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
-                      >
-                        {t('workouts.start_ai')}
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-3 bg-yellow-300/10 border border-yellow-300/30 rounded-xl px-4 py-3">
-                        <span className="text-yellow-300 font-black text-sm">{t('workouts.in_progress')}{fmtElapsed(elapsedSec)}</span>
-                      </div>
-                    )}
-                    <WorkoutPlanView profile={profile} token={token ?? undefined} />
+                    <WorkoutPlanView
+                      profile={profile}
+                      token={token ?? undefined}
+                      onStartSession={() => startWorkout('AI Workout Plan', 'ai')}
+                      onFinishSession={finishWorkout}
+                    />
                   </motion.div>
                 )}
                 {workoutTab === 'my' && (
                   <motion.div key="my" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
                     <MyWorkouts token={token!} onStartWorkout={activeSession ? undefined : startWorkout} />
-                  </motion.div>
-                )}
-                {workoutTab === 'videos' && (
-                  <motion.div key="videos" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
-                    <WorkoutVideos token={token!} />
                   </motion.div>
                 )}
                 {workoutTab === 'library' && (
