@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { io, Socket } from 'socket.io-client';
 import {
-  apiGetUsers, apiGetConversations, apiStartConversation,
+  apiGetUsers, apiGetConversations, apiStartConversation, apiCreateGroup,
   apiGetMessages, apiSendMessage, apiUploadFile, apiToggleReaction,
   apiDeleteConversation, apiDeleteMessage,
   type PublicUser, type ChatConversation, type DirectMessage, type MessageReaction,
@@ -329,6 +329,13 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
   const [activeConvo, setActiveConvo]       = useState<ChatConversation | null>(null);
   const [messages, setMessages]             = useState<DirectMessage[]>([]);
   const [showAddUser, setShowAddUser]       = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [groupName, setGroupName]           = useState('');
+  const [groupMembers, setGroupMembers]     = useState<PublicUser[]>([]);
+  const [groupSearch, setGroupSearch]       = useState('');
+  const [groupUsers, setGroupUsers]         = useState<PublicUser[]>([]);
+  const [groupCreating, setGroupCreating]   = useState(false);
+  const [groupError, setGroupError]         = useState('');
   const [leftTab, setLeftTab]               = useState<'messages' | 'athletes'>('messages');
   const [users, setUsers]                   = useState<PublicUser[]>([]);
   const [usersLoading, setUsersLoading]     = useState(false);
@@ -533,6 +540,42 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
     u.username.toLowerCase().includes(userSearch.toLowerCase())
   );
 
+  const openCreateGroup = () => {
+    setGroupName('');
+    setGroupMembers([]);
+    setGroupSearch('');
+    setGroupError('');
+    if (users.length === 0) {
+      setGroupUsers([]);
+      apiGetUsers(token).then(setGroupUsers);
+    } else {
+      setGroupUsers(users);
+    }
+    setShowCreateGroup(true);
+  };
+
+  const toggleGroupMember = (u: PublicUser) => {
+    setGroupMembers((prev) =>
+      prev.find((m) => m.id === u.id) ? prev.filter((m) => m.id !== u.id) : [...prev, u]
+    );
+  };
+
+  const createGroup = async () => {
+    if (!groupName.trim()) { setGroupError('Enter a group name'); return; }
+    if (groupMembers.length === 0) { setGroupError('Add at least one member'); return; }
+    setGroupCreating(true);
+    setGroupError('');
+    try {
+      const convo = await apiCreateGroup(token, groupName.trim(), groupMembers.map((m) => m.id));
+      handleConversationStarted(convo);
+      setShowCreateGroup(false);
+    } catch (err: unknown) {
+      setGroupError(err instanceof Error ? err.message : 'Failed to create group');
+    } finally {
+      setGroupCreating(false);
+    }
+  };
+
   // ── File selection ──────────────────────────────────────────────────────────
   const onFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -627,7 +670,8 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
 
   // ── Delete conversation ─────────────────────────────────────────────────────
   const handleDeleteConversation = useCallback(async (convo: ChatConversation) => {
-    if (!window.confirm(`Delete chat with ${convo.other_user?.name ?? 'this user'}? This cannot be undone.`)) return;
+    const label = convo.is_group ? (convo.group_name ?? 'this group') : (convo.other_user?.name ?? 'this user');
+    if (!window.confirm(`Leave "${label}"? This cannot be undone.`)) return;
     // Optimistic
     setConversations((prev) => prev.filter((c) => c.id !== convo.id));
     if (activeConvo?.id === convo.id) { setActiveConvo(null); setMessages([]); setMobileView('list'); }
@@ -720,13 +764,22 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
             <span className={`w-2 h-2 rounded-full shrink-0 ${connected ? 'bg-green-400' : 'bg-red-500'}`} title={connected ? 'Connected' : 'Reconnecting…'} />
           </h2>
         </div>
-        <button
-          onClick={() => setShowAddUser(true)}
-          className="px-4 py-2 sm:px-5 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs sm:text-sm
-            hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200"
-        >
-          + Add Athlete
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={openCreateGroup}
+            className="px-2.5 py-1.5 sm:px-4 sm:py-2 bg-white/10 border border-white/15 text-white font-black rounded-xl uppercase text-xs
+              hover:bg-white/15 active:scale-95 transition-all duration-200"
+          >
+            👥 Group
+          </button>
+          <button
+            onClick={() => setShowAddUser(true)}
+            className="px-2.5 py-1.5 sm:px-5 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs
+              hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200"
+          >
+            + Athlete
+          </button>
+        </div>
       </div>
 
       {/* Add user modal */}
@@ -739,6 +792,118 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
             onConversationStarted={handleConversationStarted}
             onClose={() => setShowAddUser(false)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Create group modal */}
+      <AnimatePresence>
+        {showCreateGroup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.75)' }}
+            onClick={() => setShowCreateGroup(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.93, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.93, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-md bg-[#0e0e12] border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                <div>
+                  <p className="text-[--color-iron-gold] text-[10px] font-black tracking-widest uppercase">Community</p>
+                  <h3 className="text-white font-black uppercase text-base">👥 Create Group</h3>
+                </div>
+                <button onClick={() => setShowCreateGroup(false)} className="text-gray-500 hover:text-white transition-colors text-xl leading-none">×</button>
+              </div>
+
+              <div className="p-5 space-y-4">
+                {/* Group name */}
+                <div>
+                  <label className="text-xs text-gray-400 font-black uppercase tracking-wide block mb-1.5">Group Name</label>
+                  <input
+                    type="text"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    placeholder="e.g. Morning Crew"
+                    className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-yellow-300/50"
+                  />
+                </div>
+
+                {/* Member search */}
+                <div>
+                  <label className="text-xs text-gray-400 font-black uppercase tracking-wide block mb-1.5">
+                    Add Members {groupMembers.length > 0 && <span className="text-yellow-300">({groupMembers.length} selected)</span>}
+                  </label>
+                  <input
+                    type="text"
+                    value={groupSearch}
+                    onChange={(e) => setGroupSearch(e.target.value)}
+                    placeholder="Search athletes…"
+                    className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-yellow-300/50 mb-2"
+                  />
+                  <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
+                    {groupUsers
+                      .filter((u) =>
+                        u.name.toLowerCase().includes(groupSearch.toLowerCase()) ||
+                        u.username.toLowerCase().includes(groupSearch.toLowerCase())
+                      )
+                      .map((u) => {
+                        const selected = !!groupMembers.find((m) => m.id === u.id);
+                        return (
+                          <button
+                            key={u.id}
+                            onClick={() => toggleGroupMember(u)}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
+                              selected ? 'bg-yellow-300/15 border border-yellow-300/30' : 'bg-white/5 border border-transparent hover:bg-white/10'
+                            }`}
+                          >
+                            <Avatar name={u.name} src={u.profile_picture ?? undefined} size="sm" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-black uppercase truncate text-gray-200">{u.name}</p>
+                              <p className="text-xs text-gray-600">@{u.username}</p>
+                            </div>
+                            <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 text-xs font-black transition-all ${
+                              selected ? 'border-yellow-300 bg-yellow-300 text-black' : 'border-white/20'
+                            }`}>
+                              {selected ? '✓' : ''}
+                            </span>
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+
+                {/* Selected members preview */}
+                {groupMembers.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {groupMembers.map((m) => (
+                      <span key={m.id} className="flex items-center gap-1 bg-yellow-300/10 border border-yellow-300/20 text-yellow-300 rounded-full px-2.5 py-1 text-xs font-bold">
+                        {m.name.split(' ')[0]}
+                        <button onClick={() => toggleGroupMember(m)} className="hover:text-red-400 transition-colors leading-none">×</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {groupError && <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded-xl px-3 py-2">{groupError}</p>}
+
+                <button
+                  onClick={createGroup}
+                  disabled={groupCreating}
+                  className="w-full py-2 sm:py-3 bg-yellow-300 text-black font-black uppercase text-xs sm:text-sm rounded-xl hover:bg-yellow-200 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {groupCreating ? 'Creating…' : '👥 Create Group'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -755,7 +920,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
               <button
                 key={tab}
                 onClick={() => setLeftTab(tab)}
-                className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wider transition-colors
+                className={`flex-1 py-1.5 sm:py-2.5 text-xs font-black uppercase tracking-wider transition-colors
                   ${leftTab === tab ? 'text-yellow-300 border-b-2 border-yellow-300' : 'text-gray-500 hover:text-gray-300'}`}
               >
                 {tab === 'messages' ? `💬 Messages${totalUnread > 0 ? ` (${totalUnread})` : ''}` : '🏋️ Athletes'}
@@ -815,7 +980,11 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                     className="flex-1 flex items-center gap-3 px-3 py-3 text-left min-w-0"
                   >
                     <div className="relative">
-                      <Avatar name={c.other_user?.name ?? '?'} src={c.other_user?.profile_picture ?? undefined} size="md" />
+                      {c.is_group ? (
+                        <div className="w-10 h-10 rounded-full bg-yellow-300/20 border-2 border-yellow-300/50 flex items-center justify-center text-lg shrink-0">👥</div>
+                      ) : (
+                        <Avatar name={c.other_user?.name ?? '?'} src={c.other_user?.profile_picture ?? undefined} size="md" />
+                      )}
                       {c.unread_count > 0 && (
                         <span className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-300 text-black text-[9px] font-black rounded-full flex items-center justify-center">
                           {c.unread_count > 9 ? '9+' : c.unread_count}
@@ -825,15 +994,18 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className={`text-sm font-black uppercase truncate ${c.unread_count > 0 ? 'text-white' : 'text-gray-300'}`}>
-                          {c.other_user?.name ?? c.other_user?.username ?? '?'}
+                          {c.is_group ? (c.group_name ?? 'Group') : (c.other_user?.name ?? c.other_user?.username ?? '?')}
                         </p>
                         {c.last_message && (
                           <span className="text-[10px] text-gray-600 shrink-0 ml-1">{timeAgo(c.last_message.created_at)}</span>
                         )}
                       </div>
+                      {c.is_group && c.members && (
+                        <p className="text-[10px] text-gray-600 truncate">{c.members.map((m) => m.name.split(' ')[0]).join(', ')}</p>
+                      )}
                       {c.last_message && (
                         <p className={`text-xs truncate mt-0.5 ${c.unread_count > 0 ? 'text-gray-300 font-semibold' : 'text-gray-600'}`}>
-                          {c.last_message.sender_id === currentUserId ? 'You: ' : ''}{c.last_message.content?.startsWith('[WORKOUT_SHARE]') ? '🏋️ Shared a workout plan' : c.last_message.content}
+                          {c.last_message.sender_id === currentUserId ? 'You: ' : c.is_group ? `${c.last_message.sender_name ?? ''}: ` : ''}{c.last_message.content?.startsWith('[WORKOUT_SHARE]') ? '🏋️ Shared a workout plan' : c.last_message.content}
                         </p>
                       )}
                     </div>
@@ -929,17 +1101,27 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                 >
                   ←
                 </button>
-                <Avatar name={activeConvo.other_user?.name ?? '?'} src={activeConvo.other_user?.profile_picture ?? undefined} size="sm" />
+                {activeConvo.is_group ? (
+                  <div className="w-8 h-8 rounded-full bg-yellow-300/20 border-2 border-yellow-300/50 flex items-center justify-center text-base shrink-0">👥</div>
+                ) : (
+                  <Avatar name={activeConvo.other_user?.name ?? '?'} src={activeConvo.other_user?.profile_picture ?? undefined} size="sm" />
+                )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-white font-black text-sm uppercase">{activeConvo.other_user?.name}</p>
-                  <p className="text-gray-600 text-xs">@{activeConvo.other_user?.username}</p>
+                  <p className="text-white font-black text-sm uppercase">
+                    {activeConvo.is_group ? (activeConvo.group_name ?? 'Group') : activeConvo.other_user?.name}
+                  </p>
+                  <p className="text-gray-600 text-xs">
+                    {activeConvo.is_group
+                      ? `${activeConvo.members?.length ?? 0} members`
+                      : `@${activeConvo.other_user?.username}`}
+                  </p>
                 </div>
                 <button
                   onClick={() => handleDeleteConversation(activeConvo)}
-                  title="Delete conversation"
+                  title={activeConvo.is_group ? 'Leave group' : 'Delete conversation'}
                   className="text-gray-600 hover:text-red-400 text-xs px-2 py-1.5 rounded-lg hover:bg-red-400/10 transition-all font-bold uppercase tracking-wide"
                 >
-                  🗑 Delete Chat
+                  🗑 {activeConvo.is_group ? 'Leave' : 'Delete'}
                 </button>
               </div>
 
@@ -1130,7 +1312,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                 <button
                   onClick={sendMessage}
                   disabled={(!input.trim() && !pendingFile) || sending || uploading}
-                  className="px-4 py-2.5 bg-yellow-300 text-black font-black rounded-xl text-sm uppercase
+                  className="px-3 py-2 sm:px-4 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl text-xs sm:text-sm uppercase
                     hover:bg-yellow-200 active:scale-95 transition-all duration-200 disabled:opacity-40 shrink-0"
                 >
                   {uploading ? '⏫' : sending ? '…' : 'Send'}

@@ -60,21 +60,29 @@ class ConversationSerializer(serializers.ModelSerializer):
     other_user = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()
+    members = serializers.SerializerMethodField()
 
     class Meta:
         model = Conversation
-        fields = ['id', 'other_user', 'last_message', 'unread_count', 'updated_at']
+        fields = ['id', 'is_group', 'group_name', 'other_user', 'members', 'last_message', 'unread_count', 'updated_at']
 
     def get_other_user(self, obj):
+        if obj.is_group:
+            return None
         request = self.context.get('request')
         other = obj.participants.exclude(id=request.user.id).first()
         return PublicUserSerializer(other).data if other else None
+
+    def get_members(self, obj):
+        if not obj.is_group:
+            return None
+        return PublicUserSerializer(obj.participants.all(), many=True).data
 
     def get_last_message(self, obj):
         msg = obj.messages.last()
         if msg:
             display = msg.content or (f'Sent a {msg.file_type}' if msg.file_type else 'Sent a file')
-            return {'content': display, 'sender_id': msg.sender.id, 'created_at': str(msg.created_at)}
+            return {'content': display, 'sender_id': msg.sender.id, 'sender_name': msg.sender.profile.name if hasattr(msg.sender, 'profile') else msg.sender.username, 'created_at': str(msg.created_at)}
         return None
 
     def get_unread_count(self, obj):

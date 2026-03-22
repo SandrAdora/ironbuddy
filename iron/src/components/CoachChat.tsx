@@ -262,7 +262,7 @@ export default function CoachChat({ profile, token }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100svh-17rem)] md:h-[calc(100vh-10rem)]">
+    <div className="flex flex-col h-[calc(100svh-9rem)] md:h-[calc(100vh-9rem)]">
       {/* Header */}
       <div className="mb-4 flex items-start justify-between">
         <div>
@@ -365,7 +365,7 @@ export default function CoachChat({ profile, token }: Props) {
         <button
           onClick={send}
           disabled={loading || !input.trim()}
-          className="px-5 py-3 font-black rounded-xl uppercase text-sm hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-3 py-2 sm:px-5 sm:py-3 font-black rounded-xl uppercase text-xs sm:text-sm hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 12px rgba(250,204,21,0.3), 0 0 28px rgba(250,204,21,0.12)' }}
         >
           {t('coach.send')}

@@ -165,7 +165,7 @@ export default function AddUserModal({ token, currentUserId, currentUserName, on
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
           <div>
             <p className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.3em] uppercase opacity-70">Find</p>
             <h3 className="text-lg font-black uppercase italic text-white">Add Athlete</h3>
@@ -179,10 +179,10 @@ export default function AddUserModal({ token, currentUserId, currentUserName, on
             <button
               key={t.id}
               onClick={() => { setTab(t.id); setScanFoundUser(null); setScanError(''); }}
-              className={`flex-1 py-3 text-xs font-black uppercase tracking-wider transition-colors flex flex-col items-center gap-1
+              className={`flex-1 py-2 text-xs font-black uppercase tracking-wider transition-colors flex flex-col items-center gap-0.5
                 ${tab === t.id ? 'text-yellow-300 border-b-2 border-yellow-300' : 'text-gray-500 hover:text-gray-300'}`}
             >
-              <span className="text-base">{t.icon}</span>
+              <span className="text-sm">{t.icon}</span>
               {t.label}
             </button>
           ))}
@@ -207,7 +207,7 @@ export default function AddUserModal({ token, currentUserId, currentUserName, on
                 <button
                   type="submit"
                   disabled={searching || !emailInput.trim()}
-                  className="px-4 py-2.5 bg-yellow-300 text-black font-black rounded-xl text-sm uppercase
+                  className="px-3 py-2 sm:px-4 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl text-xs sm:text-sm uppercase
                     hover:bg-yellow-200 active:scale-95 transition-all disabled:opacity-40"
                 >
                   {searching ? '…' : 'Find'}
@@ -308,7 +308,7 @@ export default function AddUserModal({ token, currentUserId, currentUserName, on
                     <button
                       onClick={() => startChat(scanFoundUser, setScanStarting)}
                       disabled={scanStarting}
-                      className="flex-1 py-2.5 bg-yellow-300 text-black font-black rounded-xl text-sm uppercase
+                      className="flex-1 py-2 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl text-xs sm:text-sm uppercase
                         hover:bg-yellow-200 active:scale-95 transition-all disabled:opacity-40"
                     >
                       {scanStarting ? '…' : 'Start Chat'}

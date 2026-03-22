@@ -96,7 +96,7 @@ export default function Recipes({ token }: Props) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+      <div className="flex items-center justify-between">
         <div>
           <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Video</p>
           <h2 className="text-2xl font-black uppercase italic mt-1">🎬 Recipes</h2>
@@ -104,10 +104,10 @@ export default function Recipes({ token }: Props) {
         {!formOpen && (
           <button
             onClick={() => setFormOpen(true)}
-            className="w-full sm:w-auto px-4 py-2 sm:px-5 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs sm:text-sm
-              hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+            className="w-7 h-7 rounded-lg text-base font-black active:scale-95 transition-all duration-200 flex items-center justify-center"
+            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
           >
-            + Add Recipe
+            +
           </button>
         )}
       </div>
@@ -233,13 +233,13 @@ export default function Recipes({ token }: Props) {
                     <p className="text-white font-black text-sm uppercase truncate">{r.title}</p>
                     <p className="text-gray-600 text-xs mt-0.5">{new Date(r.created_at).toLocaleDateString()}</p>
                   </div>
-                  <div className="flex items-center gap-1 ml-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <div className="flex items-center gap-1 ml-3 shrink-0">
                     <button
                       onClick={() => openEdit(r)}
-                      className="text-gray-600 hover:text-yellow-300 p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors"
+                      className="text-yellow-300 text-sm p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors"
                       title="Edit recipe"
                     >
-                      ✏️
+                      ✎
                     </button>
                     <button
                       onClick={() => handleDelete(r.id)}

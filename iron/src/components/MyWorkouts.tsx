@@ -271,13 +271,13 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
               <div className="flex gap-2">
                 <button
                   onClick={addExercise}
-                  className="flex-1 py-2.5 border border-dashed border-white/20 rounded-xl text-gray-500 hover:text-white hover:border-yellow-300/30 text-sm font-bold uppercase transition-all duration-200"
+                  className="flex-1 py-1.5 border border-dashed border-white/20 rounded-xl text-gray-500 hover:text-white hover:border-yellow-300/30 text-xs font-bold uppercase transition-all duration-200"
                 >
                   + Add Exercise
                 </button>
                 <button
                   onClick={() => { setLibOpen((v) => !v); setLibSearch(''); }}
-                  className="flex-1 py-2.5 border border-dashed border-yellow-300/30 rounded-xl text-yellow-400/70 hover:text-yellow-300 hover:border-yellow-300/60 text-sm font-bold uppercase transition-all duration-200"
+                  className="flex-1 py-1.5 border border-dashed border-yellow-300/30 rounded-xl text-yellow-400/70 hover:text-yellow-300 hover:border-yellow-300/60 text-xs font-bold uppercase transition-all duration-200"
                 >
                   📚 From Library
                 </button>
@@ -366,7 +366,7 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
             >
               <button
                 onClick={() => setExpandedId(expandedId === w.id ? null : w.id)}
-                className="w-full flex items-center justify-between px-5 py-4 text-left"
+                className="w-full flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 text-left"
               >
                 <div>
                   <p className="text-white font-black uppercase tracking-wide">{w.name}</p>
@@ -395,10 +395,10 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); openEdit(w); }}
-                    className="text-gray-600 hover:text-yellow-300 text-xs font-bold transition-colors px-2 py-1 rounded-lg hover:bg-yellow-300/10"
+                    className="text-yellow-300 text-xs font-bold transition-colors px-2 py-1 rounded-lg hover:bg-yellow-300/10"
                     title="Edit workout"
                   >
-                    ✏️
+                    ✎
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDelete(w.id); }}

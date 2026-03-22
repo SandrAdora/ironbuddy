@@ -469,7 +469,6 @@ export default function UserProfile() {
           <p className="mt-3 font-black text-[--color-iron-gold] uppercase text-sm tracking-widest text-center">
             {profile.name || t('common.athlete')}
           </p>
-          <p className="text-gray-500 text-xs mt-0.5 text-center truncate w-full px-2">{profile.email}</p>
         </div>
 
         {/* BMI Badge */}
@@ -510,56 +509,12 @@ export default function UserProfile() {
         {/* Logout */}
         <Link 
           to={"/" }
-          className="mt-6 w-full py-2.5 text-black font-bold rounded-lg uppercase text-sm"
+          className="mt-6 w-full py-1.5 sm:py-2.5 text-black font-bold rounded-lg uppercase text-xs sm:text-sm"
         >
           {t('common.sign_out')}
         </Link>
       </motion.aside>
 
-      {/* ── Mobile profile strip (mobile only) ─────────── */}
-      <div className="md:hidden fixed top-16 left-0 right-0 z-30 bg-[--color-gym-dark]/95 backdrop-blur-xl border-b border-white/10 px-4 py-3">
-        {/* Avatar + name row */}
-        <div className="flex items-center gap-3 mb-3">
-          <button
-            onClick={handleAvatarClick}
-            disabled={avatarUploading}
-            className="relative w-12 h-12 rounded-xl border-2 border-yellow-300 overflow-hidden shrink-0 group focus:outline-none"
-            title={profile.profilePicture ? t('profile.view_photo') : t('profile.upload_photo')}
-          >
-            {profile.profilePicture ? (
-              <img src={profile.profilePicture} alt="avatar" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-yellow-300/20 flex items-center justify-center text-xl animate-coach-breathe">
-                🦾
-              </div>
-            )}
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <span className="text-white text-xs font-bold">{avatarUploading ? '…' : profile.profilePicture ? '🔍' : '📷'}</span>
-            </div>
-          </button>
-          <div className="min-w-0">
-            <p className="font-black text-[--color-iron-gold] uppercase text-sm tracking-widest truncate">
-              {profile.name || t('common.athlete')}
-            </p>
-            <p className="text-gray-500 text-xs truncate">{profile.email}</p>
-          </div>
-        </div>
-        {/* Stats chips row — desktop only */}
-        <div className="hidden md:flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {[
-            { label: t('sidebar.goal'),   value: profile.fitnessGoals || '—' },
-            { label: t('sidebar.level'),  value: profile.experienceLevel || '—' },
-            { label: t('sidebar.weight'), value: profile.weight ? `${profile.weight} kg` : '—' },
-            { label: t('sidebar.height'), value: profile.height ? `${profile.height} cm` : '—' },
-            ...(bmi && bmiInfo ? [{ label: t('sidebar.bmi'), value: `${bmi.toFixed(1)} · ${t(bmiInfo.key)}` }] : []),
-          ].map((s) => (
-            <div key={s.label} className="shrink-0 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex flex-col items-center">
-              <span className="text-[10px] text-gray-500 uppercase font-bold">{s.label}</span>
-              <span className="text-xs text-white font-semibold whitespace-nowrap">{s.value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* ── Mobile bottom nav (mobile only) ─────────────── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[--color-gym-dark]/95 backdrop-blur-xl border-t border-white/10 flex items-center gap-1 px-2 py-2 overflow-x-auto">
@@ -620,20 +575,20 @@ export default function UserProfile() {
       </AnimatePresence>
 
       {/* ── Main content ─────────────────────────────── */}
-      <main className={`flex-1 md:ml-64 px-4 md:px-6 py-4 md:py-8 space-y-8 mt-[108px] md:mt-0 pb-24 md:pb-8 ${activeSession ? 'mt-[152px] md:mt-[44px]' : ''}`}>
+      <main className={`flex-1 md:ml-64 px-3 md:px-6 pt-3 pb-24 md:pt-6 md:pb-8 space-y-4 md:space-y-8 overflow-x-hidden ${activeSession ? 'mt-[44px]' : ''}`}>
         <AnimatePresence mode="wait">
 
           {/* ── DASHBOARD ── */}
           {active === 'dashboard' && (
-            <motion.div key="dashboard" {...fadeUp(0)} className="space-y-8">
+            <motion.div key="dashboard" {...fadeUp(0)} className="space-y-4 md:space-y-8">
               <motion.div {...fadeUp(0)}>
                 <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.title')}</p>
-                <h1 className="text-2xl md:text-3xl font-black uppercase italic mt-1">
+                <h1 className="text-xl md:text-3xl font-black uppercase italic mt-1">
                   {t('dashboard.welcome')} <span className="text-[--color-iron-gold]">{profile.name?.split(' ')[0] || t('common.athlete')}</span> 💪
                 </h1>
               </motion.div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
                 {[
                   { label: t('dashboard.workouts'), value: String(totalWorkouts), icon: '🏋️' },
                   { label: t('dashboard.streak'), value: streak > 0 ? `${streak} ${streak !== 1 ? t('dashboard.days') : t('dashboard.day')}` : '—', icon: '🔥' },
@@ -653,7 +608,7 @@ export default function UserProfile() {
               </div>
 
               {/* Donut + Meals side by side */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                 <GoalDonut goalData={goalData} goal={profile.fitnessGoals} />
                 <MealCard
                   meals={aiMealPlan
@@ -663,36 +618,6 @@ export default function UserProfile() {
                 />
               </div>
 
-              {/* Workout Starter */}
-              <motion.div {...fadeUp(0.35)}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6
-                  hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)] transition-all duration-300">
-                <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest mb-4">{t('dashboard.start_workout')}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
-                    onClick={() => { setActive('workouts'); setWorkoutTab('ai'); }}
-                    className="flex items-center gap-4 bg-yellow-300/10 border border-yellow-300/20 rounded-xl p-4
-                      hover:bg-yellow-300/20 hover:border-yellow-300/40 hover:scale-[1.02] active:scale-95 transition-all duration-200 text-left"
-                  >
-                    <span className="text-3xl">🤖</span>
-                    <div>
-                      <p className="font-black text-[--color-iron-gold] uppercase text-sm">{t('dashboard.ai_plan')}</p>
-                      <p className="text-gray-400 text-xs mt-0.5">{t('dashboard.ai_plan_desc')}</p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => { setActive('workouts'); setWorkoutTab('my'); }}
-                    className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-xl p-4
-                      hover:bg-white/10 hover:border-white/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 text-left"
-                  >
-                    <span className="text-3xl">✏️</span>
-                    <div>
-                      <p className="font-black text-white uppercase text-sm">{t('dashboard.my_workouts')}</p>
-                      <p className="text-gray-400 text-xs mt-0.5">{t('dashboard.my_workouts_desc')}</p>
-                    </div>
-                  </button>
-                </div>
-              </motion.div>
             </motion.div>
           )}
 
@@ -705,7 +630,7 @@ export default function UserProfile() {
 
           {/* ── GOALS ── */}
           {active === 'goals' && (
-            <motion.div key="goals" {...fadeUp(0)} className="space-y-6">
+            <motion.div key="goals" {...fadeUp(0)} className="space-y-3 md:space-y-6">
               <SectionHeader title={t('goals.title')} sub={t('goals.subtitle')} />
               <GoalDonut goalData={goalData} goal={profile.fitnessGoals} large />
             </motion.div>
@@ -713,9 +638,9 @@ export default function UserProfile() {
 
           {/* ── MEALS ── */}
           {active === 'meals' && (
-            <motion.div key="meals" {...fadeUp(0)} className="space-y-6">
+            <motion.div key="meals" {...fadeUp(0)} className="space-y-3 md:space-y-6">
               {/* Sub-tabs */}
-              <div className="flex border-b border-white/10 overflow-x-auto">
+              <div className="flex border-b border-white/10">
                 {([
                   { id: 'ai', label: t('meals.ai_tab') },
                   { id: 'my', label: t('meals.my_tab') },
@@ -726,8 +651,8 @@ export default function UserProfile() {
                   <button
                     key={tab.id}
                     onClick={() => setMealTab(tab.id)}
-                    style={{ fontSize: '0.75rem' }}
-                    className={`shrink-0 px-4 py-2.5 text-xs font-black uppercase tracking-wide transition-all duration-200 border-b-2 -mb-px ${
+                    style={{ fontSize: '0.65rem' }}
+                    className={`flex-1 py-1.5 sm:py-2.5 text-center font-black uppercase tracking-wide transition-all duration-200 border-b-2 -mb-px truncate px-1 ${
                       mealTab === tab.id
                         ? 'border-[--color-iron-gold] text-[--color-iron-gold]'
                         : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'
@@ -863,12 +788,14 @@ export default function UserProfile() {
                                 onClick={() => setNutritionOpen(o => !o)}
                                 className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white/5 hover:bg-white/8 transition-colors"
                               >
-                                <div className="flex items-center gap-2 flex-wrap">
+                                <div className="flex flex-col gap-1 min-w-0">
                                   <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{t('meals.daily_total')}</span>
-                                  <span className="text-xs bg-yellow-400/15 text-yellow-300 font-black px-2.5 py-0.5 rounded-full border border-yellow-400/20">🔥 {totalKcal} kcal</span>
-                                  <span className="text-xs bg-red-500/10 text-red-300 font-bold px-2 py-0.5 rounded-full">P {totalP}g</span>
-                                  <span className="text-xs bg-sky-500/10 text-sky-300 font-bold px-2 py-0.5 rounded-full">C {totalC}g</span>
-                                  <span className="text-xs bg-orange-500/10 text-orange-300 font-bold px-2 py-0.5 rounded-full">F {totalF}g</span>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    <span className="text-xs bg-yellow-400/15 text-yellow-300 font-black px-2.5 py-0.5 rounded-full border border-yellow-400/20">🔥 {totalKcal} kcal</span>
+                                    <span className="text-xs bg-red-500/10 text-red-300 font-bold px-2 py-0.5 rounded-full">P {totalP}g</span>
+                                    <span className="text-xs bg-sky-500/10 text-sky-300 font-bold px-2 py-0.5 rounded-full">C {totalC}g</span>
+                                    <span className="text-xs bg-orange-500/10 text-orange-300 font-bold px-2 py-0.5 rounded-full">F {totalF}g</span>
+                                  </div>
                                 </div>
                                 <span className={`text-gray-400 transition-transform duration-300 text-xs ${nutritionOpen ? 'rotate-180' : ''}`}>▼</span>
                               </button>
@@ -980,7 +907,7 @@ export default function UserProfile() {
                               const srv = getSrv(m.meal);
                               return (
                                 <motion.div key={m.meal} {...fadeUp(0)}
-                                  className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-4
+                                  className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4
                                     hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)] transition-all duration-300">
                                   <div className="flex items-start gap-3">
                                     <span className="text-4xl shrink-0">{m.icon}</span>
@@ -989,20 +916,22 @@ export default function UserProfile() {
                                       <p className="text-gray-400 text-xs mt-0.5">{m.desc}</p>
                                     </div>
                                   </div>
-                                  <div className="flex items-center justify-between gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-2.5">
+                                  <div className="flex flex-wrap items-center justify-between gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-2.5">
                                     <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{t('meals.servings')}</span>
-                                    <div className="flex items-center gap-1.5">
-                                      <button onClick={() => setSrv(m.meal, srv - 1)} disabled={srv <= 1}
-                                        className="w-7 h-7 rounded-lg bg-white/10 border border-white/10 hover:bg-red-500/20 hover:border-red-400/40 hover:text-red-300 text-gray-300 font-black text-sm
-                                          flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed active:scale-90">−</button>
-                                      <span className="text-white font-black text-sm w-5 text-center tabular-nums">{srv}</span>
-                                      <button onClick={() => setSrv(m.meal, srv + 1)} disabled={srv >= 10}
-                                        className="w-7 h-7 rounded-lg bg-white/10 border border-white/10 hover:bg-green-500/20 hover:border-green-400/40 hover:text-green-300 text-gray-300 font-black text-sm
-                                          flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed active:scale-90">+</button>
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex items-center gap-1.5">
+                                        <button onClick={() => setSrv(m.meal, srv - 1)} disabled={srv <= 1}
+                                          className="w-7 h-7 rounded-lg bg-white/10 border border-white/10 hover:bg-red-500/20 hover:border-red-400/40 hover:text-red-300 text-gray-300 font-black text-sm
+                                            flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed active:scale-90">−</button>
+                                        <span className="text-white font-black text-sm w-5 text-center tabular-nums">{srv}</span>
+                                        <button onClick={() => setSrv(m.meal, srv + 1)} disabled={srv >= 10}
+                                          className="w-7 h-7 rounded-lg bg-white/10 border border-white/10 hover:bg-green-500/20 hover:border-green-400/40 hover:text-green-300 text-gray-300 font-black text-sm
+                                            flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed active:scale-90">+</button>
+                                      </div>
+                                      <span className="text-xs bg-yellow-400/15 text-yellow-300 font-black px-3 py-1 rounded-full border border-yellow-400/20 shrink-0">
+                                        {scaleKcal(m.kcal, srv)}
+                                      </span>
                                     </div>
-                                    <span className="text-xs bg-yellow-400/15 text-yellow-300 font-black px-3 py-1 rounded-full border border-yellow-400/20 shrink-0">
-                                      {scaleKcal(m.kcal, srv)}
-                                    </span>
                                   </div>
                                   {(m.protein_g || m.carbs_g || m.fat_g) && (
                                     <div className="flex flex-wrap gap-1.5">
@@ -1057,7 +986,7 @@ export default function UserProfile() {
                                   </div>
                                   {m.steps && m.steps.length > 0 && <MealSteps steps={m.steps} />}
                                   {token && (
-                                    <div className="flex gap-2 pt-1">
+                                    <div className="flex flex-wrap gap-2 pt-1">
                                       <button
                                         disabled={!!savedMeals[m.meal]}
                                         onClick={async () => {
@@ -1073,10 +1002,10 @@ export default function UserProfile() {
                                             setSavedMeals(prev => ({ ...prev, [m.meal]: true }));
                                           } catch { /* ignore */ }
                                         }}
-                                        className="flex-1 py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95"
+                                        className="flex-1 py-1 rounded-xl font-black uppercase tracking-wide transition-all duration-200 active:scale-95"
                                         style={savedMeals[m.meal]
-                                          ? { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', boxShadow: 'none', cursor: 'default' }
-                                          : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 24px rgba(250,204,21,0.08)' }
+                                          ? { fontSize: '0.6rem', background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', boxShadow: 'none', cursor: 'default' }
+                                          : { fontSize: '0.6rem', background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 24px rgba(250,204,21,0.08)' }
                                         }
                                       >
                                         {savedMeals[m.meal] ? '✓ Saved' : t('meals.save_meal')}
@@ -1103,27 +1032,27 @@ export default function UserProfile() {
                                           setSavedAsRecipes(prev => ({ ...prev, [m.meal]: true }));
                                           setMealTab('custom');
                                         }}
-                                        className="flex-1 py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95"
+                                        className="w-7 h-7 rounded-lg font-black transition-all duration-200 active:scale-95 flex items-center justify-center text-base shrink-0"
                                         style={savedAsRecipes[m.meal]
                                           ? { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', boxShadow: 'none', cursor: 'default' }
-                                          : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 24px rgba(250,204,21,0.08)' }
+                                          : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }
                                         }
                                       >
-                                        {savedAsRecipes[m.meal] ? '✓ Saved' : t('meals.add_recipe')}
+                                        {savedAsRecipes[m.meal] ? '✓' : '+'}
                                       </button>
                                       <button
                                         onClick={() => {
                                           logMealToday(m, getSrv(m.meal));
                                           setLoggedMeals(prev => ({ ...prev, [m.meal]: true }));
                                         }}
-                                        className="px-3 py-2.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95"
+                                        className="px-3 py-1.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95"
                                         style={loggedMeals[m.meal]
                                           ? { background: 'rgba(20,184,166,0.12)', color: '#2dd4bf', border: '1px solid rgba(20,184,166,0.3)', boxShadow: 'none', cursor: 'default' }
                                           : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 24px rgba(250,204,21,0.08)' }
                                         }
                                         title="Log to today's macro tracker"
                                       >
-                                        {loggedMeals[m.meal] ? '✓' : '📊'}
+                                        {loggedMeals[m.meal] ? '✓' : 'Log'}
                                       </button>
                                     </div>
                                   )}
@@ -1136,7 +1065,7 @@ export default function UserProfile() {
                     )}
 
                     {!aiMealLoading && !aiMealPlan && !aiMealError && (
-                      <div className="bg-white/5 border border-white/10 rounded-2xl p-12 flex flex-col items-center gap-4 text-center">
+                      <div className="bg-white/5 border border-white/10 rounded-2xl p-4 md:p-12 flex flex-col items-center gap-4 text-center">
                         <span className="text-5xl">🥗</span>
                         <p className="text-[--color-iron-gold] font-black uppercase">{t('meals.no_plan')}</p>
                         <p className="text-gray-400 text-sm">{t('meals.no_plan_desc')}</p>
@@ -1160,8 +1089,8 @@ export default function UserProfile() {
                   </motion.div>
                 )}
                 {mealTab === 'ingredients' && (
-                  <motion.div key="ingredients" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }} className="space-y-6">
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
+                  <motion.div key="ingredients" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }} className="space-y-3 md:space-y-6">
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6 space-y-3 md:space-y-4">
                       <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">{t('meals.ingredient_prefs')}</p>
                       <p className="text-gray-400 text-xs">{t('meals.ingredient_prefs_desc')}</p>
 
@@ -1231,7 +1160,7 @@ export default function UserProfile() {
 
           {/* ── WORKOUTS ── */}
           {active === 'workouts' && (
-            <motion.div key="workouts" {...fadeUp(0)} className="space-y-6">
+            <motion.div key="workouts" {...fadeUp(0)} className="space-y-3 md:space-y-6">
               {/* Sub-tabs */}
               <div className="flex border-b border-white/10">
                 {([
@@ -1242,13 +1171,14 @@ export default function UserProfile() {
                   <button
                     key={tab.id}
                     onClick={() => setWorkoutTab(tab.id)}
-                    className={`px-4 py-2.5 text-xs sm:text-sm font-black uppercase tracking-wide transition-all duration-200 border-b-2 -mb-px ${
+                    style={{ fontSize: '0.75rem' }}
+                    className={`flex-1 py-1.5 sm:py-2.5 text-xs font-black uppercase tracking-wide transition-all duration-200 border-b-2 -mb-px ${
                       workoutTab === tab.id
-                        ? 'border-yellow-300 text-yellow-300'
-                        : 'border-transparent text-gray-500 hover:text-gray-200'
+                        ? 'border-[--color-iron-gold] text-[--color-iron-gold]'
+                        : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'
                     }`}
                   >
-                    {t(tab.key)}
+                    {tab.id === 'ai' ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}>🤖</span> {t(tab.key)}</> : t(tab.key)}
                   </button>
                 ))}
               </div>
@@ -1291,7 +1221,7 @@ export default function UserProfile() {
 
           {/* ── PROGRESS ── */}
           {active === 'progress' && (
-            <motion.div key="progress" {...fadeUp(0)} className="space-y-6">
+            <motion.div key="progress" {...fadeUp(0)} className="space-y-3 md:space-y-6">
               <SectionHeader title={t('progress.title')} sub={t('progress.subtitle')} />
               <ProgressTab
                 token={token!}
@@ -1303,7 +1233,7 @@ export default function UserProfile() {
 
           {/* ── SETTINGS ── */}
           {active === 'settings' && (
-            <motion.div key="settings" {...fadeUp(0)} className="space-y-6">
+            <motion.div key="settings" {...fadeUp(0)} className="space-y-3 md:space-y-6">
               <SectionHeader title={t('settings.title')} sub={t('settings.sub')} />
 
               <div className="flex flex-col lg:flex-row gap-6">
@@ -1346,7 +1276,7 @@ export default function UserProfile() {
                 {/* Account tab */}
                 {settingsTab === 'account' && (
                   <motion.div key="account" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-5">
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6 space-y-3 md:space-y-5">
                       {/* Header row */}
                       <div className="flex items-center justify-between">
                         <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">{t('profile.details')}</p>
@@ -1514,7 +1444,7 @@ export default function UserProfile() {
                 {/* Password tab */}
                 {settingsTab === 'password' && (
                   <motion.div key="password" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4 max-w-sm">
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6 space-y-3 md:space-y-4 max-w-sm">
                       {pwSuccess ? (
                         <motion.p
                           initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
@@ -1550,7 +1480,7 @@ export default function UserProfile() {
                           <button
                             type="submit"
                             disabled={pwSaving}
-                            className="w-full py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-sm
+                            className="w-full py-2 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs sm:text-sm
                               hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 mt-1"
                           >
                             {pwSaving ? t('common.saving') : t('password.update')}
@@ -1564,7 +1494,7 @@ export default function UserProfile() {
                 {/* Legal tab */}
                 {settingsTab === 'legal' && (
                   <motion.div key="legal" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6 space-y-3 md:space-y-4">
                       <div className="flex items-center justify-between">
                         <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">{t('legal.title')}</p>
                         {profile.disclaimerAcceptedAt ? (
@@ -1614,7 +1544,7 @@ export default function UserProfile() {
                 {settingsTab === 'languages' && (
                   <motion.div key="languages" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }} className="space-y-4">
                     {/* App Language */}
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-5">
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6 space-y-3 md:space-y-5">
                       <div>
                         <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">{t('language.app_language')}</p>
                         <p className="text-gray-400 text-xs mt-1">{t('language.app_language_desc')}</p>
@@ -1652,7 +1582,7 @@ export default function UserProfile() {
                     </div>
 
                     {/* AI Coach Language */}
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-3">
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6 space-y-3">
                       <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">🦾 {t('language.coach_language')}</p>
                       <p className="text-gray-400 text-xs">{t('language.coach_language_desc')}</p>
                       <div className="flex items-center gap-3 bg-yellow-300/5 border border-yellow-300/20 rounded-xl px-4 py-3">
@@ -1669,7 +1599,7 @@ export default function UserProfile() {
                 {/* Danger Zone tab */}
                 {settingsTab === 'delete_account' && (
                   <motion.div key="danger" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
-                    <div className="bg-red-900/10 backdrop-blur-md border border-red-500/20 rounded-2xl p-6 space-y-6">
+                    <div className="bg-red-900/10 backdrop-blur-md border border-red-500/20 rounded-2xl p-4 md:p-6 space-y-3 md:space-y-6">
                       <p className="text-red-400 font-black uppercase text-sm tracking-widest">{t('danger.title')}</p>
 
                       {/* Deactivate */}
@@ -1678,7 +1608,7 @@ export default function UserProfile() {
                         <p className="text-gray-400 text-xs">{t('danger.deactivate_desc')}</p>
                         {dangerAction !== 'deactivate' ? (
                           <button onClick={() => { setDangerAction('deactivate'); setDangerError(''); setDangerPassword(''); }}
-                            className="px-5 py-2 bg-orange-500/20 border border-orange-400/30 text-orange-300 font-black rounded-xl uppercase text-xs hover:bg-orange-500/30 transition-all">
+                            className="px-3 py-1.5 sm:px-5 sm:py-2 bg-orange-500/20 border border-orange-400/30 text-orange-300 font-black rounded-xl uppercase text-xs hover:bg-orange-500/30 transition-all">
                             {t('danger.deactivate_btn')}
                           </button>
                         ) : (
@@ -1695,10 +1625,10 @@ export default function UserProfile() {
                                 } catch (err: unknown) {
                                   setDangerError(err instanceof Error ? err.message : 'Failed');
                                 } finally { setDangerLoading(false); }
-                              }} className="px-5 py-2 bg-orange-500 text-black font-black rounded-xl uppercase text-xs hover:bg-orange-400 active:scale-95 transition-all disabled:opacity-50">
+                              }} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-orange-500 text-black font-black rounded-xl uppercase text-xs hover:bg-orange-400 active:scale-95 transition-all disabled:opacity-50">
                                 {dangerLoading ? t('common.processing') : t('danger.confirm_deactivate')}
                               </button>
-                              <button onClick={() => setDangerAction(null)} className="px-5 py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all">{t('danger.cancel')}</button>
+                              <button onClick={() => setDangerAction(null)} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all">{t('danger.cancel')}</button>
                             </div>
                           </div>
                         )}
@@ -1712,7 +1642,7 @@ export default function UserProfile() {
                         <p className="text-gray-400 text-xs">{t('danger.delete_desc')}</p>
                         {dangerAction !== 'delete' ? (
                           <button onClick={() => { setDangerAction('delete'); setDangerError(''); setDangerPassword(''); }}
-                            className="px-5 py-2 bg-red-500/20 border border-red-400/30 text-red-300 font-black rounded-xl uppercase text-xs hover:bg-red-500/30 transition-all">
+                            className="px-3 py-1.5 sm:px-5 sm:py-2 bg-red-500/20 border border-red-400/30 text-red-300 font-black rounded-xl uppercase text-xs hover:bg-red-500/30 transition-all">
                             {t('danger.delete_btn')}
                           </button>
                         ) : (
@@ -1729,10 +1659,10 @@ export default function UserProfile() {
                                 } catch (err: unknown) {
                                   setDangerError(err instanceof Error ? err.message : 'Failed');
                                 } finally { setDangerLoading(false); }
-                              }} className="px-5 py-2 bg-red-600 text-white font-black rounded-xl uppercase text-xs hover:bg-red-500 active:scale-95 transition-all disabled:opacity-50">
+                              }} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-red-600 text-white font-black rounded-xl uppercase text-xs hover:bg-red-500 active:scale-95 transition-all disabled:opacity-50">
                                 {dangerLoading ? t('common.processing') : t('danger.confirm_delete')}
                               </button>
-                              <button onClick={() => setDangerAction(null)} className="px-5 py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all">{t('danger.cancel')}</button>
+                              <button onClick={() => setDangerAction(null)} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all">{t('danger.cancel')}</button>
                             </div>
                           </div>
                         )}
@@ -1782,13 +1712,13 @@ export default function UserProfile() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => finishWorkout()}
-                    className="flex-1 py-3 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all"
+                    className="flex-1 py-2 sm:py-3 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all"
                   >
                     Skip
                   </button>
                   <button
                     onClick={() => finishWorkout(notesInput.trim() || undefined)}
-                    className="flex-1 py-3 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs hover:brightness-110 hover:scale-[1.02] active:scale-95 transition-all"
+                    className="flex-1 py-2 sm:py-3 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs hover:brightness-110 hover:scale-[1.02] active:scale-95 transition-all"
                   >
                     Save & Finish ✓
                   </button>
@@ -1828,14 +1758,14 @@ export default function UserProfile() {
               <div className="flex gap-3 w-full">
                 <button
                   onClick={() => { setViewingAvatar(false); avatarInputRef.current?.click(); }}
-                  className="flex-1 py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs
+                  className="flex-1 py-2 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs
                     hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200"
                 >
                   📷 {t('profile.upload_photo')}
                 </button>
                 <button
                   onClick={() => setViewingAvatar(false)}
-                  className="flex-1 py-2.5 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs
+                  className="flex-1 py-1.5 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs
                     hover:text-white transition-all"
                 >
                   {t('common.close')}
@@ -1864,7 +1794,7 @@ function SectionHeader({ title, sub }: { title: string; sub: string }) {
   return (
     <div>
       <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{sub}</p>
-      <h1 className="text-3xl font-black uppercase italic mt-1">{title}</h1>
+      <h1 className="text-xl md:text-3xl font-black uppercase italic mt-1">{title}</h1>
     </div>
   );
 }

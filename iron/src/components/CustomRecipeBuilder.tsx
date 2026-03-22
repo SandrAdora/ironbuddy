@@ -292,8 +292,8 @@ export default function CustomRecipeBuilder({ token }: Props) {
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <button onClick={(e) => { e.stopPropagation(); openEdit(r); }}
-                    className="text-gray-600 hover:text-yellow-300 p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors"
-                    title="Edit recipe">✏️</button>
+                    className="text-yellow-300 text-sm p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors"
+                    title="Edit recipe">✎</button>
                   <button onClick={(e) => { e.stopPropagation(); handleDelete(r.id); }}
                     className="text-gray-600 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-400/10 transition-colors"
                     title="Delete recipe">🗑</button>

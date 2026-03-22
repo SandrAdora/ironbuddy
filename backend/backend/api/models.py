@@ -85,6 +85,9 @@ class WorkoutVideo(models.Model):
 
 class Conversation(models.Model):
     participants = models.ManyToManyField(User, related_name='conversations')
+    is_group = models.BooleanField(default=False)
+    group_name = models.CharField(max_length=100, blank=True)
+    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='created_conversations')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -92,7 +95,7 @@ class Conversation(models.Model):
         ordering = ['-updated_at']
 
     def __str__(self):
-        return f"Conversation {self.pk}"
+        return self.group_name or f"Conversation {self.pk}"
 
 
 class Message(models.Model):

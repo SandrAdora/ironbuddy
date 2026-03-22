@@ -284,8 +284,11 @@ export interface PublicUser {
 
 export interface ChatConversation {
   id: number;
-  other_user: PublicUser;
-  last_message: { content: string; sender_id: number; created_at: string } | null;
+  is_group: boolean;
+  group_name?: string;
+  other_user: PublicUser | null;
+  members?: PublicUser[];
+  last_message: { content: string; sender_id: number; sender_name?: string; created_at: string } | null;
   unread_count: number;
   updated_at: string;
 }
@@ -370,6 +373,19 @@ export async function apiStartConversation(token: string, userId: number): Promi
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error ?? 'Failed to start conversation');
+  }
+  return res.json();
+}
+
+export async function apiCreateGroup(token: string, name: string, userIds: number[]): Promise<ChatConversation> {
+  const res = await fetch(`${BASE}/api/conversations/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ name, user_ids: userIds }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error ?? 'Failed to create group');
   }
   return res.json();
 }

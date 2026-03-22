@@ -3,14 +3,18 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
+from django.core.files.storage import default_storage
+from django.conf import settings
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import status
 from .serializers import UserSerializer, UserProfileSerializer, CustomWorkoutSerializer, CustomMealSerializer, UserRecipeSerializer, WorkoutVideoSerializer, PublicUserSerializer, ConversationSerializer, MessageSerializer, WorkoutSessionSerializer, WeightLogSerializer, BodyMeasurementSerializer
 from .models import UserProfile, CustomWorkout, CustomMeal, UserRecipe, WorkoutVideo, Conversation, Message, WorkoutSession, MessageReaction, WeightLog, BodyMeasurement
 from groq import Groq
 import os
+import uuid
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -240,7 +244,7 @@ RULE C — DEFAULT BEHAVIOR:
             messages[-1]['content'] = message + recipe_context
 
         try:
-            reply = _chat_completion(provider, api_key, main_model, system, messages, max_tokens=1024)
+            reply = _chat_completion(provider, api_key, main_model, system, messages, max_tokens=2000)
 
             # ── Server-side guard: strip tags the LLM produced without permission ──
             # If the user did not explicitly request a workout, remove [SAVE_WORKOUT]
@@ -269,10 +273,13 @@ Coach message:
                     "data": {"name": "Coach Workout", "description": clean_reply[:200], "exercises": []}
                 }
                 try:
-                    raw = _chat_completion(provider, api_key, fast_model, 'Return ONLY valid JSON, no markdown, no extra text.', [{"role": "user", "content": extract_prompt}], max_tokens=1200)
+                    raw = _chat_completion(provider, api_key, fast_model, 'Return ONLY valid JSON, no markdown, no extra text.', [{"role": "user", "content": extract_prompt}], max_tokens=2500)
                     raw = _re.sub(r'^```(?:json)?\s*', '', raw.strip())
                     raw = _re.sub(r'\s*```$', '', raw)
-                    save_prompt = json.loads(raw)
+                    parsed = json.loads(raw)
+                    # Only use the parsed result if it actually contains exercises
+                    if isinstance(parsed.get('data', {}).get('exercises'), list) and len(parsed['data']['exercises']) > 0:
+                        save_prompt = parsed
                 except Exception:
                     pass
                 reply = clean_reply
@@ -291,7 +298,7 @@ Coach message:
                     "data": {"name": "Coach Meal", "description": clean_reply[:200], "kcal": "—", "icon": "🍽️", "ingredients": [], "steps": []}
                 }
                 try:
-                    raw = _chat_completion(provider, api_key, fast_model, 'Return ONLY valid JSON, no markdown, no extra text.', [{"role": "user", "content": extract_prompt}], max_tokens=1200)
+                    raw = _chat_completion(provider, api_key, fast_model, 'Return ONLY valid JSON, no markdown, no extra text.', [{"role": "user", "content": extract_prompt}], max_tokens=2500)
                     raw = _re.sub(r'^```(?:json)?\s*', '', raw.strip())
                     raw = _re.sub(r'\s*```$', '', raw)
                     save_prompt = json.loads(raw)
@@ -1171,12 +1178,27 @@ class ConversationListView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        # ── Group creation ──────────────────────────────────────────────
+        user_ids = request.data.get('user_ids')
+        if user_ids is not None:
+            group_name = request.data.get('name', '').strip()
+            if not group_name:
+                return Response({'error': 'Group name is required'}, status=400)
+            if not isinstance(user_ids, list) or len(user_ids) == 0:
+                return Response({'error': 'At least one member is required'}, status=400)
+            members = User.objects.filter(id__in=user_ids)
+            convo = Conversation.objects.create(is_group=True, group_name=group_name, created_by=request.user)
+            convo.participants.add(request.user, *members)
+            serializer = ConversationSerializer(convo, context={'request': request})
+            return Response(serializer.data, status=201)
+
+        # ── 1-on-1 DM ───────────────────────────────────────────────────
         other_user_id = request.data.get('user_id')
         try:
             other_user = User.objects.get(id=other_user_id)
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=404)
-        convo = Conversation.objects.filter(participants=request.user).filter(participants=other_user).first()
+        convo = Conversation.objects.filter(participants=request.user).filter(participants=other_user).filter(is_group=False).first()
         if not convo:
             profile = getattr(request.user, 'profile', None)
             if profile and not profile.community_visible:
@@ -1496,3 +1518,31 @@ class ExerciseFetchMediaView(APIView):
         t = threading.Thread(target=run, daemon=True)
         t.start()
         return Response({'status': 'started'})
+
+
+class UploadFileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    ALLOWED_TYPES = {'image/jpeg', 'image/png', 'image/gif', 'image/webp'}
+    MAX_SIZE = 5 * 1024 * 1024  # 5 MB
+
+    def post(self, request):
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
+        if file.content_type not in self.ALLOWED_TYPES:
+            return Response({'error': 'Only JPEG, PNG, GIF and WebP images are allowed'}, status=status.HTTP_400_BAD_REQUEST)
+        if file.size > self.MAX_SIZE:
+            return Response({'error': 'File too large (max 5 MB)'}, status=status.HTTP_400_BAD_REQUEST)
+
+        ext = os.path.splitext(file.name)[1].lower() or '.jpg'
+        filename = f'avatars/{uuid.uuid4().hex}{ext}'
+        saved_path = default_storage.save(filename, file)
+        file_url = request.build_absolute_uri(settings.MEDIA_URL + saved_path)
+
+        return Response({
+            'file_url': file_url,
+            'file_name': file.name,
+            'file_type': file.content_type,
+            'file_size': file.size,
+        })

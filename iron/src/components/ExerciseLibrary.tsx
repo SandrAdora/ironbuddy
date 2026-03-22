@@ -300,7 +300,7 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
           placeholder="Search exercises…"
           className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-300/50"
         />
-        <button type="submit" className="px-4 py-2.5 bg-yellow-300 text-black rounded-xl text-sm font-black hover:bg-yellow-200 transition-colors">
+        <button type="submit" className="px-3 py-2 sm:px-4 sm:py-2.5 bg-yellow-300 text-black rounded-xl text-xs sm:text-sm font-black hover:bg-yellow-200 transition-colors">
           Search
         </button>
 
@@ -308,7 +308,7 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
         <button
           type="button"
           onClick={() => setFiltersOpen(o => !o)}
-          className={`relative px-4 py-2.5 rounded-xl text-sm font-black border transition-all ${
+          className={`relative px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black border transition-all ${
             filtersOpen || activeFilterCount > 0
               ? 'bg-yellow-300 text-black border-yellow-300'
               : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:border-white/20'

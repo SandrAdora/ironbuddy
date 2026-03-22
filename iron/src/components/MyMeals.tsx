@@ -88,7 +88,7 @@ export default function MyMeals({ token }: Props) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+      <div className="flex items-center justify-between">
         <div>
           <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Custom</p>
           <h2 className="text-2xl font-black uppercase italic mt-1">🍽️ My Meals</h2>
@@ -96,10 +96,10 @@ export default function MyMeals({ token }: Props) {
         {!formOpen && (
           <button
             onClick={() => setFormOpen(true)}
-            className="w-full sm:w-auto px-4 py-2 sm:px-5 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs sm:text-sm
-              hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+            className="w-7 h-7 rounded-lg text-base font-black active:scale-95 transition-all duration-200 flex items-center justify-center"
+            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
           >
-            + Add Meal
+            +
           </button>
         )}
       </div>
@@ -161,8 +161,8 @@ export default function MyMeals({ token }: Props) {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 py-2 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs sm:text-sm
-                  hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-50"
+                className="flex-1 py-1.5 font-black rounded-xl uppercase text-xs active:scale-95 transition-all duration-200 disabled:opacity-50"
+                style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
               >
                 {saving ? 'Saving...' : editingId !== null ? 'Update Meal' : 'Save Meal'}
               </button>
@@ -201,13 +201,13 @@ export default function MyMeals({ token }: Props) {
             >
               <div className="flex items-start justify-between">
                 <span className="text-4xl">{m.icon}</span>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1">
                   <button
                     onClick={() => openEdit(m)}
-                    className="text-gray-600 hover:text-yellow-300 p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors"
+                    className="text-yellow-300 p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors text-sm"
                     title="Edit meal"
                   >
-                    ✏️
+                    ✎
                   </button>
                   <button
                     onClick={() => handleDelete(m.id)}

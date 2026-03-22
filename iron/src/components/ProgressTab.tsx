@@ -196,7 +196,7 @@ export default function ProgressTab({ token, sessions, currentWeight }: Props) {
   const weightDelta  = latestWeight && firstWeight ? +(latestWeight - firstWeight).toFixed(1) : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full overflow-x-hidden">
 
       {/* ── Share summary ── */}
       <div className="flex justify-end">
@@ -262,7 +262,7 @@ export default function ProgressTab({ token, sessions, currentWeight }: Props) {
         {finished.length === 0 ? (
           <p className="text-gray-500 text-sm text-center py-8">Complete your first workout to see your activity chart.</p>
         ) : (
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="99%" height={200}>
             <BarChart data={weeklyData} barCategoryGap="30%">
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis dataKey="week" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -320,7 +320,7 @@ export default function ProgressTab({ token, sessions, currentWeight }: Props) {
           <button
             onClick={handleAddWeight}
             disabled={saving || !weightInput}
-            className="px-5 py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-sm
+            className="px-3 py-2 sm:px-5 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs sm:text-sm
               hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {saving ? '…' : 'Log'}
@@ -337,7 +337,7 @@ export default function ProgressTab({ token, sessions, currentWeight }: Props) {
               : 'Add one more entry to see your weight trend.'}
           </p>
         ) : (
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="99%" height={200}>
             <LineChart data={weightChartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -436,7 +436,7 @@ export default function ProgressTab({ token, sessions, currentWeight }: Props) {
           <button
             onClick={handleAddMeasurement}
             disabled={measureSaving}
-            className="px-5 py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-sm
+            className="px-3 py-2 sm:px-5 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs sm:text-sm
               hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-40"
           >
             {measureSaving ? '…' : 'Log'}
@@ -446,7 +446,7 @@ export default function ProgressTab({ token, sessions, currentWeight }: Props) {
 
         {/* Chart */}
         {measurements.length >= 2 && (
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="99%" height={200}>
             <LineChart data={measurements.map((m) => ({
               date:  m.logged_at.slice(5),
               chest: m.chest ?? undefined,
