@@ -703,3 +703,14 @@ export async function apiFetchExerciseMedia(token: string, force = false): Promi
   });
   if (!res.ok) throw new Error('Failed to start media fetch');
 }
+
+export async function apiTranslateInstructions(token: string, instructions: string[], language: string): Promise<string[]> {
+  const res = await fetch(`${BASE}/api/translate-instructions/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ instructions, language }),
+  });
+  if (!res.ok) return instructions;
+  const data = await res.json();
+  return data.instructions ?? instructions;
+}

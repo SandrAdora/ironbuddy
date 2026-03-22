@@ -1554,3 +1554,52 @@ class UploadFileView(APIView):
             'file_type': file.content_type,
             'file_size': file.size,
         })
+
+
+class TranslateInstructionsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    LANGUAGE_NAMES = {
+        'en': 'English', 'de': 'German', 'fr': 'French',
+        'es': 'Spanish', 'hu': 'Hungarian',
+    }
+
+    def post(self, request):
+        instructions = request.data.get('instructions', [])
+        language = request.data.get('language', 'en')
+
+        if language == 'en' or not instructions:
+            return Response({'instructions': instructions})
+
+        language_name = self.LANGUAGE_NAMES.get(language, 'English')
+
+        try:
+            numbered = '\n'.join(f'{i+1}. {step}' for i, step in enumerate(instructions))
+            prompt = (
+                f'Translate the following numbered exercise instructions to {language_name}. '
+                f'Return ONLY the translated numbered list, preserving the same numbers and format. '
+                f'Do not add any extra text.\n\n{numbered}'
+            )
+            _, api_key, _, fast_model = _get_ai_provider()
+            client = Groq(api_key=api_key)
+            resp = client.chat.completions.create(
+                model=fast_model,
+                messages=[{'role': 'user', 'content': prompt}],
+                temperature=0.2,
+            )
+            raw = resp.choices[0].message.content.strip()
+            translated = []
+            for line in raw.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                # strip leading "1. ", "2. " etc.
+                import re
+                cleaned = re.sub(r'^\d+\.\s*', '', line)
+                if cleaned:
+                    translated.append(cleaned)
+            if len(translated) != len(instructions):
+                translated = instructions  # fallback to originals on parse error
+            return Response({'instructions': translated})
+        except Exception:
+            return Response({'instructions': instructions})

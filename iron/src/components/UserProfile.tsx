@@ -1238,7 +1238,9 @@ export default function UserProfile() {
                       ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}>🤖</span> {t(tab.key)}</>
                       : tab.id === 'my'
                         ? <><span style={{ color: '#facc15' }}>✎</span> {t(tab.key)}</>
-                        : t(tab.key)
+                        : tab.id === 'library'
+                          ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}>📚</span> {t(tab.key)}</>
+                          : t(tab.key)
                     }
                   </button>
                 ))}
@@ -1262,7 +1264,7 @@ export default function UserProfile() {
                 )}
                 {workoutTab === 'library' && (
                   <motion.div key="library" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
-                    <ExerciseLibrary token={token!} />
+                    <ExerciseLibrary token={token!} language={profile.language ?? 'en'} />
                   </motion.div>
                 )}
               </AnimatePresence>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   apiGetExercises, apiGetExerciseMeta, apiGetCustomWorkouts, apiUpdateCustomWorkout,
-  apiFetchExerciseMedia,
+  apiFetchExerciseMedia, apiTranslateInstructions,
   Exercise, ExerciseMeta, CustomWorkout,
 } from '../api';
 import MuscleMap from './MuscleMap';
@@ -79,7 +79,7 @@ function CustomSelect({ value, onChange, options, placeholder = 'Select…', cla
   );
 }
 
-interface Props { token: string }
+interface Props { token: string; language?: string }
 
 const PAGE_SIZE = 20;
 
@@ -137,7 +137,7 @@ function FilterBadge({ label, onRemove }: { label: string; onRemove: () => void 
   );
 }
 
-const ExerciseLibrary: React.FC<Props> = ({ token }) => {
+const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
   const [meta, setMeta]               = useState<ExerciseMeta | null>(null);
   const [exercises, setExercises]     = useState<Exercise[]>([]);
   const [total, setTotal]             = useState(0);
@@ -167,6 +167,9 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
   // Feature B — add to workout
   const [addToWorkoutId, setAddToWorkoutId] = useState<number | ''>('');
   const [addStatus, setAddStatus]           = useState<'idle' | 'saving' | 'done' | 'error'>('idle');
+
+  // Translated instructions cache: exerciseId -> string[]
+  const [translatedInstructions, setTranslatedInstructions] = useState<Record<string, string[]>>({});
 
 
   // Load meta + workouts once, and kick off background media fetch
@@ -439,7 +442,16 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
               key={ex.exercise_id}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => { setSelected(ex); setAddToWorkoutId(''); setAddStatus('idle'); }}
+              onClick={() => {
+                setSelected(ex);
+                setAddToWorkoutId('');
+                setAddStatus('idle');
+                if (language !== 'en' && ex.instructions.length > 0 && !translatedInstructions[ex.exercise_id]) {
+                  apiTranslateInstructions(token, ex.instructions, language).then(translated => {
+                    setTranslatedInstructions(prev => ({ ...prev, [ex.exercise_id]: translated }));
+                  });
+                }
+              }}
               className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden text-left hover:border-yellow-300/30 transition-colors"
             >
               <div className="aspect-square overflow-hidden relative">
@@ -570,8 +582,11 @@ const ExerciseLibrary: React.FC<Props> = ({ token }) => {
                 {selected.instructions.length > 0 && (
                   <div>
                     <h3 className="text-white font-bold text-sm mb-2">How to perform</h3>
+                    {language !== 'en' && !translatedInstructions[selected.exercise_id] && (
+                      <p className="text-xs text-gray-500 mb-2 animate-pulse">Translating…</p>
+                    )}
                     <ol className="space-y-2">
-                      {selected.instructions.map((step, i) => (
+                      {(translatedInstructions[selected.exercise_id] ?? selected.instructions).map((step, i) => (
                         <li key={i} className="flex gap-3 text-sm text-gray-300">
                           <span className="shrink-0 w-5 h-5 bg-yellow-300/10 text-yellow-300 rounded-full flex items-center justify-center text-xs font-bold">{i + 1}</span>
                           {step}
