@@ -101,7 +101,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     # Map camelCase frontend names to snake_case model fields
     fitnessGoals = serializers.CharField(source='fitness_goals', allow_blank=True, required=False)
     experienceLevel = serializers.CharField(source='experience_level', allow_blank=True, required=False)
-    disclaimerAcceptedAt = serializers.DateTimeField(source='disclaimer_accepted_at', allow_null=True, required=False)
+    disclaimerAcceptedAt = serializers.DateTimeField(source='disclaimer_accepted_at', read_only=True)
     profilePicture = serializers.URLField(source='profile_picture', allow_blank=True, required=False)
     communityVisible = serializers.BooleanField(source='community_visible', required=False)
     preferredIngredients = serializers.JSONField(source='preferred_ingredients', required=False)
@@ -192,4 +192,4 @@ from .models import Exercise
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Exercise
-        fields = ['id', 'exercise_id', 'name', 'body_part', 'target', 'secondary_muscles', 'equipment', 'gif_url', 'instructions']
+        fields = ['id', 'exercise_id', 'name', 'body_part', 'target', 'secondary_muscles', 'equipment', 'gif_url', 'instructions', 'youtube_video_id', 'wger_image_url']

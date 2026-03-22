@@ -159,7 +159,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     if (profile.email) {
       localStorage.setItem(profileKey(profile.email), JSON.stringify(profile));
       if (token && profile.onboarded) {
-        const { email: _e, password: _p, onboarded: _o, ...profileData } = profile;
+        const { email: _e, password: _p, onboarded: _o, disclaimerAcceptedAt: _d, ...profileData } = profile;
         apiSaveProfile(token, profileData as Record<string, unknown>).catch(() => {});
       }
     }

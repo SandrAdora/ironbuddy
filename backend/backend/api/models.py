@@ -180,6 +180,8 @@ class Exercise(models.Model):
     equipment = models.CharField(max_length=100, blank=True)
     gif_url = models.URLField(max_length=500, blank=True)
     instructions = models.JSONField(default=list)
+    youtube_video_id = models.CharField(max_length=20, blank=True)
+    wger_image_url = models.URLField(max_length=500, blank=True)
 
     class Meta:
         ordering = ['name']

@@ -10,11 +10,13 @@ export interface CachedMessage {
   conversation_id: number;
   sender_id: number;
   sender_name: string;
+  sender_profile_picture?: string;
   content: string;
   file_url?: string;
   file_type?: string;
   file_name?: string;
   created_at: string;
+  reactions?: { emoji: string; count: number; user_ids: number[] }[];
 }
 
 // ── Internal DB open ──────────────────────────────────────────────────────────

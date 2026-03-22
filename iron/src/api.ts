@@ -63,11 +63,11 @@ export async function apiChat(
   return res.json();
 }
 
-export async function apiWorkout(profile: Record<string, unknown>): Promise<WorkoutPlan> {
+export async function apiWorkout(profile: Record<string, unknown>, days?: number): Promise<WorkoutPlan> {
   const res = await fetch(`${BASE}/api/workout/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ profile }),
+    body: JSON.stringify({ profile, days }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Failed to generate workout plan');
@@ -634,6 +634,8 @@ export interface Exercise {
   equipment: string;
   gif_url: string;
   instructions: string[];
+  youtube_video_id: string;
+  wger_image_url: string;
 }
 
 export interface ExercisePage {
@@ -671,4 +673,13 @@ export async function apiGetExerciseMeta(token: string): Promise<ExerciseMeta> {
   });
   if (!res.ok) throw new Error('Failed to fetch exercise metadata');
   return res.json();
+}
+
+export async function apiFetchExerciseMedia(token: string, force = false): Promise<void> {
+  const res = await fetch(`${BASE}/api/exercises/fetch-media/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ force }),
+  });
+  if (!res.ok) throw new Error('Failed to start media fetch');
 }

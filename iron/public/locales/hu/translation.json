@@ -206,7 +206,7 @@
     "videos": "Videók",
     "ai_tab": "🤖 AI Terv",
     "my_tab": "✏️ Edzéseim",
-    "videos_tab": "🎬 Videók",
+    "library_tab": "📚 Gyakorlatkönyvtár",
     "start_ai": "▶ AI Edzés indítása",
     "in_progress": "🏋️ Edzés folyamatban — "
   },
@@ -351,7 +351,7 @@
     },
     "section_nav": {
       "home": "Kezdőlap",
-      "how_it_works": "Hogyan működik",
+      "how_it_works": "A Folyamat",
       "features": "Funkciók",
       "join": "Csatlakozás"
     }
