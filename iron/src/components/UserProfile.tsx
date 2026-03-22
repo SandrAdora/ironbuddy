@@ -184,6 +184,7 @@ export default function UserProfile() {
   const [mealTimeTab, setMealTimeTab] = useState<'breakfast' | 'lunch' | 'dinner' | 'snacks'>('breakfast');
   const [mealSuggIdx, setMealSuggIdx] = useState<Record<string, number>>({});
   const [nutritionOpen, setNutritionOpen] = useState(false);
+  const [closedMealCards, setClosedMealCards] = useState<Set<string>>(new Set());
 
   // AI Meal Plan state
   const [aiMealPlan, setAiMealPlan] = useState<AIMealPlan | null>(null);
@@ -444,9 +445,9 @@ export default function UserProfile() {
             title={profile.profilePicture ? t('profile.view_photo') : t('profile.upload_photo')}
           >
             {profile.profilePicture ? (
-              <img src={profile.profilePicture} alt="avatar" className="w-full h-full object-cover" />
+              <img src={profile.profilePicture} alt="avatar" className="absolute inset-0 w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-yellow-300/20 flex items-center justify-center text-4xl animate-coach-breathe">
+              <div className="absolute inset-0 bg-yellow-300/20 flex items-center justify-center text-4xl animate-coach-breathe">
                 🦾
               </div>
             )}
@@ -581,11 +582,29 @@ export default function UserProfile() {
           {/* ── DASHBOARD ── */}
           {active === 'dashboard' && (
             <motion.div key="dashboard" {...fadeUp(0)} className="space-y-4 md:space-y-8">
-              <motion.div {...fadeUp(0)}>
-                <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.title')}</p>
-                <h1 className="text-xl md:text-3xl font-black uppercase italic mt-1">
-                  {t('dashboard.welcome')} <span className="text-[--color-iron-gold]">{profile.name?.split(' ')[0] || t('common.athlete')}</span> 💪
-                </h1>
+              <motion.div {...fadeUp(0)} className="flex items-center gap-4">
+                {/* Avatar — left side, mobile only */}
+                <button
+                  onClick={handleAvatarClick}
+                  disabled={avatarUploading}
+                  className="md:hidden relative shrink-0 w-14 h-14 rounded-2xl border-2 border-yellow-300 overflow-hidden focus:outline-none shadow-[0_0_14px_rgba(250,204,21,0.2)]"
+                  title={profile.profilePicture ? t('profile.view_photo') : t('profile.upload_photo')}
+                >
+                  {profile.profilePicture ? (
+                    <img src={profile.profilePicture} alt="avatar" className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 bg-yellow-300/20 flex items-center justify-center text-2xl">
+                      🦾
+                    </div>
+                  )}
+                </button>
+                {/* Welcome text — right of avatar */}
+                <div>
+                  <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.title')}</p>
+                  <h1 className="text-xl md:text-3xl font-black uppercase italic mt-1">
+                    {t('dashboard.welcome')} <span className="text-[--color-iron-gold]">{profile.name?.split(' ')[0] || t('common.athlete')}</span> 💪
+                  </h1>
+                </div>
               </motion.div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
@@ -750,7 +769,7 @@ export default function UserProfile() {
                           ] as const).map((tab) => (
                             <button
                               key={tab.id}
-                              onClick={() => setMealTimeTab(tab.id)}
+                              onClick={() => { setMealTimeTab(tab.id); setClosedMealCards(s => { const n = new Set(s); n.delete(tab.id); return n; }); }}
                               className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-1 sm:px-3 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wide transition-all duration-200 ${
                                 mealTimeTab === tab.id
                                   ? 'bg-gradient-to-br from-yellow-400/90 to-amber-500/80 text-black shadow-[0_2px_12px_rgba(251,191,36,0.4)]'
@@ -886,7 +905,10 @@ export default function UserProfile() {
                                 <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest shrink-0">Suggestion</span>
                                 <select
                                   value={mealSuggIdx[mealTimeTab] ?? 0}
-                                  onChange={e => setMealSuggIdx(p => ({ ...p, [mealTimeTab]: Number(e.target.value) }))}
+                                  onChange={e => {
+                                    setMealSuggIdx(p => ({ ...p, [mealTimeTab]: Number(e.target.value) }));
+                                    setClosedMealCards(s => { const n = new Set(s); n.delete(mealTimeTab); return n; });
+                                  }}
                                   className="flex-1 text-sm font-bold text-white border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-yellow-300/50 cursor-pointer"
                                   style={{ background: '#060608' }}
                                 >
@@ -896,6 +918,23 @@ export default function UserProfile() {
                                     </option>
                                   ))}
                                 </select>
+                                {/* Delete current suggestion */}
+                                <button
+                                  onClick={() => {
+                                    const idx = mealSuggIdx[mealTimeTab] ?? 0;
+                                    setAiMealPlan(prev => {
+                                      if (!prev) return prev;
+                                      const list = [...(prev[mealTimeTab] ?? [])];
+                                      list.splice(idx, 1);
+                                      return { ...prev, [mealTimeTab]: list };
+                                    });
+                                    setMealSuggIdx(p => ({ ...p, [mealTimeTab]: Math.max(0, idx - 1) }));
+                                    setClosedMealCards(s => { const n = new Set(s); n.delete(mealTimeTab); return n; });
+                                  }}
+                                  className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-red-400 border border-white/10 hover:border-red-400/30 transition-all shrink-0"
+                                  style={{ background: '#060608' }}
+                                  title="Delete this suggestion"
+                                >🗑</button>
                               </div>
                             )}
 
@@ -904,6 +943,15 @@ export default function UserProfile() {
                               const idx = mealSuggIdx[mealTimeTab] ?? 0;
                               const m = meals[Math.min(idx, meals.length - 1)];
                               if (!m) return null;
+                              if (closedMealCards.has(mealTimeTab)) return (
+                                <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl px-4 py-3">
+                                  <span className="text-xs text-gray-400 font-bold">{m.icon} {m.meal}</span>
+                                  <button
+                                    onClick={() => setClosedMealCards(s => { const n = new Set(s); n.delete(mealTimeTab); return n; })}
+                                    className="text-xs text-gray-500 hover:text-yellow-300 font-black uppercase tracking-wide transition-colors"
+                                  >Show</button>
+                                </div>
+                              );
                               const srv = getSrv(m.meal);
                               return (
                                 <motion.div key={m.meal} {...fadeUp(0)}
@@ -911,10 +959,15 @@ export default function UserProfile() {
                                     hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)] transition-all duration-300">
                                   <div className="flex items-start gap-3">
                                     <span className="text-4xl shrink-0">{m.icon}</span>
-                                    <div className="min-w-0">
+                                    <div className="min-w-0 flex-1">
                                       <p className="font-black text-[--color-iron-gold] uppercase text-sm">{m.meal}</p>
                                       <p className="text-gray-400 text-xs mt-0.5">{m.desc}</p>
                                     </div>
+                                    <button
+                                      onClick={() => setClosedMealCards(s => new Set(s).add(mealTimeTab))}
+                                      className="shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/10 transition-all text-base leading-none"
+                                      title="Close"
+                                    >×</button>
                                   </div>
                                   <div className="flex flex-wrap items-center justify-between gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-2.5">
                                     <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{t('meals.servings')}</span>
@@ -1032,24 +1085,27 @@ export default function UserProfile() {
                                           setSavedAsRecipes(prev => ({ ...prev, [m.meal]: true }));
                                           setMealTab('custom');
                                         }}
-                                        className="w-7 h-7 rounded-lg font-black transition-all duration-200 active:scale-95 flex items-center justify-center text-base shrink-0"
+                                        className="px-2.5 py-1 rounded-lg font-black transition-all duration-200 active:scale-95 flex items-center gap-1 shrink-0 text-[10px] uppercase tracking-wide"
                                         style={savedAsRecipes[m.meal]
                                           ? { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', boxShadow: 'none', cursor: 'default' }
                                           : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }
                                         }
+                                        title="Save to My Recipes"
                                       >
-                                        {savedAsRecipes[m.meal] ? '✓' : '+'}
+                                        {savedAsRecipes[m.meal] ? '✓ Saved' : '📋 Recipe'}
                                       </button>
                                       <button
                                         onClick={() => {
                                           logMealToday(m, getSrv(m.meal));
                                           setLoggedMeals(prev => ({ ...prev, [m.meal]: true }));
                                         }}
-                                        className="px-3 py-1.5 rounded-xl font-black uppercase text-xs tracking-wide transition-all duration-200 active:scale-95"
-                                        style={loggedMeals[m.meal]
-                                          ? { background: 'rgba(20,184,166,0.12)', color: '#2dd4bf', border: '1px solid rgba(20,184,166,0.3)', boxShadow: 'none', cursor: 'default' }
-                                          : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 24px rgba(250,204,21,0.08)' }
-                                        }
+                                        className="px-2 py-0.5 rounded-lg font-black uppercase tracking-wide transition-all duration-200 active:scale-95 shrink-0"
+                                        style={{
+                                          fontSize: '0.6rem',
+                                          ...(loggedMeals[m.meal]
+                                            ? { background: 'rgba(20,184,166,0.12)', color: '#2dd4bf', border: '1px solid rgba(20,184,166,0.3)', boxShadow: 'none', cursor: 'default' }
+                                            : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 24px rgba(250,204,21,0.08)' })
+                                        }}
                                         title="Log to today's macro tracker"
                                       >
                                         {loggedMeals[m.meal] ? '✓' : 'Log'}
@@ -1178,7 +1234,12 @@ export default function UserProfile() {
                         : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'
                     }`}
                   >
-                    {tab.id === 'ai' ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}>🤖</span> {t(tab.key)}</> : t(tab.key)}
+                    {tab.id === 'ai'
+                      ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}>🤖</span> {t(tab.key)}</>
+                      : tab.id === 'my'
+                        ? <><span style={{ color: '#facc15' }}>✎</span> {t(tab.key)}</>
+                        : t(tab.key)
+                    }
                   </button>
                 ))}
               </div>
@@ -1276,6 +1337,38 @@ export default function UserProfile() {
                 {/* Account tab */}
                 {settingsTab === 'account' && (
                   <motion.div key="account" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
+                    {/* Mobile avatar — hidden on md+ where sidebar already shows it */}
+                    <div className="md:hidden flex flex-col items-center mb-4">
+                      <button
+                        onClick={handleAvatarClick}
+                        disabled={avatarUploading}
+                        className="relative w-20 h-20 rounded-2xl border-2 border-yellow-300 overflow-hidden focus:outline-none shadow-[0_0_20px_rgba(250,204,21,0.2)]"
+                        title={profile.profilePicture ? t('profile.view_photo') : t('profile.upload_photo')}
+                      >
+                        {profile.profilePicture ? (
+                          <img src={profile.profilePicture} alt="avatar" className="absolute inset-0 w-full h-full object-cover" />
+                        ) : (
+                          <div className="absolute inset-0 bg-yellow-300/20 flex items-center justify-center text-3xl">
+                            🦾
+                          </div>
+                        )}
+                        <div className={`absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 transition-opacity duration-200 ${profile.profilePicture && !avatarUploading ? 'opacity-0 active:opacity-100' : 'opacity-100'}`}>
+                          {avatarUploading ? (
+                            <span className="text-white text-xs font-bold">{t('common.uploading')}</span>
+                          ) : (
+                            <>
+                              <span className="text-base">📷</span>
+                              <span className="text-white text-[10px] font-bold uppercase tracking-wide">
+                                {profile.profilePicture ? t('common.view') : t('common.upload')}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </button>
+                      <p className="mt-2 font-black text-[--color-iron-gold] uppercase text-xs tracking-widest text-center">
+                        {profile.name || t('common.athlete')}
+                      </p>
+                    </div>
                     <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6 space-y-3 md:space-y-5">
                       {/* Header row */}
                       <div className="flex items-center justify-between">
@@ -1285,7 +1378,7 @@ export default function UserProfile() {
                             onClick={openAccountEdit}
                             className="px-4 py-1.5 bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-white/30 font-bold rounded-xl uppercase text-xs transition-all"
                           >
-                            ✏️ {t('common.edit')}
+                            <span style={{ color: '#facc15' }}>✎</span> {t('common.edit')}
                           </button>
                         ) : (
                           <div className="flex gap-2">
@@ -1297,7 +1390,8 @@ export default function UserProfile() {
                             </button>
                             <button
                               onClick={saveAccount}
-                              className="px-4 py-1.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all"
+                              className="px-4 py-1.5 font-black rounded-xl uppercase text-xs active:scale-95 transition-all"
+                              style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
                             >
                               {t('common.save')}
                             </button>
@@ -1718,7 +1812,8 @@ export default function UserProfile() {
                   </button>
                   <button
                     onClick={() => finishWorkout(notesInput.trim() || undefined)}
-                    className="flex-1 py-2 sm:py-3 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs hover:brightness-110 hover:scale-[1.02] active:scale-95 transition-all"
+                    className="flex-1 py-2 sm:py-3 font-black rounded-xl uppercase text-xs active:scale-95 transition-all"
+                    style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
                   >
                     Save & Finish ✓
                   </button>

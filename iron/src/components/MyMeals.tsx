@@ -118,7 +118,7 @@ export default function MyMeals({ token }: Props) {
             className="bg-white/5 backdrop-blur-md border border-yellow-300/20 rounded-2xl p-5 space-y-5"
           >
             <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">
-              {editingId !== null ? '✏️ Edit Meal' : 'New Meal'}
+              {editingId !== null ? <><span style={{ color: '#facc15' }}>✎</span> Edit Meal</> : 'New Meal'}
             </p>
 
             {/* Emoji picker */}

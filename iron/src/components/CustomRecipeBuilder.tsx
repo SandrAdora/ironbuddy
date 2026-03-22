@@ -162,7 +162,7 @@ export default function CustomRecipeBuilder({ token }: Props) {
             className="bg-white/5 backdrop-blur-md border border-yellow-300/20 rounded-2xl p-5 space-y-5"
           >
             <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">
-              {editingId !== null ? '✏️ Edit Recipe' : '👨‍🍳 New Recipe'}
+              {editingId !== null ? <><span style={{ color: '#facc15' }}>✎</span> Edit Recipe</> : '👨‍🍳 New Recipe'}
             </p>
 
             {/* Icon picker */}
@@ -249,8 +249,8 @@ export default function CustomRecipeBuilder({ token }: Props) {
                 Cancel
               </button>
               <button onClick={handleSave}
-                className="flex-1 py-2 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs sm:text-sm
-                  hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200">
+                className="flex-1 py-1.5 font-black rounded-xl uppercase text-xs active:scale-95 transition-all duration-200"
+                style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}>
                 {editingId !== null ? 'Update Recipe' : 'Save Recipe'}
               </button>
             </div>

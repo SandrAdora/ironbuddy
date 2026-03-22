@@ -1538,7 +1538,15 @@ class UploadFileView(APIView):
         ext = os.path.splitext(file.name)[1].lower() or '.jpg'
         filename = f'avatars/{uuid.uuid4().hex}{ext}'
         saved_path = default_storage.save(filename, file)
-        file_url = request.build_absolute_uri(settings.MEDIA_URL + saved_path)
+        file_url = settings.MEDIA_URL + saved_path  # relative path, proxied by Vite
+
+        # Also update the user's profile picture immediately
+        try:
+            profile = request.user.profile
+            profile.profile_picture = file_url
+            profile.save(update_fields=['profile_picture'])
+        except Exception:
+            pass
 
         return Response({
             'file_url': file_url,

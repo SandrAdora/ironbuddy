@@ -128,8 +128,8 @@ export default function WorkoutVideos({ token }: Props) {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 py-2 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs sm:text-sm
-                  hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-50"
+                className="flex-1 py-1.5 font-black rounded-xl uppercase text-xs active:scale-95 transition-all duration-200 disabled:opacity-50"
+                style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
               >
                 {saving ? 'Saving...' : 'Save Video'}
               </button>

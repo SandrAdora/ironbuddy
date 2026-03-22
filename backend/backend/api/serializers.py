@@ -110,7 +110,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     fitnessGoals = serializers.CharField(source='fitness_goals', allow_blank=True, required=False)
     experienceLevel = serializers.CharField(source='experience_level', allow_blank=True, required=False)
     disclaimerAcceptedAt = serializers.DateTimeField(source='disclaimer_accepted_at', read_only=True)
-    profilePicture = serializers.URLField(source='profile_picture', allow_blank=True, required=False)
+    profilePicture = serializers.CharField(source='profile_picture', allow_blank=True, required=False)
     communityVisible = serializers.BooleanField(source='community_visible', required=False)
     preferredIngredients = serializers.JSONField(source='preferred_ingredients', required=False)
     excludedIngredients = serializers.JSONField(source='excluded_ingredients', required=False)

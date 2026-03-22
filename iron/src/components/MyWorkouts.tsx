@@ -171,7 +171,7 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
         <div>
           <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Custom</p>
-          <h1 className="text-2xl md:text-3xl font-black uppercase italic mt-1">✏️ My Workouts</h1>
+          <h1 className="text-2xl md:text-3xl font-black uppercase italic mt-1"><span style={{ color: '#facc15' }}>✎</span> My Workouts</h1>
         </div>
         {!formOpen && (
           <button
@@ -198,7 +198,7 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
             className="bg-white/5 backdrop-blur-md border border-yellow-300/20 rounded-2xl p-5 space-y-5"
           >
             <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">
-              {editingId !== null ? '✏️ Edit Workout' : 'New Workout'}
+              {editingId !== null ? <><span style={{ color: '#facc15' }}>✎</span> Edit Workout</> : 'New Workout'}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -333,8 +333,8 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
               </button>
               <button
                 onClick={handleSave}
-                className="flex-1 py-2 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs sm:text-sm
-                  hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200"
+                className="flex-1 py-1.5 font-black rounded-xl uppercase text-xs active:scale-95 transition-all duration-200"
+                style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
               >
                 {editingId !== null ? 'Update Workout' : 'Save Workout'}
               </button>
@@ -350,7 +350,7 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-10 flex flex-col items-center justify-center text-center gap-4"
         >
-          <span className="text-5xl">✏️</span>
+          <span className="text-5xl" style={{ color: '#facc15' }}>✎</span>
           <p className="text-[--color-iron-gold] font-black uppercase text-lg">No workouts yet</p>
           <p className="text-gray-400 text-sm">Click <strong className="text-white">Create Workout</strong> to build your first custom plan.</p>
         </motion.div>
@@ -395,7 +395,8 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); openEdit(w); }}
-                    className="text-yellow-300 text-xs font-bold transition-colors px-2 py-1 rounded-lg hover:bg-yellow-300/10"
+                    className="text-xs font-bold transition-colors px-2 py-1 rounded-lg hover:bg-yellow-300/10"
+                    style={{ color: '#facc15' }}
                     title="Edit workout"
                   >
                     ✎

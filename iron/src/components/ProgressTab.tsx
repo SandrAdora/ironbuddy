@@ -517,7 +517,7 @@ export default function ProgressTab({ token, sessions, currentWeight }: Props) {
                 return (
                   <div key={s.id} className="py-2.5 px-3 rounded-xl hover:bg-white/5 transition-colors">
                     <div className="flex items-center gap-3">
-                      <span className="text-lg shrink-0">{isAI ? '🤖' : '✏️'}</span>
+                      <span className="text-lg shrink-0">{isAI ? '🤖' : <span style={{ color: '#facc15', fontSize: '1.1rem' }}>✎</span>}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-white text-sm font-bold truncate">{s.workout_name}</p>
                         <p className="text-gray-500 text-xs">{date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>

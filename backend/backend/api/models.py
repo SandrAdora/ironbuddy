@@ -17,7 +17,7 @@ class UserProfile(models.Model):
     allergies = models.JSONField(default=list, blank=True)
     injuries = models.JSONField(default=list, blank=True)
     disclaimer_accepted_at = models.DateTimeField(auto_now_add=True)
-    profile_picture = models.URLField(blank=True)
+    profile_picture = models.CharField(max_length=500, blank=True)
     community_visible = models.BooleanField(default=False)
     preferred_ingredients = models.JSONField(default=list, blank=True)
     excluded_ingredients = models.JSONField(default=list, blank=True)
