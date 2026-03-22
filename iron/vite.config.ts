@@ -42,14 +42,9 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
-      // File uploads go to the socket server
-      '/upload': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      },
-      // Serve uploaded files through the same origin
-      '/uploads': {
-        target: 'http://localhost:3001',
+      // Serve uploaded media files from Django
+      '/media': {
+        target: 'http://localhost:8000',
         changeOrigin: true,
       },
       // Socket.io — ws:true proxies WebSocket upgrade as well as HTTP polling

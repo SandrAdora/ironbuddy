@@ -313,7 +313,7 @@ export default function UserProfile() {
     setAvatarUploading(true);
     setViewingAvatar(false);
     try {
-      const result = await apiUploadFile(file);
+      const result = await apiUploadFile(file, token ?? '');
       setProfile((p) => ({ ...p, profilePicture: result.file_url }));
     } catch {
       // silently ignore

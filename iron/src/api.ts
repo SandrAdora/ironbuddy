@@ -319,10 +319,14 @@ export interface UploadedFile {
   file_size: number;
 }
 
-export async function apiUploadFile(file: File): Promise<UploadedFile> {
+export async function apiUploadFile(file: File, token: string): Promise<UploadedFile> {
   const form = new FormData();
   form.append('file', file);
-  const res = await fetch(`${SOCKET_BASE}/upload`, { method: 'POST', body: form });
+  const res = await fetch(`${BASE}/api/upload/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error ?? 'Upload failed');
