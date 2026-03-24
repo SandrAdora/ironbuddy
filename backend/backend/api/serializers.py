@@ -4,6 +4,16 @@ from rest_framework.validators import UniqueValidator
 from .models import UserProfile, CustomWorkout, Conversation, Message, MessageReaction, WeightLog
 
 
+def _normalise_pic(url: str) -> str | None:
+    """Convert old absolute socket-server URLs to a Vite-proxied relative path."""
+    if not url:
+        return None
+    # Old format: http://localhost:3001/uploads/filename
+    if '://localhost:3001/uploads/' in url:
+        return '/uploads/' + url.split('/uploads/', 1)[1]
+    return url
+
+
 class PublicUserSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     profile_picture = serializers.SerializerMethodField()
@@ -20,7 +30,7 @@ class PublicUserSerializer(serializers.ModelSerializer):
 
     def get_profile_picture(self, obj):
         try:
-            return obj.profile.profile_picture or None
+            return _normalise_pic(obj.profile.profile_picture)
         except Exception:
             return None
 
@@ -44,7 +54,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     def get_sender_profile_picture(self, obj):
         try:
-            return obj.sender.profile.profile_picture or None
+            return _normalise_pic(obj.sender.profile.profile_picture)
         except Exception:
             return None
 
@@ -134,6 +144,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'injuries': {'required': False},
             'profile_picture': {'allow_blank': True, 'required': False},
         }
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['profilePicture'] = _normalise_pic(data.get('profilePicture') or '') or ''
+        return data
 
 
 class CustomWorkoutSerializer(serializers.ModelSerializer):

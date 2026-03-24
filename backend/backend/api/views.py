@@ -103,6 +103,9 @@ class CoachChatView(APIView):
         equipment = profile.get('equipments') or 'No Equipment'
         allergies = ', '.join(profile.get('allergies') or []) or 'None'
         injuries = ', '.join(profile.get('injuries') or []) or 'None'
+        _all_pref = profile.get('preferredIngredients') or []
+        liked_ingr    = ', '.join(x for x in _all_pref if not x.startswith('!')) or 'None'
+        disliked_ingr = ', '.join(x.lstrip('!') for x in _all_pref if x.startswith('!')) or 'None'
 
         language_map = {
             'de': 'German',
@@ -132,8 +135,11 @@ Athlete profile:
 - Equipment: {equipment}
 - Allergies: {allergies}
 - Injuries: {injuries}
+- Preferred foods/ingredients (prioritise in meal suggestions): {liked_ingr}
+- Disliked foods/ingredients (avoid in meal suggestions): {disliked_ingr}
 
 Always tailor advice to this profile. Account for injuries in all exercise recommendations.
+When suggesting meals or recipes, favour the athlete's preferred ingredients and avoid their disliked ones.
 
 ══════════════════════════════════════════════
 ANTI-HALLUCINATION RULES — follow strictly:
@@ -843,7 +849,9 @@ class AIMealPlanView(APIView):
         goal       = profile.get('fitnessGoals') or 'General Fitness'
         allergies  = ', '.join(profile.get('allergies') or []) or 'None'
         injuries   = ', '.join(profile.get('injuries') or []) or 'None'
-        preferred  = ', '.join(profile.get('preferredIngredients') or []) or 'None'
+        _all_pref  = profile.get('preferredIngredients') or []
+        preferred  = ', '.join(x for x in _all_pref if not x.startswith('!')) or 'None'
+        disliked   = ', '.join(x.lstrip('!') for x in _all_pref if x.startswith('!')) or 'None'
         excluded   = ', '.join(profile.get('excludedIngredients') or []) or 'None'
         weight     = profile.get('weight')
         height     = profile.get('height')
@@ -870,9 +878,10 @@ CRITICAL: Respond entirely in {language_name}. Every word — names, ingredients
 
 === USER PROFILE ===
 - Goal: {goal}  |  BMI: {bmi if bmi else 'unknown'}
-- Allergies (NEVER use): {allergies}
-- Excluded ingredients (NEVER use): {excluded}
-- Preferred ingredients (use when possible): {preferred}
+- Allergies (NEVER use — hard restriction): {allergies}
+- Excluded ingredients (NEVER use — hard restriction): {excluded}
+- Disliked ingredients (strongly avoid — only use if no reasonable alternative): {disliked}
+- Preferred ingredients (actively prioritise — build recipes around these when suitable): {preferred}
 - Injuries: {injuries}
 
 === REAL RECIPES FROM THE INTERNET ===
@@ -882,6 +891,8 @@ YOUR TASK: convert these exact recipes into the JSON format.
 - Keep the original ingredients — just add exact gram/ml quantities if missing
 - Keep the original preparation steps — just translate them to {language_name}
 - If an ingredient conflicts with allergies/excluded list, substitute a safe alternative
+- If a recipe contains disliked ingredients, replace them with preferred ingredients or neutral alternatives
+- When multiple recipe options exist, pick the ones that best match the preferred ingredients list
 
 --- BREAKFAST recipes (cuisine: {cuisines[0]}) ---
 {breakfast_hits or f'Create 3 original {cuisines[0]}-style healthy breakfast recipes for {goal}'}
