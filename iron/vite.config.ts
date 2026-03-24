@@ -47,6 +47,11 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
+      // Serve files uploaded via the socket server (old profile pictures)
+      '/uploads': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
       // Socket.io — ws:true proxies WebSocket upgrade as well as HTTP polling
       '/socket.io': {
         target: 'http://localhost:3001',

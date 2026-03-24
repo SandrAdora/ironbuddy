@@ -71,6 +71,7 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
   const [phase, setPhase]             = useState<'work' | 'rest'>('work');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+
   const dayExercises = plan ? plan.days[activeDay].exercises : [];
 
   useEffect(() => {

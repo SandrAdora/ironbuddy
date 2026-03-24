@@ -172,6 +172,8 @@ export default function UserProfile() {
   const [editingGoal, setEditingGoal] = useState(false);
   const [editingLevel, setEditingLevel] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [viewingAvatar, setViewingAvatar] = useState(false);
   const [mealServings, setMealServings] = useState<Record<string, number>>({});
   const [savedMeals, setSavedMeals] = useState<Record<string, boolean>>({});
@@ -301,7 +303,7 @@ export default function UserProfile() {
   const [showNotesPrompt, setShowNotesPrompt] = useState(false);
 
   const handleAvatarClick = () => {
-    if (profile.profilePicture) {
+    if (profile.profilePicture && !avatarError) {
       setViewingAvatar(true);
     } else {
       avatarInputRef.current?.click();
@@ -312,12 +314,14 @@ export default function UserProfile() {
     const file = e.target.files?.[0];
     if (!file) return;
     setAvatarUploading(true);
+    setUploadError('');
     setViewingAvatar(false);
     try {
       const result = await apiUploadFile(file, token ?? '');
+      setAvatarError(false);
       setProfile((p) => ({ ...p, profilePicture: result.file_url }));
-    } catch {
-      // silently ignore
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setAvatarUploading(false);
       if (avatarInputRef.current) avatarInputRef.current.value = '';
@@ -428,6 +432,9 @@ export default function UserProfile() {
   return (
     <div className="flex min-h-screen bg-[--color-gym-dark] text-white pt-16">
 
+      {/* Hidden file input — outside sidebar so it works on mobile too */}
+      <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+
       {/* ── Sidebar (desktop only) ───────────────────────── */}
       <motion.aside
         initial={{ x: -60, opacity: 0 }}
@@ -437,15 +444,14 @@ export default function UserProfile() {
       >
         {/* Avatar */}
         <div className="flex flex-col items-center mb-8">
-          <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
           <button
             onClick={handleAvatarClick}
             disabled={avatarUploading}
             className="relative w-24 h-24 rounded-2xl border-2 border-yellow-300 overflow-hidden group focus:outline-none shadow-[0_0_20px_rgba(250,204,21,0.2)]"
-            title={profile.profilePicture ? t('profile.view_photo') : t('profile.upload_photo')}
+            title={profile.profilePicture && !avatarError ? t('profile.view_photo') : t('profile.upload_photo')}
           >
-            {profile.profilePicture ? (
-              <img src={profile.profilePicture} alt="avatar" className="absolute inset-0 w-full h-full object-cover" />
+            {profile.profilePicture && !avatarError ? (
+              <img src={profile.profilePicture} alt="avatar" className="absolute inset-0 w-full h-full object-cover" onError={() => setAvatarError(true)} />
             ) : (
               <div className="absolute inset-0 bg-yellow-300/20 flex items-center justify-center text-4xl animate-coach-breathe">
                 🦾
@@ -454,7 +460,7 @@ export default function UserProfile() {
             <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               {avatarUploading ? (
                 <span className="text-white text-xs font-bold">{t('common.uploading')}</span>
-              ) : profile.profilePicture ? (
+              ) : profile.profilePicture && !avatarError ? (
                 <>
                   <span className="text-lg">🔍</span>
                   <span className="text-white text-[10px] font-bold uppercase tracking-wide">{t('common.view')}</span>
@@ -470,6 +476,9 @@ export default function UserProfile() {
           <p className="mt-3 font-black text-[--color-iron-gold] uppercase text-sm tracking-widest text-center">
             {profile.name || t('common.athlete')}
           </p>
+          {uploadError && (
+            <p className="mt-1 text-red-400 text-xs text-center">{uploadError}</p>
+          )}
         </div>
 
         {/* BMI Badge */}
@@ -588,10 +597,10 @@ export default function UserProfile() {
                   onClick={handleAvatarClick}
                   disabled={avatarUploading}
                   className="md:hidden relative shrink-0 w-14 h-14 rounded-2xl border-2 border-yellow-300 overflow-hidden focus:outline-none shadow-[0_0_14px_rgba(250,204,21,0.2)]"
-                  title={profile.profilePicture ? t('profile.view_photo') : t('profile.upload_photo')}
+                  title={profile.profilePicture && !avatarError ? t('profile.view_photo') : t('profile.upload_photo')}
                 >
-                  {profile.profilePicture ? (
-                    <img src={profile.profilePicture} alt="avatar" className="absolute inset-0 w-full h-full object-cover" />
+                  {profile.profilePicture && !avatarError ? (
+                    <img src={profile.profilePicture} alt="avatar" className="absolute inset-0 w-full h-full object-cover" onError={() => setAvatarError(true)} />
                   ) : (
                     <div className="absolute inset-0 bg-yellow-300/20 flex items-center justify-center text-2xl">
                       🦾
@@ -1345,23 +1354,23 @@ export default function UserProfile() {
                         onClick={handleAvatarClick}
                         disabled={avatarUploading}
                         className="relative w-20 h-20 rounded-2xl border-2 border-yellow-300 overflow-hidden focus:outline-none shadow-[0_0_20px_rgba(250,204,21,0.2)]"
-                        title={profile.profilePicture ? t('profile.view_photo') : t('profile.upload_photo')}
+                        title={profile.profilePicture && !avatarError ? t('profile.view_photo') : t('profile.upload_photo')}
                       >
-                        {profile.profilePicture ? (
-                          <img src={profile.profilePicture} alt="avatar" className="absolute inset-0 w-full h-full object-cover" />
+                        {profile.profilePicture && !avatarError ? (
+                          <img src={profile.profilePicture} alt="avatar" className="absolute inset-0 w-full h-full object-cover" onError={() => setAvatarError(true)} />
                         ) : (
                           <div className="absolute inset-0 bg-yellow-300/20 flex items-center justify-center text-3xl">
                             🦾
                           </div>
                         )}
-                        <div className={`absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 transition-opacity duration-200 ${profile.profilePicture && !avatarUploading ? 'opacity-0 active:opacity-100' : 'opacity-100'}`}>
+                        <div className={`absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 transition-opacity duration-200 ${profile.profilePicture && !avatarError && !avatarUploading ? 'opacity-0 active:opacity-100' : 'opacity-100'}`}>
                           {avatarUploading ? (
                             <span className="text-white text-xs font-bold">{t('common.uploading')}</span>
                           ) : (
                             <>
                               <span className="text-base">📷</span>
                               <span className="text-white text-[10px] font-bold uppercase tracking-wide">
-                                {profile.profilePicture ? t('common.view') : t('common.upload')}
+                                {profile.profilePicture && !avatarError ? t('common.view') : t('common.upload')}
                               </span>
                             </>
                           )}
@@ -1828,7 +1837,7 @@ export default function UserProfile() {
 
       {/* ── Profile photo lightbox ────────────────────────── */}
       <AnimatePresence>
-        {viewingAvatar && profile.profilePicture && (
+        {viewingAvatar && profile.profilePicture && !avatarError && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

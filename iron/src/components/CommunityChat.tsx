@@ -53,15 +53,16 @@ function toCached(msg: DirectMessage, conversationId: number): CachedMessage {
 }
 
 function Avatar({ name, src, size = 'md' }: { name: string; src?: string; size?: 'sm' | 'md' | 'lg' }) {
+  const [imgError, setImgError] = useState(false);
   const initials = name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
   const cls = size === 'sm' ? 'w-8 h-8 text-xs' : size === 'lg' ? 'w-12 h-12 text-lg' : 'w-10 h-10 text-sm';
-  if (src) {
+  if (src && !imgError) {
     return (
       <img
         src={src}
         alt={name}
         className={`${cls} rounded-full object-cover border-2 border-yellow-300/50 shrink-0`}
-        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+        onError={() => setImgError(true)}
       />
     );
   }

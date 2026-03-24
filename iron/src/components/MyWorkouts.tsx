@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { CustomWorkout, CustomExercise, Exercise, PublicUser } from '../api';
 import { apiGetExercises, apiGetUsers, apiStartConversation, apiSendMessage } from '../api';
@@ -35,6 +36,32 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
   const [formOpen, setFormOpen]       = useState(false);
   const [editingId, setEditingId]     = useState<number | null>(null);
   const [expandedId, setExpandedId]   = useState<number | null>(null);
+  const [menuId, setMenuId]           = useState<number | null>(null);
+  const [menuPos, setMenuPos]         = useState({ top: 0, right: 0 });
+  const [activeWorkoutId, setActiveWorkoutId] = useState<number | null>(null);
+  const [workoutPaused, setWorkoutPaused] = useState(false);
+
+  // Set tracker & logs  — key: `${workoutId}_${exIdx}`, value: boolean[] per set
+  const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({});
+  // Weight/reps log     — key: `${workoutId}_${exIdx}_${setIdx}`
+  // Extra sets added manually — key: `${workoutId}_${exIdx}`
+  const [extraSets, setExtraSets] = useState<Record<string, number>>({});
+  const [setLogs, setSetLogs] = useState<Record<string, { weight: string; reps: string }>>({});
+
+  // Rest timer between sets
+  const [restActive, setRestActive]   = useState(false);
+  const [restLeft, setRestLeft]       = useState(0);
+  const restRef                       = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const restWasActive                 = useRef(false);
+  const alarmWasActive                = useRef(false);
+
+  // Stop alarm
+  const [alarmMins, setAlarmMins]       = useState(0);
+  const [alarmSecInput, setAlarmSecInput] = useState(0);
+  const [alarmActive, setAlarmActive]   = useState(false);
+  const [alarmLeft, setAlarmLeft]       = useState(0);
+  const alarmRef                        = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const alarmTotal                      = alarmMins * 60 + alarmSecInput;
   const [error, setError]             = useState('');
 
   // Form state
@@ -75,11 +102,143 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
   const [libResults, setLibResults]   = useState<Exercise[]>([]);
   const [libLoading, setLibLoading]   = useState(false);
   const libTimer                       = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const menuRef                        = useRef<HTMLDivElement>(null);
 
   // Load from localStorage on mount
   useEffect(() => {
     setWorkouts(loadWorkouts(token));
   }, [token]);
+
+  useEffect(() => {
+    if (menuId === null) return;
+    const close = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [menuId]);
+
+  function playAlarm() {
+    try {
+      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      for (let i = 0; i < 12; i++) {
+        const delay = i * 0.22;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = i % 2 === 0 ? 1400 : 1050;
+        gain.gain.setValueAtTime(0.55, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.18);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + 0.18);
+      }
+    } catch { /* silent fail */ }
+  }
+
+  useEffect(() => {
+    if (!alarmActive || workoutPaused) return;
+    if (alarmLeft > 0) {
+      alarmRef.current = setTimeout(() => setAlarmLeft(t => t - 1), 1000);
+      return () => { if (alarmRef.current) clearTimeout(alarmRef.current); };
+    }
+    playAlarm();
+    setAlarmActive(false);
+    setAlarmLeft(alarmTotal);
+  }, [alarmActive, alarmLeft, alarmTotal, workoutPaused]);
+
+  function startAlarm(overrideSecs?: number) {
+    if (alarmRef.current) clearTimeout(alarmRef.current);
+    if (overrideSecs !== undefined) {
+      // Fresh start with explicit duration
+      if (overrideSecs < 1) return;
+      const mins = Math.floor(overrideSecs / 60);
+      const sec  = overrideSecs % 60;
+      setAlarmMins(mins);
+      setAlarmSecInput(sec);
+      setAlarmLeft(overrideSecs);
+    }
+    // Resume from current alarmLeft (or alarmTotal if starting fresh via button)
+    setAlarmActive(true);
+  }
+
+  function firstExerciseSecs(w: CustomWorkout): number {
+    const ex = w.exercises[0];
+    if (!ex) return 0;
+    const nums = String(ex.reps).match(/\d+/g) ?? ['10'];
+    const avg  = nums.reduce((a, b) => a + Number(b), 0) / nums.length;
+    return Math.max(20, Math.min(45, Math.round(ex.sets * avg * 2)));
+  }
+
+  function stopAlarm() {
+    setAlarmActive(false);
+    if (alarmRef.current) clearTimeout(alarmRef.current);
+  }
+
+  // Rest timer
+  useEffect(() => {
+    if (!restActive || workoutPaused) return;
+    if (restLeft > 0) {
+      restRef.current = setTimeout(() => setRestLeft(t => t - 1), 1000);
+      return () => { if (restRef.current) clearTimeout(restRef.current); };
+    }
+    try {
+      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const osc = ctx.createOscillator(); const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.4, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.start(); osc.stop(ctx.currentTime + 0.4);
+    } catch { /* silent */ }
+    setRestActive(false);
+  }, [restActive, restLeft, workoutPaused]);
+
+  function parseRestSecs(rest: string): number {
+    const min = rest.match(/(\d+)\s*min/i);
+    const sec = rest.match(/(\d+)\s*s/i);
+    if (min) return Math.min(180, Number(min[1]) * 60);
+    if (sec) return Math.min(180, Number(sec[1]));
+    return 60;
+  }
+
+  function tickSet(wid: number, ei: number, si: number, restSecs: number) {
+    const key = `${wid}_${ei}`;
+    setCompletedSets(prev => {
+      const arr = [...(prev[key] ?? [])];
+      arr[si] = !arr[si];
+      const nowDone = arr[si];
+      if (nowDone && restSecs > 0) {
+        if (restRef.current) clearTimeout(restRef.current);
+        setRestLeft(restSecs);
+        setRestActive(true);
+      } else if (!nowDone) {
+        setRestActive(false);
+      }
+      return { ...prev, [key]: arr };
+    });
+  }
+
+  function logSet(wid: number, ei: number, si: number, field: 'weight' | 'reps', val: string) {
+    const key = `${wid}_${ei}_${si}`;
+    setSetLogs(prev => ({ ...prev, [key]: { ...(prev[key] ?? { weight: '', reps: '' }), [field]: val } }));
+  }
+
+  function startActiveWorkout(w: CustomWorkout) {
+    setActiveWorkoutId(w.id);
+    setWorkoutPaused(false);
+    restWasActive.current = false;
+    alarmWasActive.current = false;
+    setExpandedId(w.id);
+    setCompletedSets({});
+    setExtraSets({});
+    setSetLogs({});
+    setRestActive(false);
+    if (restRef.current) clearTimeout(restRef.current);
+    if (onStartWorkout) onStartWorkout(w.name, 'custom');
+    startAlarm(firstExerciseSecs(w));
+  }
 
   // Fetch library exercises with debounce
   useEffect(() => {
@@ -176,8 +335,8 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
         {!formOpen && (
           <button
             onClick={() => setFormOpen(true)}
-            className="w-full sm:w-auto px-4 py-2 sm:px-5 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs sm:text-sm
-              hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-4 py-2 sm:px-5 sm:py-2.5 font-black rounded-xl uppercase text-xs sm:text-sm hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.5)', boxShadow: '0 0 12px rgba(250,204,21,0.45), 0 0 28px rgba(250,204,21,0.2)' }}
           >
             + Create Workout
           </button>
@@ -362,7 +521,7 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
               layout
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:border-yellow-300/20 transition-all duration-300"
+              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl hover:border-yellow-300/20 transition-all duration-300"
             >
               <button
                 onClick={() => setExpandedId(expandedId === w.id ? null : w.id)}
@@ -377,37 +536,61 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {onStartWorkout && (
+                  {onStartWorkout && activeWorkoutId === w.id ? (
+                    <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                      {/* Pause / Resume */}
+                      <button
+                        onClick={() => {
+                          if (workoutPaused) {
+                            setWorkoutPaused(false);
+                            if (alarmWasActive.current) startAlarm();
+                            if (restWasActive.current) setRestActive(true);
+                          } else {
+                            alarmWasActive.current = alarmActive;
+                            restWasActive.current = restActive;
+                            setWorkoutPaused(true);
+                          }
+                        }}
+                        className="text-[10px] font-black px-2.5 py-1.5 rounded-lg border-none outline-none transition-all active:scale-95"
+                        style={{ background: '#060608', color: '#facc15', boxShadow: '0 0 10px rgba(250,204,21,0.45), 0 0 24px rgba(250,204,21,0.2)' }}
+                        title={workoutPaused ? 'Resume workout' : 'Pause workout'}
+                      >
+                        {workoutPaused ? '▶' : '⏸'}
+                      </button>
+                      {/* Finish */}
+                      <button
+                        onClick={() => { setActiveWorkoutId(null); setWorkoutPaused(false); setRestActive(false); stopAlarm(); }}
+                        className="text-[10px] font-black px-2.5 py-1.5 rounded-lg border-none outline-none transition-all active:scale-95"
+                        style={{ background: '#060608', color: '#4ade80', boxShadow: '0 0 10px rgba(74,222,128,0.45), 0 0 24px rgba(74,222,128,0.2)' }}
+                        title="Finish workout"
+                      >
+                        ✓
+                      </button>
+                    </div>
+                  ) : onStartWorkout ? (
                     <button
-                      onClick={(e) => { e.stopPropagation(); onStartWorkout(w.name, 'custom'); }}
-                      className="text-xs font-black text-black bg-yellow-300 hover:bg-yellow-200 px-3 py-1.5 rounded-lg transition-all active:scale-95"
+                      onClick={(e) => { e.stopPropagation(); startActiveWorkout(w); }}
+                      className="text-xs font-black px-3 py-1.5 rounded-lg bg-yellow-300 text-black hover:bg-yellow-200 active:scale-95 transition-all duration-200"
                       title="Start workout"
                     >
                       ▶ Start
                     </button>
-                  )}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); openShare(w); }}
-                    className="text-gray-600 hover:text-blue-400 text-xs font-bold transition-colors px-2 py-1 rounded-lg hover:bg-blue-400/10"
-                    title="Share workout"
-                  >
-                    📤
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); openEdit(w); }}
-                    className="text-xs font-bold transition-colors px-2 py-1 rounded-lg hover:bg-yellow-300/10"
-                    style={{ color: '#facc15' }}
-                    title="Edit workout"
-                  >
-                    ✎
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(w.id); }}
-                    className="text-gray-600 hover:text-red-400 text-xs font-bold transition-colors px-2 py-1 rounded-lg hover:bg-red-400/10"
-                    title="Delete workout"
-                  >
-                    🗑
-                  </button>
+                  ) : null}
+                  {/* Gear menu */}
+                  <div ref={menuId === w.id ? menuRef : undefined} onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={(e) => {
+                        if (menuId === w.id) { setMenuId(null); return; }
+                        const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                        setMenuPos({ top: rect.bottom + window.scrollY + 4, right: window.innerWidth - rect.right });
+                        setMenuId(w.id);
+                      }}
+                      className="text-gray-400 hover:text-yellow-300 text-base px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
+                      title="Options"
+                    >
+                      ⚙
+                    </button>
+                  </div>
                   <span className={`text-gray-400 transition-transform duration-200 ${expandedId === w.id ? 'rotate-180' : ''}`}>▾</span>
                 </div>
               </button>
@@ -421,21 +604,201 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
                     transition={{ duration: 0.25 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-5 pb-5 grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-white/10 pt-4">
-                      {w.exercises.map((ex, i) => (
-                        <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
-                          <div>
-                            <p className="text-white font-black text-sm uppercase">{ex.name}</p>
-                            {ex.muscle && <p className="text-[--color-iron-gold] text-xs font-semibold">{ex.muscle}</p>}
-                          </div>
-                          <div className="flex gap-2">
-                            <ExPill label="Sets" value={String(ex.sets)} />
-                            <ExPill label="Reps" value={ex.reps} />
-                            <ExPill label="Rest" value={ex.rest} />
-                          </div>
-                          {ex.notes && <p className="text-gray-500 text-xs">💡 {ex.notes}</p>}
+                    <div className="px-5 pb-5 space-y-3 border-t border-white/10 pt-4">
+                      {/* ── Alarm widget ── */}
+                      <div className="flex items-center gap-2 flex-wrap bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+                        <span className="text-sm shrink-0" style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg)', color: '#facc15' }}>⏰</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 shrink-0">Rest Timer</span>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number" min={0} max={99} value={alarmMins}
+                            onChange={e => {
+                              const v = Math.max(0, Math.min(99, Number(e.target.value)));
+                              setAlarmMins(v);
+                              if (alarmActive) setAlarmLeft(v * 60 + alarmSecInput);
+                            }}
+                            className="w-9 bg-black/40 border border-white/10 rounded-lg text-center text-white text-xs font-bold py-1 focus:outline-none focus:border-yellow-300/50"
+                            placeholder="mm"
+                          />
+                          <span className="text-gray-400 font-black text-xs">:</span>
+                          <input
+                            type="number" min={0} max={59} value={alarmSecInput}
+                            onChange={e => {
+                              const v = Math.max(0, Math.min(59, Number(e.target.value)));
+                              setAlarmSecInput(v);
+                              if (alarmActive) setAlarmLeft(alarmMins * 60 + v);
+                            }}
+                            className="w-9 bg-black/40 border border-white/10 rounded-lg text-center text-white text-xs font-bold py-1 focus:outline-none focus:border-yellow-300/50"
+                            placeholder="ss"
+                          />
                         </div>
-                      ))}
+                        {alarmActive && (
+                          <span className="font-black text-base tabular-nums" style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7)' }}>
+                            {String(Math.floor(alarmLeft / 60)).padStart(2,'0')}:{String(alarmLeft % 60).padStart(2,'0')}
+                          </span>
+                        )}
+                        <div className="ml-auto">
+                          {alarmActive ? (
+                            <button onClick={stopAlarm} className="text-[10px] font-black px-2 py-1 rounded-lg border-none outline-none" style={{ background: '#060608', color: '#facc15', boxShadow: '0 0 8px rgba(250,204,21,0.4)' }}>⏸</button>
+                          ) : (
+                            <button onClick={() => { if (alarmLeft > 0) { startAlarm(); } else { startAlarm(alarmTotal); } }} disabled={alarmTotal < 1 && alarmLeft < 1} className="text-[10px] font-black px-2 py-1 rounded-lg border-none outline-none disabled:opacity-40" style={{ background: '#060608', color: '#facc15', boxShadow: '0 0 8px rgba(250,204,21,0.4)' }}>▶</button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Rest timer banner */}
+                      {activeWorkoutId === w.id && restActive && (
+                        <div className="flex items-center gap-3 bg-blue-500/10 border border-blue-400/30 rounded-xl px-4 py-2">
+                          <span className="text-blue-300 text-xs font-black uppercase tracking-widest">Rest</span>
+                          <span className="text-blue-300 font-black text-xl tabular-nums ml-auto">
+                            {String(Math.floor(restLeft / 60)).padStart(2,'0')}:{String(restLeft % 60).padStart(2,'0')}
+                          </span>
+                          <button onClick={() => setRestActive(false)} className="text-xs text-blue-400 hover:text-white font-bold transition-colors">Skip</button>
+                        </div>
+                      )}
+
+                      {w.exercises.map((ex, i) => {
+                        const isActive = activeWorkoutId === w.id;
+                        const isExpanded = expandedId === w.id;
+                        const key = `${w.id}_${i}`;
+                        const done = completedSets[key] ?? [];
+                        const totalSets = ex.sets + (extraSets[key] ?? 0);
+                        const doneCount = done.filter(Boolean).length;
+                        return (
+                          <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+                            {/* Header */}
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="text-white font-black text-sm uppercase">{ex.name}</p>
+                                {ex.muscle && <p className="text-[--color-iron-gold] text-xs font-semibold">{ex.muscle}</p>}
+                              </div>
+                              {isActive && (
+                                <span className="text-xs font-bold tabular-nums shrink-0" style={{ color: doneCount === totalSets ? '#4ade80' : '#facc15' }}>
+                                  {doneCount}/{totalSets} sets
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Pills (static info) */}
+                            {!isExpanded && (
+                              <div className="flex gap-2">
+                                <ExPill label="Sets" value={String(ex.sets)} />
+                                <ExPill label="Reps" value={ex.reps} />
+                                <ExPill label="Rest" value={ex.rest} />
+                              </div>
+                            )}
+
+                            {/* Set rows (shown when card is expanded) */}
+                            {isExpanded && (
+                              <div className="space-y-2">
+                                {/* Barbell progress */}
+                                <div className="flex items-center gap-1 px-1 my-1" style={{ height: 24 }}>
+                                  <div className="flex items-center gap-[2px]">
+                                    {Array.from({ length: totalSets }).map((_, pi) => {
+                                      const plateIdx = totalSets - 1 - pi;
+                                      const filled = done[plateIdx] ?? false;
+                                      const allDone = doneCount === totalSets;
+                                      return (
+                                        <div key={pi} className="rounded-[2px] transition-all duration-300 shrink-0" style={{
+                                          width: 6,
+                                          height: filled ? 22 : 10,
+                                          background: filled ? (allDone ? '#4ade80' : '#facc15') : 'rgba(255,255,255,0.12)',
+                                          boxShadow: filled ? `0 0 6px ${allDone ? 'rgba(74,222,128,0.8)' : 'rgba(250,204,21,0.8)'}` : 'none',
+                                        }} />
+                                      );
+                                    })}
+                                  </div>
+                                  <div className="flex-1 h-[3px] rounded-full transition-all duration-500" style={{
+                                    background: doneCount > 0 ? (doneCount === totalSets ? '#4ade80' : '#facc15') : 'rgba(255,255,255,0.1)',
+                                    boxShadow: doneCount > 0 ? `0 0 8px ${doneCount === totalSets ? 'rgba(74,222,128,0.6)' : 'rgba(250,204,21,0.6)'}` : 'none',
+                                  }} />
+                                  <div className="flex items-center gap-[2px]">
+                                    {Array.from({ length: totalSets }).map((_, pi) => {
+                                      const filled = done[pi] ?? false;
+                                      const allDone = doneCount === totalSets;
+                                      return (
+                                        <div key={pi} className="rounded-[2px] transition-all duration-300 shrink-0" style={{
+                                          width: 6,
+                                          height: filled ? 22 : 10,
+                                          background: filled ? (allDone ? '#4ade80' : '#facc15') : 'rgba(255,255,255,0.12)',
+                                          boxShadow: filled ? `0 0 6px ${allDone ? 'rgba(74,222,128,0.8)' : 'rgba(250,204,21,0.8)'}` : 'none',
+                                        }} />
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                                {/* Column headers */}
+                                <div className="grid grid-cols-[20px_1fr_1fr_28px] gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 px-1">
+                                  <span>#</span><span>Weight</span><span>Reps</span><span></span>
+                                </div>
+                                {Array.from({ length: totalSets }).map((_, si) => {
+                                  const log = setLogs[`${w.id}_${i}_${si}`] ?? { weight: '', reps: '' };
+                                  const checked = done[si] ?? false;
+                                  return (
+                                    <div key={si} className={`grid grid-cols-[20px_1fr_1fr_28px] gap-2 items-center rounded-lg px-1 py-1 transition-colors ${checked ? 'bg-green-500/10' : 'bg-white/3'}`}>
+                                      <span className="text-xs font-black text-gray-500">{si + 1}</span>
+                                      <input
+                                        type="text" inputMode="decimal" placeholder="kg"
+                                        value={log.weight}
+                                        onChange={e => logSet(w.id, i, si, 'weight', e.target.value)}
+                                        className={`bg-black/40 border border-white/10 rounded-lg text-center text-xs font-bold py-1 px-1 focus:outline-none focus:border-yellow-300/40 w-full transition-all ${checked ? 'line-through text-green-400/60' : 'text-white'}`}
+                                      />
+                                      <input
+                                        type="text" inputMode="numeric" placeholder={ex.reps}
+                                        value={log.reps}
+                                        onChange={e => logSet(w.id, i, si, 'reps', e.target.value)}
+                                        className={`bg-black/40 border border-white/10 rounded-lg text-center text-xs font-bold py-1 px-1 focus:outline-none focus:border-yellow-300/40 w-full transition-all ${checked ? 'line-through text-green-400/60' : 'text-white'}`}
+                                      />
+                                      <button
+                                        onClick={() => tickSet(w.id, i, si, parseRestSecs(ex.rest))}
+                                        className="w-6 h-6 sm:w-7 sm:h-7 rounded-sm text-xs font-black transition-all flex items-center justify-center border-none outline-none"
+                                        style={checked
+                                          ? { background: '#060608', color: '#4ade80', boxShadow: '0 0 10px rgba(74,222,128,0.6), 0 0 20px rgba(74,222,128,0.3)', border: '2px solid rgba(74,222,128,0.8)' }
+                                          : { background: '#060608', color: 'rgba(255,255,255,0.3)', boxShadow: '0 0 8px rgba(250,204,21,0.25)', border: '2px solid rgba(250,204,21,0.4)' }
+                                        }
+                                      >
+                                        {checked ? '✓' : ''}
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                                {/* Add / Remove set buttons */}
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => setExtraSets(prev => ({ ...prev, [key]: (prev[key] ?? 0) + 1 }))}
+                                    className="flex-1 text-xs font-black text-gray-500 hover:text-yellow-300 border border-dashed border-white/10 hover:border-yellow-300 hover:shadow-[0_0_10px_2px_rgba(250,204,21,0.5)] rounded-lg py-1.5 transition-all"
+                                  >
+                                    + Add Set
+                                  </button>
+                                  {totalSets > 1 && (
+                                    <button
+                                      onClick={() => {
+                                        const lastIdx = totalSets - 1;
+                                        setExtraSets(prev => ({ ...prev, [key]: (prev[key] ?? 0) - 1 }));
+                                        setCompletedSets(prev => {
+                                          const arr = [...(prev[key] ?? [])];
+                                          arr.splice(lastIdx, 1);
+                                          return { ...prev, [key]: arr };
+                                        });
+                                        setSetLogs(prev => {
+                                          const next = { ...prev };
+                                          delete next[`${w.id}_${i}_${lastIdx}`];
+                                          return next;
+                                        });
+                                      }}
+                                      className="flex-1 text-xs font-black text-gray-500 hover:text-red-400 border border-dashed border-white/10 hover:border-red-400 hover:shadow-[0_0_10px_2px_rgba(248,113,113,0.5)] rounded-lg py-1.5 transition-all"
+                                    >
+                                      − Remove Set
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {ex.notes && <p className="text-gray-500 text-xs">💡 {ex.notes}</p>}
+                          </div>
+                        );
+                      })}
                     </div>
                   </motion.div>
                 )}
@@ -513,6 +876,34 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Gear dropdown — rendered at body level so it's never clipped by card stacking contexts */}
+      {menuId !== null && createPortal(
+        <div
+          ref={menuRef}
+          style={{ position: 'absolute', top: menuPos.top, right: menuPos.right }}
+          className="z-[9999] bg-[#12121f] border border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[130px]"
+        >
+          {(() => {
+            const w = workouts.find(x => x.id === menuId);
+            if (!w) return null;
+            return (
+              <>
+                <button onClick={() => { setMenuId(null); openShare(w); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-blue-400 flex items-center gap-2 transition-colors">
+                  📤 Share
+                </button>
+                <button onClick={() => { setMenuId(null); openEdit(w); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-yellow-300 flex items-center gap-2 transition-colors">
+                  ✎ Edit
+                </button>
+                <button onClick={() => { setMenuId(null); handleDelete(w.id); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-red-400 flex items-center gap-2 transition-colors">
+                  🗑 Delete
+                </button>
+              </>
+            );
+          })()}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

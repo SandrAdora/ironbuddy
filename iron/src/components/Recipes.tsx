@@ -99,7 +99,7 @@ export default function Recipes({ token }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Video</p>
-          <h2 className="text-2xl font-black uppercase italic mt-1">🎬 Recipes</h2>
+          <h2 className="text-2xl font-black uppercase italic mt-1">🎬 Video Recipes</h2>
         </div>
         {!formOpen && (
           <button
