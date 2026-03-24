@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { CustomWorkout, CustomExercise, Exercise, PublicUser } from '../api';
-import { apiGetExercises, apiGetUsers, apiStartConversation, apiSendMessage } from '../api';
+import { apiGetExercises, apiGetUsers, apiStartConversation, apiSendMessage, apiGetYouTubeVideo } from '../api';
 
 interface Props {
   token: string;
@@ -69,12 +69,30 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
   const [workoutDesc, setWorkoutDesc] = useState('');
   const [exercises, setExercises]     = useState<CustomExercise[]>([emptyExercise()]);
 
+  // YouTube video cache — key: exercise name (lowercase)
+  const [videoMap, setVideoMap] = useState<Record<string, string | null>>({});
+
   // Share state
   const [shareWorkout, setShareWorkout] = useState<CustomWorkout | null>(null);
   const [shareUsers, setShareUsers]     = useState<PublicUser[]>([]);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareSending, setShareSending] = useState(false);
   const [shareSent, setShareSent]       = useState<number | null>(null); // userId just sent to
+
+  async function fetchVideo(name: string) {
+    const key = name.toLowerCase();
+    if (key in videoMap) return;
+    setVideoMap(prev => ({ ...prev, [key]: null }));
+    const id = await apiGetYouTubeVideo(token, name).catch(() => '');
+    setVideoMap(prev => ({ ...prev, [key]: id }));
+  }
+
+  async function retryVideo(name: string) {
+    const key = name.toLowerCase();
+    setVideoMap(prev => ({ ...prev, [key]: null }));
+    const id = await apiGetYouTubeVideo(token, name).catch(() => '');
+    setVideoMap(prev => ({ ...prev, [key]: id }));
+  }
 
   const openShare = async (w: CustomWorkout) => {
     setShareWorkout(w);
@@ -101,6 +119,7 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
   const [libSearch, setLibSearch]     = useState('');
   const [libResults, setLibResults]   = useState<Exercise[]>([]);
   const [libLoading, setLibLoading]   = useState(false);
+  const [libError, setLibError]       = useState('');
   const libTimer                       = useRef<ReturnType<typeof setTimeout> | null>(null);
   const menuRef                        = useRef<HTMLDivElement>(null);
 
@@ -249,7 +268,8 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
       try {
         const page = await apiGetExercises(token, { search: libSearch, limit: 30 });
         setLibResults(page.results);
-      } catch { setLibResults([]); }
+        setLibError('');
+      } catch (e) { setLibResults([]); setLibError(e instanceof Error ? e.message : 'Failed to load exercises'); }
       finally { setLibLoading(false); }
     }, 300);
     return () => { if (libTimer.current) clearTimeout(libTimer.current); };
@@ -335,8 +355,8 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
         {!formOpen && (
           <button
             onClick={() => setFormOpen(true)}
-            className="w-full sm:w-auto px-4 py-2 sm:px-5 sm:py-2.5 font-black rounded-xl uppercase text-xs sm:text-sm hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
-            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.5)', boxShadow: '0 0 12px rgba(250,204,21,0.45), 0 0 28px rgba(250,204,21,0.2)' }}
+            className="font-black uppercase text-xs sm:text-sm border-none outline-none bg-transparent active:scale-95 transition-colors"
+            style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
           >
             + Create Workout
           </button>
@@ -464,6 +484,8 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
                       <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
                         {libLoading ? (
                           <p className="text-gray-500 text-xs text-center py-4">Loading…</p>
+                        ) : libError ? (
+                          <p className="text-red-400 text-xs text-center py-4">{libError}</p>
                         ) : libResults.length === 0 ? (
                           <p className="text-gray-500 text-xs text-center py-4">No exercises found</p>
                         ) : libResults.map((ex) => (
@@ -570,10 +592,11 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
                   ) : onStartWorkout ? (
                     <button
                       onClick={(e) => { e.stopPropagation(); startActiveWorkout(w); }}
-                      className="text-xs font-black px-3 py-1.5 rounded-lg bg-yellow-300 text-black hover:bg-yellow-200 active:scale-95 transition-all duration-200"
+                      className="text-sm font-black border-none outline-none bg-transparent active:scale-95 transition-colors"
+                      style={{ color: '#facc15' }}
                       title="Start workout"
                     >
-                      ▶ Start
+                      ▶
                     </button>
                   ) : null}
                   {/* Gear menu */}
@@ -605,55 +628,22 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
                     className="overflow-hidden"
                   >
                     <div className="px-5 pb-5 space-y-3 border-t border-white/10 pt-4">
-                      {/* ── Alarm widget ── */}
-                      <div className="flex items-center gap-2 flex-wrap bg-white/5 border border-white/10 rounded-xl px-3 py-2">
-                        <span className="text-sm shrink-0" style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg)', color: '#facc15' }}>⏰</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 shrink-0">Rest Timer</span>
-                        <div className="flex items-center gap-1">
-                          <input
-                            type="number" min={0} max={99} value={alarmMins}
-                            onChange={e => {
-                              const v = Math.max(0, Math.min(99, Number(e.target.value)));
-                              setAlarmMins(v);
-                              if (alarmActive) setAlarmLeft(v * 60 + alarmSecInput);
-                            }}
-                            className="w-9 bg-black/40 border border-white/10 rounded-lg text-center text-white text-xs font-bold py-1 focus:outline-none focus:border-yellow-300/50"
-                            placeholder="mm"
-                          />
-                          <span className="text-gray-400 font-black text-xs">:</span>
-                          <input
-                            type="number" min={0} max={59} value={alarmSecInput}
-                            onChange={e => {
-                              const v = Math.max(0, Math.min(59, Number(e.target.value)));
-                              setAlarmSecInput(v);
-                              if (alarmActive) setAlarmLeft(alarmMins * 60 + v);
-                            }}
-                            className="w-9 bg-black/40 border border-white/10 rounded-lg text-center text-white text-xs font-bold py-1 focus:outline-none focus:border-yellow-300/50"
-                            placeholder="ss"
-                          />
-                        </div>
-                        {alarmActive && (
-                          <span className="font-black text-base tabular-nums" style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7)' }}>
-                            {String(Math.floor(alarmLeft / 60)).padStart(2,'0')}:{String(alarmLeft % 60).padStart(2,'0')}
-                          </span>
-                        )}
-                        <div className="ml-auto">
-                          {alarmActive ? (
-                            <button onClick={stopAlarm} className="text-[10px] font-black px-2 py-1 rounded-lg border-none outline-none" style={{ background: '#060608', color: '#facc15', boxShadow: '0 0 8px rgba(250,204,21,0.4)' }}>⏸</button>
-                          ) : (
-                            <button onClick={() => { if (alarmLeft > 0) { startAlarm(); } else { startAlarm(alarmTotal); } }} disabled={alarmTotal < 1 && alarmLeft < 1} className="text-[10px] font-black px-2 py-1 rounded-lg border-none outline-none disabled:opacity-40" style={{ background: '#060608', color: '#facc15', boxShadow: '0 0 8px rgba(250,204,21,0.4)' }}>▶</button>
-                          )}
-                        </div>
-                      </div>
-
                       {/* Rest timer banner */}
                       {activeWorkoutId === w.id && restActive && (
-                        <div className="flex items-center gap-3 bg-blue-500/10 border border-blue-400/30 rounded-xl px-4 py-2">
-                          <span className="text-blue-300 text-xs font-black uppercase tracking-widest">Rest</span>
-                          <span className="text-blue-300 font-black text-xl tabular-nums ml-auto">
+                        <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-400/30 rounded-xl px-3 py-2">
+                          <span className="text-blue-300 text-xs font-black uppercase tracking-widest shrink-0">Rest</span>
+                          <button
+                            onClick={() => setRestLeft(t => Math.max(0, t - 10))}
+                            className="text-[10px] font-black px-2 py-1 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 transition-colors shrink-0"
+                          >−10s</button>
+                          <span className="text-blue-300 font-black text-xl tabular-nums mx-auto">
                             {String(Math.floor(restLeft / 60)).padStart(2,'0')}:{String(restLeft % 60).padStart(2,'0')}
                           </span>
-                          <button onClick={() => setRestActive(false)} className="text-xs text-blue-400 hover:text-white font-bold transition-colors">Skip</button>
+                          <button
+                            onClick={() => setRestLeft(t => t + 10)}
+                            className="text-[10px] font-black px-2 py-1 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 transition-colors shrink-0"
+                          >+10s</button>
+                          <button onClick={() => setRestActive(false)} className="text-xs text-blue-400 hover:text-white font-bold transition-colors shrink-0">Skip</button>
                         </div>
                       )}
 
@@ -672,12 +662,52 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
                                 <p className="text-white font-black text-sm uppercase">{ex.name}</p>
                                 {ex.muscle && <p className="text-[--color-iron-gold] text-xs font-semibold">{ex.muscle}</p>}
                               </div>
-                              {isActive && (
-                                <span className="text-xs font-bold tabular-nums shrink-0" style={{ color: doneCount === totalSets ? '#4ade80' : '#facc15' }}>
-                                  {doneCount}/{totalSets} sets
-                                </span>
-                              )}
+                              <div className="flex items-center gap-2 shrink-0">
+                                {isActive && (
+                                  <span className="text-xs font-bold tabular-nums" style={{ color: doneCount === totalSets ? '#4ade80' : '#facc15' }}>
+                                    {doneCount}/{totalSets} sets
+                                  </span>
+                                )}
+                                <button
+                                  onClick={() => fetchVideo(ex.name)}
+                                  className="text-xs font-black border-none outline-none bg-transparent transition-colors"
+                                  style={{ color: '#facc15', textShadow: '0 0 8px rgba(250,204,21,0.5)' }}
+                                >
+                                  ▶ Tutorial
+                                </button>
+                              </div>
                             </div>
+
+                            {/* YouTube video embed */}
+                            {videoMap[ex.name.toLowerCase()] === null && (
+                              <p className="text-gray-500 text-xs">Loading video…</p>
+                            )}
+                            {ex.name.toLowerCase() in videoMap && videoMap[ex.name.toLowerCase()] === '' && (
+                              <button
+                                onClick={() => retryVideo(ex.name)}
+                                className="relative w-full rounded-xl overflow-hidden border-none outline-none cursor-pointer group"
+                                style={{ paddingTop: '56.25%', background: '#0f0f0f', display: 'block' }}
+                              >
+                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                                  <div className="w-12 h-12 rounded-full flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                                    style={{ background: '#ff0000', boxShadow: '0 0 20px rgba(255,0,0,0.5)' }}>
+                                    <span className="text-white text-xl ml-1">▶</span>
+                                  </div>
+                                  <p className="text-gray-500 text-[10px] uppercase tracking-widest">Tap to load video</p>
+                                </div>
+                              </button>
+                            )}
+                            {videoMap[ex.name.toLowerCase()] && (
+                              <div className="relative w-full rounded-xl overflow-hidden" style={{ paddingTop: '56.25%' }}>
+                                <iframe
+                                  className="absolute inset-0 w-full h-full"
+                                  src={`https://www.youtube.com/embed/${videoMap[ex.name.toLowerCase()]}?rel=0`}
+                                  title={ex.name}
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  allowFullScreen
+                                />
+                              </div>
+                            )}
 
                             {/* Pills (static info) */}
                             {!isExpanded && (
@@ -766,7 +796,10 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
                                 <div className="flex gap-2">
                                   <button
                                     onClick={() => setExtraSets(prev => ({ ...prev, [key]: (prev[key] ?? 0) + 1 }))}
-                                    className="flex-1 text-xs font-black text-gray-500 hover:text-yellow-300 border border-dashed border-white/10 hover:border-yellow-300 hover:shadow-[0_0_10px_2px_rgba(250,204,21,0.5)] rounded-lg py-1.5 transition-all"
+                                    className="flex-1 text-xs font-black border-none outline-none bg-transparent active:scale-95 transition-colors"
+                                    style={{ color: 'rgba(156,163,175,0.6)' }}
+                                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 10px rgba(250,204,21,0.7)'; }}
+                                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
                                   >
                                     + Add Set
                                   </button>
@@ -786,7 +819,10 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
                                           return next;
                                         });
                                       }}
-                                      className="flex-1 text-xs font-black text-gray-500 hover:text-red-400 border border-dashed border-white/10 hover:border-red-400 hover:shadow-[0_0_10px_2px_rgba(248,113,113,0.5)] rounded-lg py-1.5 transition-all"
+                                      className="flex-1 text-xs font-black border-none outline-none bg-transparent active:scale-95 transition-colors"
+                                      style={{ color: 'rgba(156,163,175,0.6)' }}
+                                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#f87171;text-shadow:0 0 10px rgba(248,113,113,0.7)'; }}
+                                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
                                     >
                                       − Remove Set
                                     </button>

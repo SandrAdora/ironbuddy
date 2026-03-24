@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n, { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../i18n';
 import { useUser } from '../context/userContext';
-import { apiUploadFile, apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, apiSaveProfile, type AIMealItem, type AIMealPlan, type WorkoutSession } from '../api';
+import { apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, apiSaveProfile, type AIMealItem, type AIMealPlan, type WorkoutSession } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import CoachChat from './CoachChat';
@@ -310,22 +310,33 @@ export default function UserProfile() {
     }
   };
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAvatarUploading(true);
     setUploadError('');
     setViewingAvatar(false);
-    try {
-      const result = await apiUploadFile(file, token ?? '');
-      setAvatarError(false);
-      setProfile((p) => ({ ...p, profilePicture: result.file_url }));
-    } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Upload failed');
-    } finally {
-      setAvatarUploading(false);
-      if (avatarInputRef.current) avatarInputRef.current.value = '';
-    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 256;
+        const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        setAvatarError(false);
+        setProfile((p) => ({ ...p, profilePicture: dataUrl }));
+        setAvatarUploading(false);
+      };
+      img.onerror = () => { setUploadError('Invalid image'); setAvatarUploading(false); };
+      img.src = reader.result as string;
+    };
+    reader.onerror = () => { setUploadError('Failed to read file'); setAvatarUploading(false); };
+    reader.readAsDataURL(file);
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
   };
 
   useEffect(() => {
@@ -739,10 +750,7 @@ export default function UserProfile() {
                       <button
                         onClick={() => fetchAIMeals(true)}
                         disabled={aiMealLoading}
-                        className="shrink-0 px-4 py-2 text-yellow-300 font-black rounded-xl uppercase text-xs tracking-wide border border-yellow-300/40
-                          hover:border-yellow-300 hover:scale-[1.04] active:scale-95
-                          transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
-                        style={{ background: '#060608', boxShadow: '0 0 12px rgba(253,224,71,0.25)' }}
+                        className="shrink-0 text-yellow-300/70 hover:text-yellow-300 text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-transparent border-none outline-none"
                       >
                         {aiMealLoading ? `⏳ ${t('meals.generating')}` : `🔄 ${t('meals.regenerate')}`}
                       </button>

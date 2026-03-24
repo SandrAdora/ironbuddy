@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   apiGetExercises, apiGetExerciseMeta, apiGetCustomWorkouts, apiUpdateCustomWorkout,
-  apiFetchExerciseMedia, apiTranslateInstructions,
+  apiFetchExerciseMedia, apiTranslateInstructions, apiGetYouTubeVideo,
   Exercise, ExerciseMeta, CustomWorkout,
 } from '../api';
 import MuscleMap from './MuscleMap';
@@ -151,7 +151,6 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
   const [target, setTarget]           = useState('');
   const [equipment, setEquipment]     = useState('');
   const [search, setSearch]           = useState('');
-  const [searchInput, setSearchInput] = useState('');
 
   // Feature A — workout filter
   const [workouts, setWorkouts]           = useState<CustomWorkout[]>([]);
@@ -170,6 +169,9 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
 
   // Translated instructions cache: exerciseId -> string[]
   const [translatedInstructions, setTranslatedInstructions] = useState<Record<string, string[]>>({});
+
+  // YouTube video cache: exerciseId -> videoId (null = loading, '' = not found)
+  const [videoCache, setVideoCache] = useState<Record<string, string | null>>({});
 
 
   // Load meta + workouts once, and kick off background media fetch
@@ -224,7 +226,6 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
     if (bodyParts.length > 0) setBodyPart(bodyParts[0]);
     else setBodyPart('');
     setSearch('');
-    setSearchInput('');
   }
 
   function resetFilters() {
@@ -232,17 +233,12 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
     setTarget('');
     setEquipment('');
     setSearch('');
-    setSearchInput('');
     setSelectedWorkoutId('');
     setWorkoutFilterLabel('');
   }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    setSelectedWorkoutId('');
-    setWorkoutFilterLabel('');
-    setTarget('');
-    setSearch(searchInput);
   }
 
   // Feature B: add exercise to workout
@@ -295,42 +291,27 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
 
   return (
     <div className="space-y-4">
-      {/* ── Search bar + Filter button ── */}
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <input
-          value={searchInput}
-          onChange={e => setSearchInput(e.target.value)}
-          placeholder="Search exercises…"
-          className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-300/50"
-        />
-        <button type="submit" className="px-3 py-2 sm:px-4 sm:py-2.5 bg-yellow-300 text-black rounded-xl text-xs sm:text-sm font-black hover:bg-yellow-200 transition-colors">
-          Search
-        </button>
-
-        {/* Filter toggle button */}
+      {/* ── Filter button ── */}
+      <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={() => setFiltersOpen(o => !o)}
-          className={`relative px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black border transition-all ${
-            filtersOpen || activeFilterCount > 0
-              ? 'bg-yellow-300 text-black border-yellow-300'
-              : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:border-white/20'
-          }`}
+          className="relative font-black text-xs sm:text-sm border-none outline-none bg-transparent transition-colors"
+          style={filtersOpen || activeFilterCount > 0 ? { color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7)' } : { color: 'rgba(156,163,175,0.8)' }}
         >
           Filters
           {activeFilterCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-yellow-400 text-black text-[10px] font-black rounded-full flex items-center justify-center">
+            <span className="absolute -top-1.5 -right-3 w-4 h-4 bg-yellow-400 text-black text-[10px] font-black rounded-full flex items-center justify-center">
               {activeFilterCount}
             </span>
           )}
         </button>
-
         {(activeFilterCount > 0 || search) && (
-          <button type="button" onClick={resetFilters} className="px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-xs text-gray-400 hover:text-white transition-colors">
+          <button type="button" onClick={resetFilters} className="text-xs text-gray-500 hover:text-white border-none outline-none bg-transparent transition-colors">
             Clear
           </button>
         )}
-      </form>
+      </div>
 
       {/* ── Expandable filter panel ── */}
       <AnimatePresence>
@@ -451,6 +432,14 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
                     setTranslatedInstructions(prev => ({ ...prev, [ex.exercise_id]: translated }));
                   });
                 }
+                if (!(ex.exercise_id in videoCache)) {
+                  setVideoCache(prev => ({ ...prev, [ex.exercise_id]: null }));
+                  apiGetYouTubeVideo(token, ex.name).then(id => {
+                    setVideoCache(prev => ({ ...prev, [ex.exercise_id]: id }));
+                  }).catch(() => {
+                    setVideoCache(prev => ({ ...prev, [ex.exercise_id]: '' }));
+                  });
+                }
               }}
               className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden text-left hover:border-yellow-300/30 transition-colors"
             >
@@ -517,22 +506,51 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
                 {/* Visual + Muscle Map */}
                 <div className="flex flex-col sm:flex-row gap-5 items-start">
                   <div className="w-full sm:w-80 shrink-0 rounded-xl overflow-hidden">
-                    {selected.youtube_video_id ? (
-                      <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+                    {/* Loading */}
+                    {videoCache[selected.exercise_id] === null && (
+                      <div className="relative w-full rounded-xl overflow-hidden bg-black" style={{ paddingTop: '56.25%' }}>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-6 h-6 border-2 border-yellow-300/30 border-t-yellow-300 rounded-full animate-spin" />
+                        </div>
+                      </div>
+                    )}
+                    {/* Embedded video */}
+                    {videoCache[selected.exercise_id] && (
+                      <div className="relative w-full rounded-xl overflow-hidden" style={{ paddingTop: '56.25%' }}>
                         <iframe
-                          className="absolute inset-0 w-full h-full rounded-xl"
-                          src={`https://www.youtube.com/embed/${selected.youtube_video_id}?rel=0`}
+                          className="absolute inset-0 w-full h-full"
+                          src={`https://www.youtube.com/embed/${videoCache[selected.exercise_id]}?rel=0`}
                           title={selected.name}
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
                         />
                       </div>
-                    ) : selected.wger_image_url ? (
-                      <img src={selected.wger_image_url} alt={selected.name} className="w-full rounded-xl object-cover" />
-                    ) : selected.gif_url ? (
-                      <img src={selected.gif_url} alt={selected.name} className="w-full aspect-square object-cover" />
-                    ) : (
-                      <div className="aspect-square"><ExerciseCardVisual bodyPart={selected.body_part} target={selected.target} /></div>
+                    )}
+                    {/* No video found: retry button */}
+                    {videoCache[selected.exercise_id] === '' && (
+                      <button
+                        onClick={() => {
+                          setVideoCache(prev => ({ ...prev, [selected.exercise_id]: null }));
+                          apiGetYouTubeVideo(token, selected.name).then(id => {
+                            setVideoCache(prev => ({ ...prev, [selected.exercise_id]: id }));
+                          }).catch(() => {
+                            setVideoCache(prev => ({ ...prev, [selected.exercise_id]: '' }));
+                          });
+                        }}
+                        className="relative w-full rounded-xl overflow-hidden border-none outline-none cursor-pointer group"
+                        style={{ paddingTop: '56.25%', background: '#0f0f0f', display: 'block' }}
+                      >
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                          <div
+                            className="w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                            style={{ background: '#ff0000', boxShadow: '0 0 24px rgba(255,0,0,0.5)' }}
+                          >
+                            <span className="text-white text-2xl ml-1">▶</span>
+                          </div>
+                          <p className="text-white text-xs font-bold text-center px-4 leading-snug">{capitalize(selected.name)}</p>
+                          <p className="text-gray-500 text-[10px] uppercase tracking-widest">Tap to load video</p>
+                        </div>
+                      </button>
                     )}
                   </div>
                   <div className="flex-1 flex flex-col items-center justify-center bg-white/3 rounded-xl p-4 min-h-[220px]">

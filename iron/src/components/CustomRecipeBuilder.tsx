@@ -140,8 +140,8 @@ export default function CustomRecipeBuilder({ token }: Props) {
         {!formOpen && (
           <button
             onClick={() => setFormOpen(true)}
-            className="w-full sm:w-auto px-4 py-2 sm:px-5 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs sm:text-sm
-              hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+            className="font-black text-xs sm:text-sm no-underline border-none outline-none bg-transparent transition-colors active:scale-95"
+            style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
           >
             + New Recipe
           </button>

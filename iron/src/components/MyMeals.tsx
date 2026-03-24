@@ -77,11 +77,14 @@ export default function MyMeals({ token }: Props) {
   };
 
   const handleDelete = async (id: number) => {
+    setError('');
+    setMeals((prev) => prev.filter((m) => m.id !== id));
     try {
       await apiDeleteCustomMeal(token, id);
-      setMeals((prev) => prev.filter((m) => m.id !== id));
-    } catch {
-      setError('Failed to delete meal');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete meal');
+      setMeals((prev) => [...prev]); // trigger re-fetch on error
+      apiGetCustomMeals(token).then(setMeals).catch(() => {});
     }
   };
 

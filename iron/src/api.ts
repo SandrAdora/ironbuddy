@@ -695,6 +695,16 @@ export async function apiGetExerciseMeta(token: string): Promise<ExerciseMeta> {
   return res.json();
 }
 
+export async function apiGetYouTubeVideo(token: string, exerciseName: string): Promise<string> {
+  const q = encodeURIComponent(exerciseName);
+  const res = await fetch(`${BASE}/api/youtube-video/?q=${q}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return '';
+  const data = await res.json();
+  return data.video_id ?? '';
+}
+
 export async function apiFetchExerciseMedia(token: string, force = false): Promise<void> {
   const res = await fetch(`${BASE}/api/exercises/fetch-media/`, {
     method: 'POST',

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { apiWorkout, apiGetExercises, type WorkoutPlan, type WorkoutExercise, type CustomWorkout } from '../api';
+import { apiWorkout, apiGetYouTubeVideo, type WorkoutPlan, type WorkoutExercise, type CustomWorkout } from '../api';
 import type { UserProfile } from '../context/userContext';
 
 interface Props {
@@ -9,35 +9,6 @@ interface Props {
   token?: string;
   onStartSession?: () => void;
   onFinishSession?: () => void;
-}
-
-function playBeep(freq = 880, duration = 0.4) {
-  try {
-    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.4, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-    osc.start();
-    osc.stop(ctx.currentTime + duration);
-  } catch { /* silent fail */ }
-}
-
-function workSeconds(ex: WorkoutExercise): number {
-  const nums = ex.reps.match(/\d+/g) ?? ['10'];
-  const avg = nums.reduce((a, b) => a + Number(b), 0) / nums.length;
-  return Math.max(20, Math.min(45, Math.round(ex.sets * avg * 2)));
-}
-
-function restSeconds(ex: WorkoutExercise): number {
-  const sec = ex.rest.match(/(\d+)\s*s/i);
-  const min = ex.rest.match(/(\d+)\s*min/i);
-  if (min) return Math.min(60, Number(min[1]) * 60);
-  if (sec) return Math.min(60, Number(sec[1]));
-  return 20;
 }
 
 // ── localStorage helpers (mirrors MyWorkouts.tsx) ─────────────────────────────
@@ -54,6 +25,31 @@ function persistWorkouts(token: string, workouts: CustomWorkout[]) {
   localStorage.setItem(`ironbuddy_workouts_${getUserId(token)}`, JSON.stringify(workouts));
 }
 
+function playAlarm() {
+  try {
+    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    for (let i = 0; i < 12; i++) {
+      const delay = i * 0.22;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = i % 2 === 0 ? 1400 : 1050;
+      gain.gain.setValueAtTime(0.55, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.18);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.18);
+    }
+  } catch { /* silent fail */ }
+}
+
+function parseRestSecs(rest: string): number {
+  const min = rest.match(/(\d+)\s*min/i);
+  const sec = rest.match(/(\d+)\s*s/i);
+  if (min) return Math.min(180, Number(min[1]) * 60);
+  if (sec) return Math.min(180, Number(sec[1]));
+  return 60;
+}
+
 export default function WorkoutPlanView({ profile, token, onStartSession, onFinishSession }: Props) {
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(false);
@@ -62,71 +58,142 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
   const [imported, setImported]         = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [numDays, setNumDays] = useState(4);
-  const [videoMap, setVideoMap] = useState<Record<string, string>>({});
 
-  // Timer
+  // YouTube video cache — key: exercise name (lowercase)
+  const [videoMap, setVideoMap] = useState<Record<string, string | null>>({});
+
+  async function fetchVideo(name: string) {
+    if (!token) return;
+    const key = name.toLowerCase();
+    if (key in videoMap) return;
+    setVideoMap(prev => ({ ...prev, [key]: null }));
+    const id = await apiGetYouTubeVideo(token, name).catch(() => '');
+    setVideoMap(prev => ({ ...prev, [key]: id }));
+  }
+
+  async function retryVideo(name: string) {
+    if (!token) return;
+    const key = name.toLowerCase();
+    setVideoMap(prev => ({ ...prev, [key]: null }));
+    const id = await apiGetYouTubeVideo(token, name).catch(() => '');
+    setVideoMap(prev => ({ ...prev, [key]: id }));
+  }
+
+  // Workout active state
   const [timerActive, setTimerActive] = useState(false);
-  const [timerExIdx, setTimerExIdx]   = useState(0);
-  const [timeLeft, setTimeLeft]       = useState(0);
-  const [phase, setPhase]             = useState<'work' | 'rest'>('work');
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [workoutPaused, setWorkoutPaused] = useState(false);
 
+  // Set tracking — key: `${activeDay}_${exIdx}`
+  const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({});
+  const [extraSets, setExtraSets] = useState<Record<string, number>>({});
+  const [setLogs, setSetLogs] = useState<Record<string, { weight: string; reps: string }>>({});
+
+  // Rest timer
+  const [restActive, setRestActive] = useState(false);
+  const [restLeft, setRestLeft] = useState(0);
+  const restRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const restWasActive = useRef(false);
+  const alarmWasActive = useRef(false);
+
+  // Alarm
+  const [alarmMins, setAlarmMins] = useState(0);
+  const [alarmSecInput, setAlarmSecInput] = useState(0);
+  const [alarmActive, setAlarmActive] = useState(false);
+  const [alarmLeft, setAlarmLeft] = useState(0);
+  const alarmRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const alarmTotal = alarmMins * 60 + alarmSecInput;
 
   const dayExercises = plan ? plan.days[activeDay].exercises : [];
 
+  // Alarm countdown
   useEffect(() => {
-    if (!timerActive) return;
-    if (timeLeft > 0) {
-      timerRef.current = setTimeout(() => setTimeLeft(t => t - 1), 1000);
-      return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    if (!alarmActive || workoutPaused) return;
+    if (alarmLeft > 0) {
+      alarmRef.current = setTimeout(() => setAlarmLeft(t => t - 1), 1000);
+      return () => { if (alarmRef.current) clearTimeout(alarmRef.current); };
     }
-    // time's up
-    if (phase === 'work') {
-      playBeep(880);
-      setPhase('rest');
-      setTimeLeft(restSeconds(dayExercises[timerExIdx]));
-    } else {
-      const next = timerExIdx + 1;
-      if (next >= dayExercises.length) {
-        playBeep(660, 0.8);
-        setTimerActive(false);
-        onFinishSession?.();
-      } else {
-        playBeep(1100, 0.2);
-        setTimerExIdx(next);
-        setPhase('work');
-        setTimeLeft(workSeconds(dayExercises[next]));
-      }
-    }
-  }, [timerActive, timeLeft, phase, timerExIdx, dayExercises, onFinishSession]);
+    playAlarm();
+    setAlarmActive(false);
+    setAlarmLeft(alarmTotal);
+  }, [alarmActive, alarmLeft, alarmTotal, workoutPaused]);
 
-  function startTimer() {
+  // Rest timer countdown
+  useEffect(() => {
+    if (!restActive || workoutPaused) return;
+    if (restLeft > 0) {
+      restRef.current = setTimeout(() => setRestLeft(t => t - 1), 1000);
+      return () => { if (restRef.current) clearTimeout(restRef.current); };
+    }
+    try {
+      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const osc = ctx.createOscillator(); const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.4, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.start(); osc.stop(ctx.currentTime + 0.4);
+    } catch { /* silent */ }
+    setRestActive(false);
+  }, [restActive, restLeft, workoutPaused]);
+
+  function startAlarmFn(overrideSecs?: number) {
+    if (alarmRef.current) clearTimeout(alarmRef.current);
+    if (overrideSecs !== undefined) {
+      if (overrideSecs < 1) return;
+      setAlarmMins(Math.floor(overrideSecs / 60));
+      setAlarmSecInput(overrideSecs % 60);
+      setAlarmLeft(overrideSecs);
+    }
+    setAlarmActive(true);
+  }
+
+  function stopAlarmFn() {
+    setAlarmActive(false);
+    if (alarmRef.current) clearTimeout(alarmRef.current);
+  }
+
+  function tickSet(dayIdx: number, ei: number, si: number, restSecs: number) {
+    const key = `${dayIdx}_${ei}`;
+    setCompletedSets(prev => {
+      const arr = [...(prev[key] ?? [])];
+      arr[si] = !arr[si];
+      const nowDone = arr[si];
+      if (nowDone && restSecs > 0) {
+        if (restRef.current) clearTimeout(restRef.current);
+        setRestLeft(restSecs);
+        setRestActive(true);
+      } else if (!nowDone) {
+        setRestActive(false);
+      }
+      return { ...prev, [key]: arr };
+    });
+  }
+
+  function logSet(dayIdx: number, ei: number, si: number, field: 'weight' | 'reps', val: string) {
+    const key = `${dayIdx}_${ei}_${si}`;
+    setSetLogs(prev => ({ ...prev, [key]: { ...(prev[key] ?? { weight: '', reps: '' }), [field]: val } }));
+  }
+
+  function startWorkout() {
     if (!dayExercises.length) return;
-    setTimerExIdx(0);
-    setPhase('work');
-    setTimeLeft(workSeconds(dayExercises[0]));
     setTimerActive(true);
+    setWorkoutPaused(false);
+    restWasActive.current = false;
+    alarmWasActive.current = false;
+    setCompletedSets({});
+    setExtraSets({});
+    setSetLogs({});
+    setRestActive(false);
+    if (restRef.current) clearTimeout(restRef.current);
     onStartSession?.();
   }
 
-  function stopTimer() {
+  function finishWorkout() {
     setTimerActive(false);
-    if (timerRef.current) clearTimeout(timerRef.current);
+    setWorkoutPaused(false);
+    setRestActive(false);
+    stopAlarmFn();
     onFinishSession?.();
-  }
-
-  function skipCurrent() {
-    const next = timerExIdx + 1;
-    if (next >= dayExercises.length) {
-      playBeep(660, 0.8);
-      setTimerActive(false);
-      onFinishSession?.();
-    } else {
-      playBeep(1100, 0.2);
-      setTimerExIdx(next);
-      setPhase('work');
-      setTimeLeft(workSeconds(dayExercises[next]));
-    }
   }
 
   const importToMyWorkouts = (planToSave: WorkoutPlan) => {
@@ -152,36 +219,6 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
     setTimeout(() => setImported(false), 3000);
   };
 
-  const fetchVideos = async (p: WorkoutPlan) => {
-    if (!token) return;
-    try {
-      const res = await apiGetExercises(token, { limit: 200 });
-      const map: Record<string, string> = {};
-
-      const stopWords = new Set(['a', 'an', 'the', 'with', 'and', 'or', 'of', 'to', 'in', 'v', 'v2']);
-      const words = (s: string) =>
-        s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 1 && !stopWords.has(w));
-
-      const aiNames = [...new Set(p.days.flatMap(d => d.exercises.map(e => e.name)))];
-
-      for (const name of aiNames) {
-        // 1. exact match
-        const exact = res.results.find(ex => ex.name.toLowerCase() === name.toLowerCase());
-        if (exact?.youtube_video_id) { map[name.toLowerCase()] = exact.youtube_video_id; continue; }
-
-        // 2. word-overlap fallback
-        const aiWords = words(name);
-        let best: typeof res.results[0] | null = null;
-        let bestScore = 0;
-        for (const ex of res.results.filter(e => e.youtube_video_id)) {
-          const score = aiWords.filter(w => words(ex.name).includes(w)).length;
-          if (score > bestScore) { bestScore = score; best = ex; }
-        }
-        if (best && bestScore >= 1) map[name.toLowerCase()] = best.youtube_video_id;
-      }
-      setVideoMap(map);
-    } catch { /* ignore */ }
-  };
 
   const generate = async () => {
     setLoading(true);
@@ -190,7 +227,6 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
       const result = await apiWorkout(profile as unknown as Record<string, unknown>, numDays);
       setPlan(result);
       setActiveDay(0);
-      fetchVideos(result);
       if (token) setShowSaveModal(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.');
@@ -202,12 +238,11 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
   return (
     <div className="space-y-6">
 
-      {/* ── Save-to-My-Workouts modal (portal so fixed positioning works inside motion parents) ── */}
+      {/* ── Save-to-My-Workouts modal ── */}
       {createPortal(
         <AnimatePresence>
           {showSaveModal && plan && (
             <>
-              {/* Backdrop */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -215,8 +250,6 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                 className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999]"
                 onClick={() => setShowSaveModal(false)}
               />
-
-              {/* Modal */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8, y: 40 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -234,7 +267,6 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                 >
                   💪
                 </motion.span>
-
                 <div className="space-y-2">
                   <p className="text-[--color-iron-gold] font-black uppercase text-xs tracking-[0.3em]">Plan Ready</p>
                   <h2 className="text-white font-black text-xl uppercase italic">{plan.plan_name}</h2>
@@ -243,7 +275,6 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                     My Workouts so you can access them anytime, even offline.
                   </p>
                 </div>
-
                 <div className="flex flex-col gap-3 w-full">
                   <button
                     onClick={() => { importToMyWorkouts(plan); setShowSaveModal(false); }}
@@ -272,7 +303,6 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
         <div>
           <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">AI Generated</p>
           <h1 className="text-2xl md:text-3xl font-black uppercase italic mt-1">💪 Workout Plan</h1>
-          {/* Days selector */}
           <div className="flex items-center gap-2 mt-3">
             <span className="text-xs text-gray-500 uppercase font-bold tracking-wide">Days:</span>
             <select
@@ -292,10 +322,10 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
             <button
               onClick={() => plan && importToMyWorkouts(plan)}
               disabled={imported}
-              className="px-4 py-2 font-black rounded-xl uppercase text-xs flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-95"
+              className="font-black text-xs border-none outline-none bg-transparent transition-colors active:scale-95 disabled:cursor-default flex items-center gap-1"
               style={imported
-                ? { background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', boxShadow: 'none', cursor: 'default' }
-                : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 12px rgba(250,204,21,0.3), 0 0 28px rgba(250,204,21,0.12)' }
+                ? { color: '#4ade80', textShadow: '0 0 10px rgba(74,222,128,0.7), 0 0 20px rgba(34,211,238,0.4)' }
+                : { color: '#4ade80', textShadow: '0 0 10px rgba(74,222,128,0.7), 0 0 20px rgba(34,211,238,0.4)' }
               }
             >
               {imported ? '✓ Saved to My Workouts' : '📥 Save to My Workouts'}
@@ -304,11 +334,8 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
           <button
             onClick={generate}
             disabled={loading}
-            className="w-auto px-4 py-2 bg-black text-yellow-300 font-black rounded-xl uppercase text-xs
-              border border-yellow-300/40
-              hover:border-yellow-300 hover:scale-[1.02] active:scale-95 transition-all duration-200
-              disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            style={{ boxShadow: '0 0 12px rgba(253,224,71,0.35), 0 0 28px rgba(253,224,71,0.15)' }}
+            className="font-black text-xs no-underline border-none outline-none bg-transparent transition-colors active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
           >
             {loading ? (
               <>
@@ -365,18 +392,21 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
             </div>
 
             {/* Day tabs */}
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex border-b border-white/10">
               {plan.days.map((_d, i) => (
                 <button
                   key={i}
-                  onClick={() => setActiveDay(i)}
-                  className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wide transition-all duration-200"
+                  onClick={() => { setActiveDay(i); if (timerActive) finishWorkout(); }}
+                  className="px-4 py-2 text-xs font-black uppercase tracking-wide transition-all duration-200 border-none outline-none bg-transparent relative"
                   style={activeDay === i
-                    ? { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.65)', boxShadow: '0 0 14px rgba(250,204,21,0.4), 0 0 28px rgba(250,204,21,0.15)' }
-                    : { background: '#060608', color: 'rgba(156,163,175,1)', border: '1px solid rgba(250,204,21,0.2)', boxShadow: '0 0 6px rgba(250,204,21,0.1)' }
+                    ? { color: '#facc15', textShadow: '0 0 8px rgba(250,204,21,0.6)' }
+                    : { color: 'rgba(156,163,175,0.6)' }
                   }
                 >
                   Day {i + 1}
+                  {activeDay === i && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full" style={{ background: '#facc15', boxShadow: '0 0 6px rgba(250,204,21,0.8)' }} />
+                  )}
                 </button>
               ))}
             </div>
@@ -391,67 +421,115 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                 transition={{ duration: 0.25 }}
                 className="space-y-4"
               >
+                {/* Day header */}
                 <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-6 py-4 flex items-center justify-between gap-4">
                   <div>
                     <h2 className="text-lg font-black text-[--color-iron-gold] uppercase italic">{plan.days[activeDay].day}</h2>
                     <p className="text-gray-400 text-sm mt-0.5">Focus: {plan.days[activeDay].focus}</p>
                   </div>
-                  {!timerActive && (
+                  {timerActive ? (
+                    <div className="flex items-center gap-1.5">
+                      {/* Pause / Resume */}
+                      <button
+                        onClick={() => {
+                          if (workoutPaused) {
+                            setWorkoutPaused(false);
+                            if (alarmWasActive.current) startAlarmFn();
+                            if (restWasActive.current) setRestActive(true);
+                          } else {
+                            alarmWasActive.current = alarmActive;
+                            restWasActive.current = restActive;
+                            setWorkoutPaused(true);
+                          }
+                        }}
+                        className="text-[10px] font-black px-2.5 py-1.5 rounded-lg border-none outline-none transition-all active:scale-95"
+                        style={{ background: '#060608', color: '#facc15', boxShadow: '0 0 10px rgba(250,204,21,0.45), 0 0 24px rgba(250,204,21,0.2)' }}
+                        title={workoutPaused ? 'Resume workout' : 'Pause workout'}
+                      >
+                        {workoutPaused ? '▶' : '⏸'}
+                      </button>
+                      {/* Finish */}
+                      <button
+                        onClick={finishWorkout}
+                        className="text-[10px] font-black px-2.5 py-1.5 rounded-lg border-none outline-none transition-all active:scale-95"
+                        style={{ background: '#060608', color: '#4ade80', boxShadow: '0 0 10px rgba(74,222,128,0.45), 0 0 24px rgba(74,222,128,0.2)' }}
+                        title="Finish workout"
+                      >
+                        ✓
+                      </button>
+                    </div>
+                  ) : (
                     <button
-                      onClick={startTimer}
-                      className="shrink-0 px-4 py-2 bg-black text-yellow-300 font-black rounded-xl uppercase text-xs border border-yellow-300/40 hover:border-yellow-300 hover:scale-105 active:scale-95 transition-all duration-200"
-                      style={{ boxShadow: '0 0 12px rgba(253,224,71,0.35), 0 0 28px rgba(253,224,71,0.15)' }}
+                      onClick={startWorkout}
+                      className="shrink-0 font-black text-xs border-none outline-none bg-transparent active:scale-95 transition-colors"
+                      style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
                     >
                       ▶ Start
                     </button>
                   )}
                 </div>
 
-                {/* Timer bar */}
-                <AnimatePresence>
-                  {timerActive && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      className="bg-black border border-yellow-300/30 rounded-2xl px-5 py-4 flex items-center gap-4"
-                      style={{ boxShadow: '0 0 20px rgba(253,224,71,0.2)' }}
-                    >
-                      {/* Phase badge */}
-                      <span className={`shrink-0 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${
-                        phase === 'work' ? 'bg-yellow-300/20 text-yellow-300' : 'bg-blue-400/20 text-blue-300'
-                      }`}>
-                        {phase === 'work' ? 'Work' : 'Rest'}
-                      </span>
+                {/* Rest timer banner */}
+                {timerActive && restActive && (
+                  <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-400/30 rounded-xl px-3 py-2">
+                    <span className="text-blue-300 text-xs font-black uppercase tracking-widest shrink-0">Rest</span>
+                    <button
+                      onClick={() => setRestLeft(t => Math.max(0, t - 10))}
+                      className="text-[10px] font-black px-2 py-1 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 transition-colors shrink-0"
+                    >−10s</button>
+                    <span className="text-blue-300 font-black text-xl tabular-nums mx-auto">
+                      {String(Math.floor(restLeft / 60)).padStart(2, '0')}:{String(restLeft % 60).padStart(2, '0')}
+                    </span>
+                    <button
+                      onClick={() => setRestLeft(t => t + 10)}
+                      className="text-[10px] font-black px-2 py-1 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 transition-colors shrink-0"
+                    >+10s</button>
+                    <button onClick={() => setRestActive(false)} className="text-xs text-blue-400 hover:text-white font-bold transition-colors shrink-0">Skip</button>
+                  </div>
+                )}
 
-                      {/* Exercise name */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white font-black text-sm truncate">{dayExercises[timerExIdx]?.name}</p>
-                        <p className="text-gray-500 text-xs">{timerExIdx + 1} / {dayExercises.length}</p>
-                      </div>
-
-                      {/* Countdown */}
-                      <span className="shrink-0 text-yellow-300 font-black text-2xl tabular-nums" style={{ textShadow: '0 0 12px rgba(253,224,71,0.6)' }}>
-                        {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
-                      </span>
-
-                      {/* Controls */}
-                      <button onClick={skipCurrent} className="shrink-0 text-sm font-bold px-2 py-1 rounded-lg transition-all duration-200" style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.3)', boxShadow: '0 0 8px rgba(250,204,21,0.2)' }}>⏭</button>
-                      <button onClick={stopTimer}   className="shrink-0 text-sm font-bold px-2 py-1 rounded-lg transition-all duration-200" style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.3)', boxShadow: '0 0 8px rgba(250,204,21,0.2)' }}>✕</button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
+                {/* Exercise cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {plan.days[activeDay].exercises.map((ex, i) => (
-                    <ExerciseCard
-                      key={i}
-                      exercise={ex}
-                      index={i}
-                      active={timerActive && timerExIdx === i}
-                      videoId={videoMap[ex.name.toLowerCase()] ?? ''}
-                    />
-                  ))}
+                  {plan.days[activeDay].exercises.map((ex, i) => {
+                    const key = `${activeDay}_${i}`;
+                    const done = completedSets[key] ?? [];
+                    const totalSets = ex.sets + (extraSets[key] ?? 0);
+                    const doneCount = done.filter(Boolean).length;
+                    return (
+                      <ExerciseCard
+                        key={i}
+                        exercise={ex}
+                        index={i}
+                        videoId={videoMap[ex.name.toLowerCase()]}
+                        onFetchVideo={() => fetchVideo(ex.name)}
+                        onRetryVideo={() => retryVideo(ex.name)}
+                        isActive={timerActive}
+                        done={done}
+                        totalSets={totalSets}
+                        doneCount={doneCount}
+                        logs={setLogs}
+                        logKey={`${activeDay}_${i}`}
+                        workoutKey={`${activeDay}_${i}`}
+                        onTickSet={(si) => tickSet(activeDay, i, si, parseRestSecs(ex.rest))}
+                        onLogSet={(si, field, val) => logSet(activeDay, i, si, field, val)}
+                        onAddSet={() => setExtraSets(prev => ({ ...prev, [key]: (prev[key] ?? 0) + 1 }))}
+                        onRemoveSet={() => {
+                          const lastIdx = totalSets - 1;
+                          setExtraSets(prev => ({ ...prev, [key]: (prev[key] ?? 0) - 1 }));
+                          setCompletedSets(prev => {
+                            const arr = [...(prev[key] ?? [])];
+                            arr.splice(lastIdx, 1);
+                            return { ...prev, [key]: arr };
+                          });
+                          setSetLogs(prev => {
+                            const next = { ...prev };
+                            delete next[`${activeDay}_${i}_${lastIdx}`];
+                            return next;
+                          });
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               </motion.div>
             </AnimatePresence>
@@ -475,7 +553,26 @@ function PlanStat({ icon, label, value }: { icon: string; label: string; value: 
   );
 }
 
-function ExerciseCard({ exercise, index, active, videoId }: { exercise: WorkoutExercise; index: number; active?: boolean; videoId?: string }) {
+interface ExerciseCardProps {
+  exercise: WorkoutExercise;
+  index: number;
+  videoId?: string | null;
+  onFetchVideo: () => void;
+  onRetryVideo: () => void;
+  isActive: boolean;
+  done: boolean[];
+  totalSets: number;
+  doneCount: number;
+  logs: Record<string, { weight: string; reps: string }>;
+  logKey: string;
+  workoutKey: string;
+  onTickSet: (si: number) => void;
+  onLogSet: (si: number, field: 'weight' | 'reps', val: string) => void;
+  onAddSet: () => void;
+  onRemoveSet: () => void;
+}
+
+function ExerciseCard({ exercise, index, videoId, onFetchVideo, onRetryVideo, isActive, done, totalSets, doneCount, logs, workoutKey, onTickSet, onLogSet, onAddSet, onRemoveSet }: ExerciseCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -483,34 +580,143 @@ function ExerciseCard({ exercise, index, active, videoId }: { exercise: WorkoutE
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.07 }}
-      className={`backdrop-blur-md rounded-2xl overflow-hidden transition-all duration-300 ${
-        active
-          ? 'border-2 border-yellow-300 shadow-[0_0_24px_rgba(253,224,71,0.3)] bg-yellow-300/5'
-          : 'bg-white/5 border border-white/10 hover:border-yellow-300/20 hover:shadow-[0_0_20px_rgba(253,224,71,0.08)]'
-      }`}
+      className="backdrop-blur-md rounded-2xl overflow-hidden transition-all duration-300 bg-white/5 border border-white/10 hover:border-yellow-300/20"
     >
       <div className="p-4 space-y-3">
-        {/* Name + muscle */}
+        {/* Name + muscle + set counter */}
         <div className="flex justify-between items-start">
           <div>
             <h3 className="text-white font-black text-sm uppercase tracking-wide">{exercise.name}</h3>
             <p className="text-[--color-iron-gold] text-xs font-semibold mt-0.5">{exercise.muscle}</p>
           </div>
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            className="text-xs font-bold px-2 py-1 rounded-lg transition-all duration-200 shrink-0"
-            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)', boxShadow: '0 0 8px rgba(250,204,21,0.15)' }}
-          >
-            {expanded ? 'Hide ▲' : 'How to ▼'}
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {isActive && (
+              <span className="text-xs font-bold tabular-nums" style={{ color: doneCount === totalSets ? '#4ade80' : '#facc15' }}>
+                {doneCount}/{totalSets} sets
+              </span>
+            )}
+            <button
+              onClick={() => { setExpanded((v) => !v); if (!expanded) onFetchVideo(); }}
+              className="text-xs font-bold border-none outline-none bg-transparent transition-colors"
+              style={{ color: '#facc15' }}
+            >
+              {expanded ? 'Hide ▲' : 'How to ▼'}
+            </button>
+          </div>
         </div>
 
-        {/* Sets / Reps / Rest */}
-        <div className="flex gap-3">
-          <Pill label="Sets" value={String(exercise.sets)} />
-          <Pill label="Reps" value={exercise.reps} />
-          <Pill label="Rest" value={exercise.rest} />
-        </div>
+        {/* Static pills when not active */}
+        {!isActive && (
+          <div className="flex gap-3">
+            <Pill label="Sets" value={String(exercise.sets)} />
+            <Pill label="Reps" value={exercise.reps} />
+            <Pill label="Rest" value={exercise.rest} />
+          </div>
+        )}
+
+        {/* Set rows when active */}
+        {isActive && (
+          <div className="space-y-2">
+            {/* Barbell progress */}
+            <div className="flex items-center gap-1 px-1 my-1" style={{ height: 24 }}>
+              <div className="flex items-center gap-[2px]">
+                {Array.from({ length: totalSets }).map((_, pi) => {
+                  const plateIdx = totalSets - 1 - pi;
+                  const filled = done[plateIdx] ?? false;
+                  const allDone = doneCount === totalSets;
+                  return (
+                    <div key={pi} className="rounded-[2px] transition-all duration-300 shrink-0" style={{
+                      width: 6,
+                      height: filled ? 22 : 10,
+                      background: filled ? (allDone ? '#4ade80' : '#facc15') : 'rgba(255,255,255,0.12)',
+                      boxShadow: filled ? `0 0 6px ${allDone ? 'rgba(74,222,128,0.8)' : 'rgba(250,204,21,0.8)'}` : 'none',
+                    }} />
+                  );
+                })}
+              </div>
+              <div className="flex-1 h-[3px] rounded-full transition-all duration-500" style={{
+                background: doneCount > 0 ? (doneCount === totalSets ? '#4ade80' : '#facc15') : 'rgba(255,255,255,0.1)',
+                boxShadow: doneCount > 0 ? `0 0 8px ${doneCount === totalSets ? 'rgba(74,222,128,0.6)' : 'rgba(250,204,21,0.6)'}` : 'none',
+              }} />
+              <div className="flex items-center gap-[2px]">
+                {Array.from({ length: totalSets }).map((_, pi) => {
+                  const filled = done[pi] ?? false;
+                  const allDone = doneCount === totalSets;
+                  return (
+                    <div key={pi} className="rounded-[2px] transition-all duration-300 shrink-0" style={{
+                      width: 6,
+                      height: filled ? 22 : 10,
+                      background: filled ? (allDone ? '#4ade80' : '#facc15') : 'rgba(255,255,255,0.12)',
+                      boxShadow: filled ? `0 0 6px ${allDone ? 'rgba(74,222,128,0.8)' : 'rgba(250,204,21,0.8)'}` : 'none',
+                    }} />
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Column headers */}
+            <div className="grid grid-cols-[20px_1fr_1fr_28px] gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 px-1">
+              <span>#</span><span>Weight</span><span>Reps</span><span></span>
+            </div>
+
+            {/* Set rows */}
+            {Array.from({ length: totalSets }).map((_, si) => {
+              const log = logs[`${workoutKey}_${si}`] ?? { weight: '', reps: '' };
+              const checked = done[si] ?? false;
+              return (
+                <div key={si} className={`grid grid-cols-[20px_1fr_1fr_28px] gap-2 items-center rounded-lg px-1 py-1 transition-colors ${checked ? 'bg-green-500/10' : 'bg-white/3'}`}>
+                  <span className="text-xs font-black text-gray-500">{si + 1}</span>
+                  <input
+                    type="text" inputMode="decimal" placeholder="kg"
+                    value={log.weight}
+                    onChange={e => onLogSet(si, 'weight', e.target.value)}
+                    className={`bg-black/40 border border-white/10 rounded-lg text-center text-xs font-bold py-1 px-1 focus:outline-none focus:border-yellow-300/40 w-full transition-all ${checked ? 'line-through text-green-400/60' : 'text-white'}`}
+                  />
+                  <input
+                    type="text" inputMode="numeric" placeholder={exercise.reps}
+                    value={log.reps}
+                    onChange={e => onLogSet(si, 'reps', e.target.value)}
+                    className={`bg-black/40 border border-white/10 rounded-lg text-center text-xs font-bold py-1 px-1 focus:outline-none focus:border-yellow-300/40 w-full transition-all ${checked ? 'line-through text-green-400/60' : 'text-white'}`}
+                  />
+                  <button
+                    onClick={() => onTickSet(si)}
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-sm text-xs font-black transition-all flex items-center justify-center border-none outline-none"
+                    style={checked
+                      ? { background: '#060608', color: '#4ade80', boxShadow: '0 0 10px rgba(74,222,128,0.6), 0 0 20px rgba(74,222,128,0.3)', border: '2px solid rgba(74,222,128,0.8)' }
+                      : { background: '#060608', color: 'rgba(255,255,255,0.3)', boxShadow: '0 0 8px rgba(250,204,21,0.25)', border: '2px solid rgba(250,204,21,0.4)' }
+                    }
+                  >
+                    {checked ? '✓' : ''}
+                  </button>
+                </div>
+              );
+            })}
+
+            {/* Add / Remove set */}
+            <div className="flex gap-2">
+              <button
+                onClick={onAddSet}
+                className="flex-1 text-xs font-black border-none outline-none bg-transparent active:scale-95 transition-colors hover:text-yellow-300 group"
+                style={{ color: 'rgba(156,163,175,0.6)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 10px rgba(250,204,21,0.7)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
+              >
+                + Add Set
+              </button>
+              {totalSets > 1 && (
+                <button
+                  onClick={onRemoveSet}
+                  className="flex-1 text-xs font-black border-none outline-none bg-transparent active:scale-95 transition-colors"
+                  style={{ color: 'rgba(156,163,175,0.6)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#f87171;text-shadow:0 0 10px rgba(248,113,113,0.7)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
+                >
+                  − Remove Set
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* How-to steps + video (collapsible) */}
         <AnimatePresence>
@@ -523,7 +729,24 @@ function ExerciseCard({ exercise, index, active, videoId }: { exercise: WorkoutE
               className="overflow-hidden"
             >
               <div className="border-t border-white/10 pt-3 space-y-3">
-                {/* YouTube video */}
+                {videoId === null && (
+                  <p className="text-gray-500 text-xs">Loading video…</p>
+                )}
+                {(videoId === '' || videoId === 'QUOTA') && (
+                  <button
+                    onClick={onRetryVideo}
+                    className="relative w-full rounded-xl overflow-hidden border-none outline-none cursor-pointer group"
+                    style={{ paddingTop: '56.25%', background: '#0f0f0f', display: 'block' }}
+                  >
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                        style={{ background: '#ff0000', boxShadow: '0 0 20px rgba(255,0,0,0.5)' }}>
+                        <span className="text-white text-xl ml-1">▶</span>
+                      </div>
+                      <p className="text-gray-500 text-[10px] uppercase tracking-widest">Tap to load video</p>
+                    </div>
+                  </button>
+                )}
                 {videoId && (
                   <div className="relative w-full rounded-xl overflow-hidden" style={{ paddingTop: '56.25%' }}>
                     <iframe
