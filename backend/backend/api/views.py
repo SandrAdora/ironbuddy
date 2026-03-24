@@ -1513,6 +1513,53 @@ class ExerciseMetaView(APIView):
         })
 
 
+INVIDIOUS_INSTANCES = [
+    'https://iv.melmac.space',
+    'https://invidious.projectsegfau.lt',
+    'https://invidious.slipfox.xyz',
+]
+
+class YouTubeVideoView(APIView):
+    """Returns a YouTube video ID for a given exercise name, with DB caching."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .models import Exercise
+        q = request.query_params.get('q', '').strip()
+        if not q:
+            return Response({'error': 'q required'}, status=400)
+
+        # Check DB cache first
+        cached = Exercise.objects.filter(name__iexact=q).exclude(youtube_video_id='').first()
+        if cached:
+            return Response({'video_id': cached.youtube_video_id})
+
+        # Search via Invidious (no API key needed)
+        query = f'{q} exercise tutorial form'
+        video_id = ''
+        for instance in INVIDIOUS_INSTANCES:
+            try:
+                resp = _http.get(
+                    f'{instance}/api/v1/search',
+                    params={'q': query, 'type': 'video', 'page': 1},
+                    timeout=8,
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if isinstance(data, list) and data:
+                        video_id = data[0].get('videoId', '')
+                        if video_id:
+                            break
+            except Exception:
+                continue
+
+        # Cache in DB
+        if video_id:
+            Exercise.objects.filter(name__iexact=q).update(youtube_video_id=video_id)
+
+        return Response({'video_id': video_id})
+
+
 class ExerciseFetchMediaView(APIView):
     """Triggers the fetch_exercise_media management command in a background thread."""
     permission_classes = [IsAuthenticated]

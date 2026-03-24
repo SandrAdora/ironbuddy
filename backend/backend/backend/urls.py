@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from api.views import CreateUserView, CoachChatView, WorkoutPlanView, AIMealPlanView, UserProfileView, CustomWorkoutListView, CustomWorkoutDetailView, CustomMealListView, CustomMealDetailView, UserRecipeListView, UserRecipeDetailView, WorkoutVideoListView, WorkoutVideoDetailView, UserListView, UserSearchView, UserDetailView, ConversationListView, ConversationDetailView, MessageListView, MessageDetailView, WorkoutSessionListView, WorkoutSessionDetailView, PasswordResetRequestView, PasswordResetConfirmView, PasswordChangeView, MessageReactionView, WeightLogListView, WeightLogDetailView, DeleteAccountView, DeactivateAccountView, ReactivatingTokenView, ContactView, BodyMeasurementListView, BodyMeasurementDetailView, ExerciseListView, ExerciseDetailView, ExerciseMetaView, ExerciseFetchMediaView, UploadFileView, TranslateInstructionsView
+from api.views import CreateUserView, CoachChatView, WorkoutPlanView, AIMealPlanView, UserProfileView, CustomWorkoutListView, CustomWorkoutDetailView, CustomMealListView, CustomMealDetailView, UserRecipeListView, UserRecipeDetailView, WorkoutVideoListView, WorkoutVideoDetailView, UserListView, UserSearchView, UserDetailView, ConversationListView, ConversationDetailView, MessageListView, MessageDetailView, WorkoutSessionListView, WorkoutSessionDetailView, PasswordResetRequestView, PasswordResetConfirmView, PasswordChangeView, MessageReactionView, WeightLogListView, WeightLogDetailView, DeleteAccountView, DeactivateAccountView, ReactivatingTokenView, ContactView, BodyMeasurementListView, BodyMeasurementDetailView, ExerciseListView, ExerciseDetailView, ExerciseMetaView, ExerciseFetchMediaView, YouTubeVideoView, UploadFileView, TranslateInstructionsView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
@@ -65,6 +65,7 @@ urlpatterns = [
     path("api/exercises/meta/", ExerciseMetaView.as_view(), name="exercises_meta"),
     path("api/exercises/fetch-media/", ExerciseFetchMediaView.as_view(), name="exercises_fetch_media"),
     path("api/exercises/<str:exercise_id>/", ExerciseDetailView.as_view(), name="exercise_detail"),
+    path("api/youtube-video/", YouTubeVideoView.as_view(), name="youtube_video"),
     path("api/upload/", UploadFileView.as_view(), name="upload_file"),
     path("api/translate-instructions/", TranslateInstructionsView.as_view(), name="translate_instructions"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
