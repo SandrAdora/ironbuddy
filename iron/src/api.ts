@@ -40,6 +40,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   save_prompt?: SavePrompt;
+  follow_ups?: string[];
 }
 
 export async function apiChat(
@@ -47,7 +48,7 @@ export async function apiChat(
   profile: Record<string, unknown>,
   history: ChatMessage[],
   token?: string
-): Promise<{ reply: string; save_prompt?: SavePrompt }> {
+): Promise<{ reply: string; save_prompt?: SavePrompt; follow_ups?: string[] }> {
   const res = await fetch(`${BASE}/api/chat/`, {
     method: 'POST',
     headers: {

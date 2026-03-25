@@ -3,10 +3,13 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { CustomWorkout, CustomExercise, Exercise, PublicUser } from '../api';
 import { apiGetExercises, apiGetUsers, apiStartConversation, apiSendMessage, apiGetYouTubeVideo } from '../api';
+import { savePR } from '../prStorage';
 
 interface Props {
   token: string;
   onStartWorkout?: (name: string, type: 'ai' | 'custom') => void;
+  autoStartName?: string;
+  onAutoStartConsumed?: () => void;
 }
 
 // ── localStorage helpers ───────────────────────────────────────────────────────
@@ -31,7 +34,7 @@ const emptyExercise = (): CustomExercise => ({
   name: '', sets: 3, reps: '8-12', rest: '60s', muscle: '', notes: '',
 });
 
-export default function MyWorkouts({ token, onStartWorkout }: Props) {
+export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAutoStartConsumed }: Props) {
   const [workouts, setWorkouts]       = useState<CustomWorkout[]>([]);
   const [formOpen, setFormOpen]       = useState(false);
   const [editingId, setEditingId]     = useState<number | null>(null);
@@ -127,6 +130,17 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
   useEffect(() => {
     setWorkouts(loadWorkouts(token));
   }, [token]);
+
+  // Auto-start a workout when navigated from dashboard
+  useEffect(() => {
+    if (!autoStartName || activeWorkoutId !== null) return;
+    const all = loadWorkouts(token);
+    const target = all.find(w => w.name === autoStartName);
+    if (target) {
+      startActiveWorkout(target);
+      onAutoStartConsumed?.();
+    }
+  }, [autoStartName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (menuId === null) return;
@@ -780,7 +794,14 @@ export default function MyWorkouts({ token, onStartWorkout }: Props) {
                                         className={`bg-black/40 border border-white/10 rounded-lg text-center text-xs font-bold py-1 px-1 focus:outline-none focus:border-yellow-300/40 w-full transition-all ${checked ? 'line-through text-green-400/60' : 'text-white'}`}
                                       />
                                       <button
-                                        onClick={() => tickSet(w.id, i, si, parseRestSecs(ex.rest))}
+                                        onClick={() => {
+                                          tickSet(w.id, i, si, parseRestSecs(ex.rest));
+                                          if (!checked) {
+                                            const w_ = parseFloat(log.weight);
+                                            const r_ = parseFloat(log.reps);
+                                            savePR(getUserId(token), ex.name, ex.muscle, w_, r_);
+                                          }
+                                        }}
                                         className="w-6 h-6 sm:w-7 sm:h-7 rounded-sm text-xs font-black transition-all flex items-center justify-center border-none outline-none"
                                         style={checked
                                           ? { background: '#060608', color: '#4ade80', boxShadow: '0 0 10px rgba(74,222,128,0.6), 0 0 20px rgba(74,222,128,0.3)', border: '2px solid rgba(74,222,128,0.8)' }

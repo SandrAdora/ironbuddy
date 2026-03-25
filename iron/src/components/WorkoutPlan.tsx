@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiWorkout, apiGetYouTubeVideo, type WorkoutPlan, type WorkoutExercise, type CustomWorkout } from '../api';
 import type { UserProfile } from '../context/userContext';
+import { savePR } from '../prStorage';
 
 interface Props {
   profile: UserProfile;
@@ -510,7 +511,14 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                         logs={setLogs}
                         logKey={`${activeDay}_${i}`}
                         workoutKey={`${activeDay}_${i}`}
-                        onTickSet={(si) => tickSet(activeDay, i, si, parseRestSecs(ex.rest))}
+                        onTickSet={(si) => {
+                          tickSet(activeDay, i, si, parseRestSecs(ex.rest));
+                          const logEntry = setLogs[`${activeDay}_${i}_${si}`] ?? { weight: '', reps: '' };
+                          const isDone = completedSets[`${activeDay}_${i}`]?.[si] ?? false;
+                          if (!isDone && logEntry.weight && logEntry.reps) {
+                            savePR(getUserId(token ?? ''), ex.name, ex.muscle, parseFloat(logEntry.weight), parseFloat(logEntry.reps));
+                          }
+                        }}
                         onLogSet={(si, field, val) => logSet(activeDay, i, si, field, val)}
                         onAddSet={() => setExtraSets(prev => ({ ...prev, [key]: (prev[key] ?? 0) + 1 }))}
                         onRemoveSet={() => {
@@ -732,7 +740,7 @@ function ExerciseCard({ exercise, index, videoId, onFetchVideo, onRetryVideo, is
                 {videoId === null && (
                   <p className="text-gray-500 text-xs">Loading video…</p>
                 )}
-                {(videoId === '' || videoId === 'QUOTA') && (
+                {videoId === '' && (
                   <button
                     onClick={onRetryVideo}
                     className="relative w-full rounded-xl overflow-hidden border-none outline-none cursor-pointer group"

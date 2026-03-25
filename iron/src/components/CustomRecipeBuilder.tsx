@@ -212,7 +212,11 @@ export default function CustomRecipeBuilder({ token }: Props) {
                 </div>
               ))}
               <button onClick={() => addLine(ingredients, setIngredients)}
-                className="text-xs text-gray-500 hover:text-yellow-300 font-bold uppercase transition-colors flex items-center gap-1 mt-1">
+                className="text-xs font-black border-none outline-none bg-transparent mt-1 active:scale-95 transition-colors"
+                style={{ color: 'rgba(156,163,175,0.6)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 8px rgba(250,204,21,0.5)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
+              >
                 + Add Ingredient
               </button>
             </div>
@@ -237,7 +241,11 @@ export default function CustomRecipeBuilder({ token }: Props) {
                 </div>
               ))}
               <button onClick={() => addLine(steps, setSteps)}
-                className="text-xs text-gray-500 hover:text-yellow-300 font-bold uppercase transition-colors flex items-center gap-1 mt-1">
+                className="text-xs font-black border-none outline-none bg-transparent mt-1 active:scale-95 transition-colors"
+                style={{ color: 'rgba(156,163,175,0.6)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 8px rgba(250,204,21,0.5)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
+              >
                 + Add Step
               </button>
             </div>

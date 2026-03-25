@@ -312,7 +312,23 @@ Coach message:
                     pass
                 reply = clean_reply
 
-            return Response({'reply': reply, 'save_prompt': save_prompt})
+            # ── Generate contextual follow-up suggestions ──
+            follow_ups = []
+            try:
+                fu_prompt = f"""Based on this fitness coach reply, suggest exactly 3 short follow-up questions the user might ask next.
+Reply ONLY with a JSON array of 3 strings, no markdown, no extra text. Each string max 8 words.
+Coach reply: {reply[:400]}"""
+                fu_raw = _chat_completion(provider, api_key, fast_model, 'Return ONLY valid JSON array of 3 strings.', [{"role": "user", "content": fu_prompt}], max_tokens=120)
+                fu_raw = _re.sub(r'^```(?:json)?\s*', '', fu_raw.strip())
+                fu_raw = _re.sub(r'\s*```$', '', fu_raw)
+                follow_ups = json.loads(fu_raw)
+                if not isinstance(follow_ups, list):
+                    follow_ups = []
+                follow_ups = [str(f) for f in follow_ups[:3]]
+            except Exception:
+                pass
+
+            return Response({'reply': reply, 'save_prompt': save_prompt, 'follow_ups': follow_ups})
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 
@@ -1513,18 +1529,14 @@ class ExerciseMetaView(APIView):
         })
 
 
-INVIDIOUS_INSTANCES = [
-    'https://iv.melmac.space',
-    'https://invidious.projectsegfau.lt',
-    'https://invidious.slipfox.xyz',
-]
-
 class YouTubeVideoView(APIView):
     """Returns a YouTube video ID for a given exercise name, with DB caching."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         from .models import Exercise
+        import yt_dlp
+
         q = request.query_params.get('q', '').strip()
         if not q:
             return Response({'error': 'q required'}, status=400)
@@ -1534,24 +1546,17 @@ class YouTubeVideoView(APIView):
         if cached:
             return Response({'video_id': cached.youtube_video_id})
 
-        # Search via Invidious (no API key needed)
-        query = f'{q} exercise tutorial form'
+        # Search YouTube via yt-dlp (no API key, no quota)
         video_id = ''
-        for instance in INVIDIOUS_INSTANCES:
-            try:
-                resp = _http.get(
-                    f'{instance}/api/v1/search',
-                    params={'q': query, 'type': 'video', 'page': 1},
-                    timeout=8,
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    if isinstance(data, list) and data:
-                        video_id = data[0].get('videoId', '')
-                        if video_id:
-                            break
-            except Exception:
-                continue
+        try:
+            ydl_opts = {'quiet': True, 'no_warnings': True, 'extract_flat': True}
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                res = ydl.extract_info(f'ytsearch1:{q} exercise tutorial form', download=False)
+                entries = res.get('entries', [])
+                if entries:
+                    video_id = entries[0].get('id', '')
+        except Exception:
+            pass
 
         # Cache in DB
         if video_id:

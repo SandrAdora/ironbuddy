@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n, { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../i18n';
 import { useUser } from '../context/userContext';
-import { apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, apiSaveProfile, type AIMealItem, type AIMealPlan, type WorkoutSession } from '../api';
+import { apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, apiSaveProfile, type AIMealItem, type AIMealPlan, type WorkoutSession, type CustomWorkout } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import CoachChat from './CoachChat';
@@ -297,6 +297,7 @@ export default function UserProfile() {
   // Workout session state
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
+  const [pendingStartName, setPendingStartName] = useState<string | undefined>(undefined);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [finishing, setFinishing] = useState(false);
   const [notesInput, setNotesInput] = useState('');
@@ -407,6 +408,36 @@ export default function UserProfile() {
   // Dashboard stats derived from sessions
   const finishedSessions = sessions.filter((s) => s.finished_at);
   const totalWorkouts = finishedSessions.length;
+
+  // Weekly goal (shared with ProgressTab via same localStorage key)
+  const goalKey = `ironbuddy_weekly_goal_${userId}`;
+  const [weeklyGoal, setWeeklyGoal] = useState<number>(() => parseInt(localStorage.getItem(goalKey) ?? '4', 10));
+  const [editingWeeklyGoal, setEditingWeeklyGoal] = useState(false);
+  const [weeklyGoalDraft, setWeeklyGoalDraft] = useState('');
+  const saveWeeklyGoal = (val: number) => {
+    const v = Math.max(1, Math.min(14, val));
+    setWeeklyGoal(v);
+    localStorage.setItem(goalKey, String(v));
+    setEditingWeeklyGoal(false);
+  };
+  const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay()); weekStart.setHours(0, 0, 0, 0);
+  const thisWeekDone = finishedSessions.filter(s => new Date(s.finished_at!) >= weekStart).length;
+
+  // Suggested workout: pick the custom workout least recently done
+  const suggestedWorkout = (() => {
+    try {
+      const raw = localStorage.getItem(`ironbuddy_workouts_${userId}`);
+      const workouts: CustomWorkout[] = raw ? JSON.parse(raw) : [];
+      if (!workouts.length) return null;
+      const lastDone = (name: string) => {
+        const s = [...finishedSessions].reverse().find(s => s.workout_name === name);
+        return s ? new Date(s.finished_at!).getTime() : 0;
+      };
+      return [...workouts].sort((a, b) => lastDone(a.name) - lastDone(b.name))[0];
+    } catch { return null; }
+  })();
+
+  const trainedToday = finishedSessions.some(s => new Date(s.finished_at!).toDateString() === new Date().toDateString());
 
   function calcStreak(): number {
     if (finishedSessions.length === 0) return 0;
@@ -646,15 +677,150 @@ export default function UserProfile() {
                 ))}
               </div>
 
-              {/* Donut + Meals side by side */}
+              {/* ── Today's Workout ── */}
+              <motion.div {...fadeUp(0.18)}
+                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 md:p-6 hover:border-yellow-300/20 transition-all duration-300"
+              >
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div>
+                    <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Today</p>
+                    <h2 className="text-lg font-black uppercase italic mt-0.5">🏋️ Today's Workout</h2>
+                  </div>
+                  {trainedToday && (
+                    <span className="text-[10px] font-black bg-green-500/15 text-green-400 px-2.5 py-1 rounded-full border border-green-500/30 shrink-0">✓ Done today</span>
+                  )}
+                </div>
+
+                {suggestedWorkout ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-4 flex-wrap">
+                      <div>
+                        <p className="text-white font-black text-base">{suggestedWorkout.name}</p>
+                        <p className="text-gray-500 text-xs mt-0.5">{suggestedWorkout.exercises.length} exercise{suggestedWorkout.exercises.length !== 1 ? 's' : ''}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (!activeSession) setPendingStartName(suggestedWorkout.name);
+                          setActive('workouts');
+                        }}
+                        disabled={!!activeSession}
+                        className="font-black text-sm border-none outline-none bg-transparent active:scale-95 transition-colors disabled:opacity-40 shrink-0"
+                        style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.9), 0 0 24px rgba(250,204,21,0.5), 0 0 40px rgba(250,204,21,0.25)' }}
+                      >
+                        {activeSession ? 'In Progress' : trainedToday ? '▶ Go Again' : '▶ Start'}
+                      </button>
+                    </div>
+                    {/* Exercise preview */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {suggestedWorkout.exercises.slice(0, 5).map((ex, i) => (
+                        <span key={i} className="text-[10px] bg-white/5 border border-white/10 text-gray-400 px-2 py-0.5 rounded-full font-bold">{ex.name}</span>
+                      ))}
+                      {suggestedWorkout.exercises.length > 5 && (
+                        <span className="text-[10px] text-gray-600 px-1 py-0.5 font-bold">+{suggestedWorkout.exercises.length - 5} more</span>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <p className="text-gray-500 text-sm">No workouts saved yet.</p>
+                    <button
+                      onClick={() => setActive('workouts')}
+                      className="text-xs font-black border-none outline-none bg-transparent"
+                      style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7)' }}
+                    >+ Create workout</button>
+                  </div>
+                )}
+              </motion.div>
+
+              {/* ── Weekly Goal + Recent Activity ── */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                <GoalDonut goalData={goalData} goal={profile.fitnessGoals} />
-                <MealCard
-                  meals={aiMealPlan
-                    ? [...(aiMealPlan.breakfast.slice(0,1)), ...(aiMealPlan.lunch.slice(0,1)), ...(aiMealPlan.dinner.slice(0,1))]
-                    : null}
-                  onNavigate={() => { setActive('meals'); setMealTab('ai'); }}
-                />
+
+                {/* Weekly Goal ring */}
+                <motion.div {...fadeUp(0.22)}
+                  className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 md:p-6 hover:border-yellow-300/20 transition-all duration-300"
+                >
+                  <div className="mb-4">
+                    <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">This Week</p>
+                    <h2 className="text-lg font-black uppercase italic mt-0.5">🎯 Weekly Goal</h2>
+                  </div>
+                  <div className="flex items-center gap-5">
+                    <svg viewBox="0 0 110 110" className="w-24 h-24 shrink-0">
+                      {(() => {
+                        const r = 44, stroke = 8, circ = 2 * Math.PI * r;
+                        const pct = weeklyGoal > 0 ? Math.min(thisWeekDone / weeklyGoal, 1) : 0;
+                        const col = pct >= 1 ? '#4ade80' : '#fde047';
+                        return (<>
+                          <circle cx={55} cy={55} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
+                          <circle cx={55} cy={55} r={r} fill="none" stroke={col} strokeWidth={stroke} strokeLinecap="round"
+                            strokeDasharray={`${pct * circ} ${circ}`} transform="rotate(-90 55 55)"
+                            style={{ filter: `drop-shadow(0 0 6px ${col}aa)` }} />
+                          <text x={55} y={51} textAnchor="middle" fill={col} fontSize="18" fontWeight="900" fontFamily="helvetica">{thisWeekDone}</text>
+                          <text x={55} y={64} textAnchor="middle" fill="rgba(156,163,175,0.6)" fontSize="9" fontFamily="helvetica">of {weeklyGoal}</text>
+                        </>);
+                      })()}
+                    </svg>
+                    <div className="space-y-2 flex-1">
+                      <p className="text-white font-black text-xl">{thisWeekDone}<span className="text-gray-500 text-sm font-bold"> / {weeklyGoal}</span></p>
+                      <p className="text-gray-400 text-xs">workouts this week</p>
+                      {thisWeekDone >= weeklyGoal
+                        ? <p className="text-green-400 text-xs font-black">🎉 Goal reached!</p>
+                        : <p className="text-gray-500 text-xs">{weeklyGoal - thisWeekDone} more to go</p>
+                      }
+                      <button
+                        onClick={() => setActive('goals')}
+                        className="text-[10px] font-black border-none outline-none bg-transparent"
+                        style={{ color: 'rgba(156,163,175,0.5)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 8px rgba(250,204,21,0.6)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.5)'; }}
+                      >✎ Change goal</button>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Recent Activity */}
+                <motion.div {...fadeUp(0.26)}
+                  className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 md:p-6 hover:border-yellow-300/20 transition-all duration-300"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">History</p>
+                      <h2 className="text-lg font-black uppercase italic mt-0.5">📋 Recent Activity</h2>
+                    </div>
+                    <button
+                      onClick={() => setActive('progress')}
+                      className="text-[10px] font-black border-none outline-none bg-transparent shrink-0"
+                      style={{ color: 'rgba(156,163,175,0.5)' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 8px rgba(250,204,21,0.6)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.5)'; }}
+                    >View all →</button>
+                  </div>
+                  {finishedSessions.length === 0 ? (
+                    <p className="text-gray-500 text-sm text-center py-6">No workouts completed yet.</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {[...finishedSessions]
+                        .sort((a, b) => new Date(b.finished_at!).getTime() - new Date(a.finished_at!).getTime())
+                        .slice(0, 5)
+                        .map((s) => {
+                          const d = new Date(s.finished_at!);
+                          const isToday = d.toDateString() === new Date().toDateString();
+                          return (
+                            <div key={s.id} className="flex items-center gap-3 py-2 px-3 rounded-xl hover:bg-white/5 transition-colors">
+                              <span className="text-base shrink-0">{s.workout_type === 'ai' ? '🤖' : '✎'}</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-bold truncate">{s.workout_name}</p>
+                                <p className="text-gray-500 text-[10px]">{isToday ? 'Today' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                              </div>
+                              {s.duration_min && (
+                                <span className="text-[--color-iron-gold] text-xs font-black shrink-0">{s.duration_min}m</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                </motion.div>
+
               </div>
 
             </motion.div>
@@ -672,6 +838,100 @@ export default function UserProfile() {
             <motion.div key="goals" {...fadeUp(0)} className="space-y-3 md:space-y-6">
               <SectionHeader title={t('goals.title')} sub={t('goals.subtitle')} />
               <GoalDonut goalData={goalData} goal={profile.fitnessGoals} large />
+
+              {/* ── Weekly Goal ── */}
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
+                <div>
+                  <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Goal</p>
+                  <h2 className="text-lg font-black uppercase italic mt-0.5">🎯 Weekly Goal</h2>
+                </div>
+                <div className="flex items-center gap-6 flex-wrap">
+                  {/* ring */}
+                  <svg viewBox="0 0 110 110" className="w-28 h-28 shrink-0">
+                    {(() => {
+                      const r = 44, stroke = 8, circ = 2 * Math.PI * r;
+                      const pct = weeklyGoal > 0 ? Math.min(thisWeekDone / weeklyGoal, 1) : 0;
+                      const dash = pct * circ;
+                      const col = pct >= 1 ? '#4ade80' : '#fde047';
+                      return (<>
+                        <circle cx={55} cy={55} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
+                        <circle cx={55} cy={55} r={r} fill="none" stroke={col} strokeWidth={stroke} strokeLinecap="round"
+                          strokeDasharray={`${dash} ${circ}`} transform="rotate(-90 55 55)"
+                          style={{ filter: `drop-shadow(0 0 6px ${pct >= 1 ? 'rgba(74,222,128,0.7)' : 'rgba(253,224,71,0.7)'})` }} />
+                        <text x={55} y={51} textAnchor="middle" fill={col} fontSize="18" fontWeight="900" fontFamily="helvetica">{thisWeekDone}</text>
+                        <text x={55} y={64} textAnchor="middle" fill="rgba(156,163,175,0.6)" fontSize="9" fontFamily="helvetica">of {weeklyGoal}</text>
+                      </>);
+                    })()}
+                  </svg>
+                  <div className="flex-1 min-w-[160px] space-y-3">
+                    <div>
+                      <p className="text-white font-black text-2xl">{thisWeekDone}<span className="text-gray-500 text-base font-bold"> / {weeklyGoal}</span></p>
+                      <p className="text-gray-400 text-xs mt-0.5">workouts this week</p>
+                      {thisWeekDone >= weeklyGoal && <p className="text-green-400 text-xs font-black mt-1">🎉 Goal reached!</p>}
+                    </div>
+                    {editingWeeklyGoal ? (
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="number" min={1} max={14} value={weeklyGoalDraft}
+                          onChange={e => setWeeklyGoalDraft(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') saveWeeklyGoal(parseInt(weeklyGoalDraft)); if (e.key === 'Escape') setEditingWeeklyGoal(false); }}
+                          className="w-16 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-white text-sm text-center focus:outline-none focus:border-yellow-300/60"
+                          autoFocus
+                        />
+                        <button onClick={() => saveWeeklyGoal(parseInt(weeklyGoalDraft))} className="text-xs font-black text-yellow-300">Save</button>
+                        <button onClick={() => setEditingWeeklyGoal(false)} className="text-xs text-gray-500">Cancel</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setWeeklyGoalDraft(String(weeklyGoal)); setEditingWeeklyGoal(true); }}
+                        className="text-xs font-black border-none outline-none bg-transparent"
+                        style={{ color: 'rgba(156,163,175,0.6)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 10px rgba(250,204,21,0.7)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
+                      >✎ Change goal</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── BMI & Body Stats ── */}
+              {(() => {
+                const w = profile.weight ?? null;
+                const h = profile.height ?? null;
+                const bmi = w && h ? +(w / ((h / 100) ** 2)).toFixed(1) : null;
+                const cat = bmi === null ? '' : bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Overweight' : 'Obese';
+                const col = bmi === null ? '' : bmi < 18.5 ? '#60a5fa' : bmi < 25 ? '#4ade80' : bmi < 30 ? '#fde047' : '#f87171';
+                return (
+                  <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
+                    <div>
+                      <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Body</p>
+                      <h2 className="text-lg font-black uppercase italic mt-0.5">📊 BMI & Body Stats</h2>
+                    </div>
+                    {!bmi ? (
+                      <p className="text-gray-500 text-sm text-center py-4">Add your height and weight in your profile to see BMI.</p>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-6 flex-wrap">
+                          <div className="text-center">
+                            <p className="text-5xl font-black" style={{ color: col }}>{bmi}</p>
+                            <p className="text-xs font-black uppercase tracking-widest mt-1" style={{ color: col }}>{cat}</p>
+                          </div>
+                          <div className="flex-1 space-y-2 min-w-[160px]">
+                            {w && <div className="flex justify-between text-sm"><span className="text-gray-400">Weight</span><span className="text-white font-black">{w} kg</span></div>}
+                            {h && <div className="flex justify-between text-sm"><span className="text-gray-400">Height</span><span className="text-white font-black">{h} cm</span></div>}
+                          </div>
+                        </div>
+                        <div className="relative h-3 rounded-full overflow-hidden" style={{ background: 'linear-gradient(to right, #60a5fa 0%, #4ade80 27%, #fde047 55%, #f87171 100%)' }}>
+                          <div className="absolute top-0 w-1 h-full bg-white rounded-full shadow-lg" style={{ left: `${Math.min(Math.max((bmi - 15) / 25, 0), 1) * 100}%`, transform: 'translateX(-50%)' }} />
+                        </div>
+                        <div className="flex justify-between text-[9px] text-gray-500 font-bold">
+                          <span>15 Underweight</span><span>18.5</span><span>25 Overweight</span><span>30 Obese</span><span>40</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
             </motion.div>
           )}
 
@@ -943,7 +1203,9 @@ export default function UserProfile() {
                                       if (!prev) return prev;
                                       const list = [...(prev[mealTimeTab] ?? [])];
                                       list.splice(idx, 1);
-                                      return { ...prev, [mealTimeTab]: list };
+                                      const updated = { ...prev, [mealTimeTab]: list };
+                                      saveMealCache(userId ?? 0, profile.fitnessGoals, profile.language ?? 'en', updated);
+                                      return updated;
                                     });
                                     setMealSuggIdx(p => ({ ...p, [mealTimeTab]: Math.max(0, idx - 1) }));
                                     setClosedMealCards(s => { const n = new Set(s); n.delete(mealTimeTab); return n; });
@@ -1276,7 +1538,12 @@ export default function UserProfile() {
                 )}
                 {workoutTab === 'my' && (
                   <motion.div key="my" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
-                    <MyWorkouts token={token!} onStartWorkout={activeSession ? undefined : startWorkout} />
+                    <MyWorkouts
+                      token={token!}
+                      onStartWorkout={activeSession ? undefined : startWorkout}
+                      autoStartName={pendingStartName}
+                      onAutoStartConsumed={() => setPendingStartName(undefined)}
+                    />
                   </motion.div>
                 )}
                 {workoutTab === 'library' && (
@@ -1306,7 +1573,10 @@ export default function UserProfile() {
               <ProgressTab
                 token={token!}
                 sessions={sessions}
+                onDeleteSession={(id) => setSessions(prev => prev.filter(s => s.id !== id))}
                 currentWeight={profile.weight ?? null}
+                height={profile.height ?? null}
+                userId={userId ?? 0}
               />
             </motion.div>
           )}

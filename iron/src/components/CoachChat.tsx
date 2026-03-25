@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import ReactMarkdown from 'react-markdown';
 import { apiChat, apiCreateCustomMeal, type ChatMessage, type SavePrompt } from '../api';
 import type { UserProfile } from '../context/userContext';
 
@@ -249,8 +250,8 @@ export default function CoachChat({ profile, token }: Props) {
     setLoading(true);
 
     try {
-      const { reply, save_prompt } = await apiChat(text, profile as unknown as Record<string, unknown>, history, token);
-      setMessages((prev) => [...prev, { role: 'assistant', content: reply, save_prompt }]);
+      const { reply, save_prompt, follow_ups } = await apiChat(text, profile as unknown as Record<string, unknown>, history, token);
+      setMessages((prev) => [...prev, { role: 'assistant', content: reply, save_prompt, follow_ups }]);
     } catch (err) {
       setMessages((prev) => [
         ...prev,
@@ -272,8 +273,10 @@ export default function CoachChat({ profile, token }: Props) {
         {messages.length > 1 && (
           <button
             onClick={() => setMessages([{ role: 'assistant', content: welcome }])}
-            className="text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-lg transition-all duration-200 hover:scale-[1.02]"
-            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.3)', boxShadow: '0 0 8px rgba(250,204,21,0.15)' }}
+            className="text-xs font-black border-none outline-none bg-transparent active:scale-95 transition-colors"
+            style={{ color: '#f87171', textShadow: '0 0 10px rgba(248,113,113,0.8), 0 0 24px rgba(248,113,113,0.4), 0 0 40px rgba(248,113,113,0.2)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#fca5a5;text-shadow:0 0 12px rgba(248,113,113,1),0 0 28px rgba(248,113,113,0.6),0 0 50px rgba(248,113,113,0.3)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#f87171;text-shadow:0 0 10px rgba(248,113,113,0.8),0 0 24px rgba(248,113,113,0.4),0 0 40px rgba(248,113,113,0.2)'; }}
           >
             {t('coach.clear')}
           </button>
@@ -297,13 +300,28 @@ export default function CoachChat({ profile, token }: Props) {
                   </div>
                 )}
                 <div
-                  className={`max-w-[88%] md:max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+                  className={`max-w-[88%] md:max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
                     msg.role === 'user'
-                      ? 'bg-yellow-300 text-black font-semibold rounded-br-sm'
-                      : 'bg-white/10 backdrop-blur-sm text-gray-100 border border-white/10 rounded-bl-sm'
+                      ? 'bg-yellow-300 text-black font-semibold rounded-br-sm whitespace-pre-wrap'
+                      : 'bg-white/10 backdrop-blur-sm text-gray-100 border border-white/10 rounded-bl-sm prose prose-invert prose-sm max-w-none'
                   }`}
                 >
-                  {msg.content}
+                  {msg.role === 'user' ? msg.content : (
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                        ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-0.5">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5">{children}</ol>,
+                        li: ({ children }) => <li className="text-gray-100">{children}</li>,
+                        strong: ({ children }) => <strong className="text-yellow-200 font-black">{children}</strong>,
+                        h1: ({ children }) => <p className="font-black text-yellow-200 text-base mb-1">{children}</p>,
+                        h2: ({ children }) => <p className="font-black text-yellow-200 mb-1">{children}</p>,
+                        h3: ({ children }) => <p className="font-bold text-yellow-100 mb-1">{children}</p>,
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  )}
                 </div>
               </motion.div>
 
@@ -313,12 +331,34 @@ export default function CoachChat({ profile, token }: Props) {
                   prompt={msg.save_prompt}
                   token={token}
                   onSaved={() => {
-                    // strip the save_prompt after saving so it doesn't re-show
                     setMessages((prev) =>
                       prev.map((m, idx) => idx === i ? { ...m, save_prompt: undefined } : m)
                     );
                   }}
                 />
+              )}
+
+              {/* Follow-up suggestions — only on the last assistant message */}
+              {msg.role === 'assistant' && msg.follow_ups?.length && i === messages.length - 1 && !loading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="ml-10 mt-2 flex flex-wrap gap-2"
+                >
+                  {msg.follow_ups.map((fu) => (
+                    <button
+                      key={fu}
+                      onClick={() => setInput(fu)}
+                      className="text-[11px] px-3 py-1.5 rounded-full transition-all duration-200 active:scale-95 text-left"
+                      style={{ background: '#060608', color: 'rgba(253,224,71,0.8)', border: '1px solid rgba(250,204,21,0.25)', boxShadow: '0 0 8px rgba(250,204,21,0.1)' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = "background:#060608;color:#fde047;border:1px solid rgba(250,204,21,0.5);box-shadow:0 0 12px rgba(250,204,21,0.3)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = "background:#060608;color:rgba(253,224,71,0.8);border:1px solid rgba(250,204,21,0.25);box-shadow:0 0 8px rgba(250,204,21,0.1)"; }}
+                    >
+                      {fu}
+                    </button>
+                  ))}
+                </motion.div>
               )}
             </div>
           ))}
@@ -373,7 +413,7 @@ export default function CoachChat({ profile, token }: Props) {
       </div>
 
       {/* Quick prompts */}
-      <div className="mt-3 hidden sm:flex flex-wrap gap-2">
+      <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {[
           t('coach.quick_workout', { goal: profile.fitnessGoals || 'fitness' }),
           t('coach.quick_eat'),
@@ -383,7 +423,7 @@ export default function CoachChat({ profile, token }: Props) {
           <button
             key={prompt}
             onClick={() => { setInput(prompt); }}
-            className="text-xs px-3 py-1.5 rounded-full transition-all duration-200 hover:scale-[1.02]"
+            className="text-xs px-3 py-1.5 rounded-full transition-all duration-200 hover:scale-[1.02] shrink-0 whitespace-nowrap"
             style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.3)', boxShadow: '0 0 8px rgba(250,204,21,0.15)' }}
           >
             {prompt}
