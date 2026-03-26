@@ -1,7 +1,7 @@
 // In dev: empty string → Vite proxy forwards /api → Django, /upload → Socket
 // In production: set VITE_API_URL and VITE_SOCKET_URL to the deployed service URLs
 const BASE        = import.meta.env.VITE_API_URL    ?? "";
-const SOCKET_BASE = import.meta.env.VITE_SOCKET_URL ?? "";
+// SOCKET_BASE reserved for future use: import.meta.env.VITE_SOCKET_URL
 
 export async function apiGetProfile(token: string): Promise<Record<string, unknown>> {
   const res = await fetch(`${BASE}/api/user/profile/`, {
@@ -724,4 +724,117 @@ export async function apiTranslateInstructions(token: string, instructions: stri
   if (!res.ok) return instructions;
   const data = await res.json();
   return data.instructions ?? instructions;
+}
+
+export async function apiAnalyzeMealPhoto(token: string, photo: File): Promise<{
+  meal_name: string; description: string; calories: number;
+  protein_g: number; carbs_g: number; fat_g: number;
+  ingredients: string[]; confidence: string;
+}> {
+  const form = new FormData();
+  form.append('photo', photo);
+  const res = await fetch(`${BASE}/api/meals/analyze-photo/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? 'Photo analysis failed');
+  }
+  return res.json();
+}
+
+export async function apiImportRecipe(token: string, url: string): Promise<{
+  name: string; ingredients: string[]; instructions: string[];
+  calories: number | null; protein_g: number | null; carbs_g: number | null; fat_g: number | null;
+  source_url: string; image_url: string;
+}> {
+  const res = await fetch(`${BASE}/api/meals/import-recipe/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? 'Recipe import failed');
+  }
+  return res.json();
+}
+
+// ── Wearable / Google Fit ─────────────────────────────────────────────────────
+
+export async function apiWearableAuthUrl(token: string): Promise<string> {
+  const res = await fetch(`${BASE}/api/wearable/auth-url/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Could not generate auth URL');
+  const data = await res.json();
+  return data.url;
+}
+
+export async function apiWearableConnect(token: string, code: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/wearable/connect/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
+  });
+  if (!res.ok) throw new Error('Connection failed');
+}
+
+export async function apiWearableData(token: string): Promise<{
+  connected: boolean; steps?: number; calories?: number; active_minutes?: number;
+}> {
+  const res = await fetch(`${BASE}/api/wearable/data/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return { connected: false };
+  return res.json();
+}
+
+export async function apiWearableDisconnect(token: string): Promise<void> {
+  await fetch(`${BASE}/api/wearable/disconnect/`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function apiWearableStatus(token: string): Promise<boolean> {
+  const res = await fetch(`${BASE}/api/wearable/status/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return false;
+  const data = await res.json();
+  return data.connected ?? false;
+}
+
+export interface BadgeMeta {
+  id: string;
+  icon: string;
+  title_key: string;
+  desc_key: string;
+}
+
+export interface AchievementsData {
+  earned: { badge_id: string; awarded_at: string }[];
+  all_badges: BadgeMeta[];
+  earned_ids: string[];
+}
+
+export async function apiGetAchievements(token: string): Promise<AchievementsData> {
+  const res = await fetch(`${BASE}/api/achievements/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch achievements');
+  return res.json();
+}
+
+export async function apiCheckAchievements(token: string): Promise<BadgeMeta[]> {
+  const res = await fetch(`${BASE}/api/achievements/check/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.newly_awarded ?? [];
 }

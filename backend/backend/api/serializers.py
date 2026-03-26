@@ -216,3 +216,12 @@ class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Exercise
         fields = ['id', 'exercise_id', 'name', 'body_part', 'target', 'secondary_muscles', 'equipment', 'gif_url', 'instructions', 'youtube_video_id', 'wger_image_url']
+
+
+from .models import UserAchievement
+
+class UserAchievementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserAchievement
+        fields = ['badge_id', 'awarded_at']
+        read_only_fields = ['badge_id', 'awarded_at']

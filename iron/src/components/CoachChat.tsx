@@ -226,12 +226,17 @@ export default function CoachChat({ profile, token }: Props) {
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const chatSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    try {
-      // Strip save_prompt before persisting — the banner is one-time only
-      const toStore = messages.map(({ save_prompt: _sp, ...m }) => m);
-      localStorage.setItem(storageKey, JSON.stringify(toStore));
-    } catch { /* ignore */ }
+    if (chatSaveTimer.current) clearTimeout(chatSaveTimer.current);
+    chatSaveTimer.current = setTimeout(() => {
+      try {
+        // Strip save_prompt before persisting — the banner is one-time only
+        const toStore = messages.map(({ save_prompt: _sp, ...m }) => m);
+        localStorage.setItem(storageKey, JSON.stringify(toStore));
+      } catch { /* ignore */ }
+    }, 500);
+    return () => { if (chatSaveTimer.current) clearTimeout(chatSaveTimer.current); };
   }, [messages, storageKey]);
 
   useEffect(() => {

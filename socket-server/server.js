@@ -10,14 +10,20 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const server = http.createServer(app);
 
-const SOCKET_PORT = process.env.SOCKET_PORT || 3001;
+const SOCKET_PORT = process.env.PORT || process.env.SOCKET_PORT || 3001;
 const UPLOAD_BASE_URL = process.env.UPLOAD_BASE_URL || `http://localhost:${SOCKET_PORT}`;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const DJANGO_SECRET_KEY = process.env.DJANGO_SECRET_KEY || process.env.SECRET_KEY;
+
+if (!DJANGO_SECRET_KEY) {
+  console.warn('[warn] DJANGO_SECRET_KEY not set — JWT verification will be skipped. Set it in .env for production.');
+}
 
 const io = new Server(server, {
-  cors: { origin: '*', methods: ['GET', 'POST'] },
+  cors: { origin: FRONTEND_URL, methods: ['GET', 'POST'] },
 });
 
-app.use(cors());
+app.use(cors({ origin: FRONTEND_URL }));
 app.use(express.json());
 
 // ── Uploads directory ────────────────────────────────────────────────────────
@@ -82,18 +88,23 @@ app.post('/upload', (req, res) => {
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 // ── Socket.io auth middleware ─────────────────────────────────────────────────
-// Django SimpleJWT tokens are JWTs — we decode (not verify) to extract user_id.
-// Actual authorization is enforced by Django on every REST call.
+// Verify Django SimpleJWT tokens using the shared secret key.
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
   if (!token) return next(new Error('Authentication required'));
   try {
-    const decoded = jwt.decode(token);
+    let decoded;
+    if (DJANGO_SECRET_KEY) {
+      decoded = jwt.verify(token, DJANGO_SECRET_KEY);
+    } else {
+      // Fallback to decode-only if secret not configured (dev only)
+      decoded = jwt.decode(token);
+    }
     if (!decoded?.user_id) return next(new Error('Invalid token payload'));
     socket.userId = decoded.user_id;
     next();
   } catch {
-    next(new Error('Token decode failed'));
+    next(new Error('Token verification failed'));
   }
 });
 

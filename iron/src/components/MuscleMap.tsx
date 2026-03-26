@@ -54,7 +54,8 @@ const MuscleMap: React.FC<MuscleMapProps> = ({ primaryMuscles, secondaryMuscles 
 
   // frequency=2 → primary (gold), frequency=1 → secondary (gray)
   // highlightedColors[0] = frequency 1, highlightedColors[1] = frequency 2
-  const data: { name: string; muscles: string[]; frequency: number }[] = [
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any[] = [
     ...primary.map(m   => ({ name: m, muscles: [m], frequency: 2 })),
     ...secondary.map(m => ({ name: m, muscles: [m], frequency: 1 })),
   ];

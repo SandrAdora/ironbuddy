@@ -29,7 +29,9 @@
       "languages": "Configuración de idioma",
       "languages_desc": "Idioma de la app y el Coach",
       "danger": "Zona de peligro",
-      "danger_desc": "Desactivar o eliminar"
+      "danger_desc": "Desactivar o eliminar",
+      "appearance": "Apariencia",
+      "appearance_desc": "Tema y pantalla"
     }
   },
   "language": {
@@ -91,7 +93,44 @@
     "quick_workout": "Entrenamiento de {{goal}}",
     "quick_eat": "Que deberia comer hoy?",
     "quick_recover": "Como recuperarme mas rapido?",
-    "quick_progress": "Valora mi progreso"
+    "quick_progress": "Valora mi progreso",
+    "tab_workouts": "Mis entrenamientos",
+    "tab_meals": "Mis comidas",
+    "tab_my_recipes": "Mis recetas",
+    "save_prompt_title": "¿Guardar \"{{label}}\" en {{tab}}?",
+    "ingredients_label": "Ingredientes",
+    "add_ingredient": "Añadir ingrediente…",
+    "saved_to_tab": "✓ ¡Guardado en {{tab}}!",
+    "saved_to_tab_and_recipes": "✓ ¡Guardado en {{tab}} y Mis recetas!",
+    "saving": "Guardando…",
+    "save_to_tab": "💾 Guardar en {{tab}}",
+    "added_to_recipes": "✓ Añadido a recetas",
+    "add_to_my_recipes": "👨‍🍳 Añadir a Mis recetas",
+    "not_now": "Ahora no",
+    "error_generic": "Algo salió mal. Inténtalo de nuevo."
+  },
+  "recipes": {
+    "eyebrow": "Vídeo",
+    "title": "Recetas en vídeo",
+    "form_add": "Añadir receta",
+    "form_edit": "Editar receta",
+    "label_title": "Título de la receta",
+    "placeholder_title": "p.ej. Pasta alta en proteínas",
+    "label_url": "URL de vídeo o receta",
+    "hint_youtube": "Los enlaces de YouTube se incrustarán como reproductor de vídeo.",
+    "btn_cancel": "Cancelar",
+    "btn_save": "Guardar receta",
+    "btn_update": "Actualizar receta",
+    "empty_title": "Aún sin recetas",
+    "empty_desc": "Añade un enlace de YouTube y aparecerá aquí como reproductor de vídeo.",
+    "open_link": "Abrir enlace",
+    "error_title_required": "El título es obligatorio",
+    "error_url_required": "La URL es obligatoria",
+    "import_btn": "Importar",
+    "import_title": "Importar receta desde URL",
+    "import_placeholder": "https://allrecipes.com/recipe/...",
+    "import_go": "Importar",
+    "import_hint": "Pega cualquier URL de receta o YouTube. Los ingredientes y macros se extraerán automáticamente."
   },
   "dashboard": {
     "title": "Resumen",
@@ -106,7 +145,29 @@
     "ai_plan": "Plan IA",
     "ai_plan_desc": "Generado para tu objetivo",
     "my_workouts": "Mis entrenamientos",
-    "my_workouts_desc": "Tus rutinas personalizadas"
+    "my_workouts_desc": "Tus rutinas personalizadas",
+    "today_label": "Hoy",
+    "today_workout": "🏋️ Entrenamiento de hoy",
+    "done_today": "✓ Hecho hoy",
+    "exercises_one": "{{count}} ejercicio",
+    "exercises_other": "{{count}} ejercicios",
+    "in_progress_btn": "En curso",
+    "go_again": "▶ Repetir",
+    "start_btn": "▶ Iniciar",
+    "more_exercises": "+{{count}} más",
+    "no_workouts": "Todavía no hay entrenamientos guardados.",
+    "create_workout": "+ Crear entrenamiento",
+    "this_week_label": "Esta semana",
+    "weekly_goal": "🎯 Objetivo semanal",
+    "of_goal": "de {{count}}",
+    "workouts_this_week": "entrenamientos esta semana",
+    "goal_reached": "🎉 ¡Objetivo alcanzado!",
+    "more_to_go": "{{count}} más por hacer",
+    "change_goal": "✎ Cambiar objetivo",
+    "history_label": "Historial",
+    "recent_activity": "📋 Actividad reciente",
+    "view_all": "Ver todo →",
+    "no_completed": "Todavía no hay entrenamientos completados."
   },
   "goals": {
     "title": "Objetivos",
@@ -116,6 +177,17 @@
     "muscle_gain": "Ganancia muscular",
     "endurance": "Resistencia",
     "general_fitness": "Fitness general",
+    "goal_label": "Objetivo",
+    "weekly_goal": "🎯 Objetivo semanal",
+    "of_goal": "de {{count}}",
+    "workouts_this_week": "entrenamientos esta semana",
+    "goal_reached": "🎉 ¡Objetivo alcanzado!",
+    "change_goal": "✎ Cambiar objetivo",
+    "body_label": "Cuerpo",
+    "bmi_stats": "📊 IMC & Medidas corporales",
+    "bmi_missing": "Añade tu altura y peso en tu perfil para ver el IMC.",
+    "weight_label": "Peso",
+    "height_label": "Altura",
     "seg": {
       "fat_loss": "Pérdida de grasa",
       "cardio": "Cardio",
@@ -197,7 +269,10 @@
     "prefs_tab": "🧂 Preferencias",
     "view_all": "Ver todo →",
     "tap_to_generate": "Toca para generar tu plan de comidas IA",
-    "daily_total": "Estimación diaria"
+    "daily_total": "Estimación diaria",
+    "photo_title": "Analizar foto de comida",
+    "photo_desc": "Sube una foto y la IA estimará los macros",
+    "photo_btn": "Subir foto"
   },
   "workouts": {
     "title": "Entrenamientos",
@@ -206,6 +281,7 @@
     "videos": "Vídeos",
     "ai_tab": "Plan IA",
     "my_tab": "Mis entrenamientos",
+    "videos_tab": "🎬 Vídeos",
     "library_tab": "Biblioteca de ejercicios",
     "start_ai": "▶ Iniciar entrenamiento IA",
     "in_progress": "🏋️ Entrenamiento en curso — "
@@ -429,5 +505,31 @@
     "sent_title": "¡Mensaje enviado!",
     "sent_desc": "Nos pondremos en contacto pronto.",
     "send_another": "Enviar otro"
+  },
+  "appearance": {
+    "theme": "Tema",
+    "theme_desc": "Cambiar entre modo oscuro y claro",
+    "dark": "Oscuro",
+    "light": "Claro"
+  },
+  "achievements": {
+    "title": "Logros",
+    "toast_label": "¡Logro desbloqueado!",
+    "first_workout": { "title": "Primera rep", "desc": "Primer entrenamiento completado" },
+    "workout_10":    { "title": "10 Entrenamientos", "desc": "10 entrenamientos completados" },
+    "workout_50":    { "title": "Veterano de hierro", "desc": "50 entrenamientos completados" },
+    "streak_3":      { "title": "En llamas", "desc": "Racha de 3 días" },
+    "streak_7":      { "title": "Guerrero semanal", "desc": "Racha de 7 días" },
+    "week_warrior":  { "title": "Guerrero semanal", "desc": "7 días seguidos" },
+    "first_weight_log":   { "title": "Peso registrado", "desc": "Primer peso registrado" },
+    "weight_log_10":      { "title": "Seguimiento constante", "desc": "Peso registrado 10 veces" },
+    "first_measurement":  { "title": "Control corporal", "desc": "Primeras medidas registradas" },
+    "first_meal_plan":    { "title": "Energía lista", "desc": "Primer plan IA generado" },
+    "meal_plan_5":        { "title": "Pro nutrición", "desc": "5 planes IA generados" },
+    "first_custom_meal":  { "title": "Chef casero", "desc": "Primera comida personalizada creada" },
+    "first_message":      { "title": "Ganancias sociales", "desc": "Primer mensaje enviado" },
+    "first_login":        { "title": "¡Bienvenido!", "desc": "Unido a IronBuddy" },
+    "profile_complete":   { "title": "Todo listo", "desc": "Perfil completado" },
+    "custom_workout_created": { "title": "Modo entrenador", "desc": "Entrenamiento personalizado creado" }
   }
 }

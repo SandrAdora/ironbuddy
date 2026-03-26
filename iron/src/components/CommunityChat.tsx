@@ -11,15 +11,16 @@ import {
 import AddUserModal from './AddUserModal';
 import { saveMessages, getMessages as dbGetMessages, addMessage as dbAddMessage, type CachedMessage } from '../services/chatDB';
 
-// Connect to current page origin — Vite proxies /socket.io → socket server :3001
-// This works on any device (phone, tablet) without knowing the server's IP.
-const SOCKET_URL = window.location.origin;
+// In dev: Vite proxies /socket.io → socket server :3001 via window.location.origin
+// In prod: VITE_SOCKET_URL must point to the deployed socket service URL
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? window.location.origin;
 
 interface Props {
   token: string;
   currentUserId: number;
   currentUserName?: string;
   onUnreadChange?: (count: number) => void;
+  onAchievementUnlocked?: () => void;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -269,28 +270,52 @@ function MessageContent({ msg }: { msg: DirectMessage }) {
     }
   }
 
-  // Text content with URL linkification
+  // Text content with URL linkification and reply quote rendering
   if (msg.content) {
-    const segments = msg.content.split(URL_REGEX);
-    const urls = msg.content.match(URL_REGEX) ?? [];
-    const nodes: React.ReactNode[] = [];
-    segments.forEach((seg, i) => {
-      if (seg) nodes.push(<span key={`s${i}`}>{seg}</span>);
-      if (urls[i]) {
-        nodes.push(
-          <a
-            key={`u${i}`}
-            href={urls[i]}
-            target="_blank"
-            rel="noreferrer"
-            className="underline break-all opacity-80 hover:opacity-100"
-          >
-            {urls[i]}
-          </a>
-        );
+    const lines = msg.content.split('\n');
+    const quoteLines: string[] = [];
+    const bodyLines: string[] = [];
+    let collectingQuotes = true;
+    for (const line of lines) {
+      if (collectingQuotes && line.startsWith('↩ ')) {
+        quoteLines.push(line.slice(2));
+      } else {
+        collectingQuotes = false;
+        bodyLines.push(line);
       }
-    });
-    parts.push(<span key="text" className="whitespace-pre-wrap break-words">{nodes}</span>);
+    }
+    if (quoteLines.length > 0) {
+      parts.push(
+        <div key="quote" className="border-l-2 border-gray-400/50 pl-2 mb-1 bg-white/5 rounded-r-lg py-1 pr-2">
+          {quoteLines.map((ql, qi) => (
+            <p key={qi} className="text-[11px] text-gray-400 italic truncate">{ql}</p>
+          ))}
+        </div>
+      );
+    }
+    const bodyText = bodyLines.join('\n');
+    if (bodyText) {
+      const segments = bodyText.split(URL_REGEX);
+      const urls = bodyText.match(URL_REGEX) ?? [];
+      const nodes: React.ReactNode[] = [];
+      segments.forEach((seg, i) => {
+        if (seg) nodes.push(<span key={`s${i}`}>{seg}</span>);
+        if (urls[i]) {
+          nodes.push(
+            <a
+              key={`u${i}`}
+              href={urls[i]}
+              target="_blank"
+              rel="noreferrer"
+              className="underline break-all opacity-80 hover:opacity-100"
+            >
+              {urls[i]}
+            </a>
+          );
+        }
+      });
+      parts.push(<span key="text" className="whitespace-pre-wrap break-words">{nodes}</span>);
+    }
   }
 
   return <>{parts}</>;
@@ -315,6 +340,7 @@ function FilePreview({ pending, onRemove }: { pending: PendingFile; onRemove: ()
       <span className="text-xs text-white/80 max-w-[120px] truncate">{pending.file.name}</span>
       <button
         onClick={onRemove}
+        aria-label="Remove file attachment"
         className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center hover:bg-red-400 transition-colors"
       >
         ✕
@@ -325,7 +351,7 @@ function FilePreview({ pending, onRemove }: { pending: PendingFile; onRemove: ()
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function CommunityChat({ token, currentUserId, currentUserName = 'Athlete', onUnreadChange }: Props) {
+export default function CommunityChat({ token, currentUserId, currentUserName = 'Athlete', onUnreadChange, onAchievementUnlocked }: Props) {
   const [conversations, setConversations]   = useState<ChatConversation[]>([]);
   const [activeConvo, setActiveConvo]       = useState<ChatConversation | null>(null);
   const [messages, setMessages]             = useState<DirectMessage[]>([]);
@@ -355,7 +381,36 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
   const [reactionPickerFor, setReactionPickerFor] = useState<number | null>(null); // message id
   const reactionAnchorRef = useRef<HTMLButtonElement | null>(null);
 
+  // ── New feature state ───────────────────────────────────────────────────────
+  // 1. Online presence
+  const [onlineUsers, setOnlineUsers] = useState<Set<number>>(new Set());
+  // 2. Message search
+  const [msgSearch, setMsgSearch] = useState('');
+  const [showMsgSearch, setShowMsgSearch] = useState(false);
+  // 3. Reply to message
+  const [replyingTo, setReplyingTo] = useState<DirectMessage | null>(null);
+  // 4. Unread jump button
+  const [scrolledUp, setScrolledUp] = useState(false);
+  // 5. Group info panel
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
+  // 6. Mute conversation
+  const [mutedConvos, setMutedConvos] = useState<Set<number>>(() => {
+    try {
+      const raw = localStorage.getItem('ironbuddy_muted_convos');
+      return raw ? new Set<number>(JSON.parse(raw)) : new Set<number>();
+    } catch { return new Set<number>(); }
+  });
+  // 9. Pinned messages
+  const [pinnedMsgs, setPinnedMsgs] = useState<Record<number, number[]>>(() => {
+    try {
+      const raw = localStorage.getItem('ironbuddy_pins');
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  });
+  const [showPinBanner, setShowPinBanner] = useState(true);
+
   const messagesEndRef  = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef  = useRef<HTMLButtonElement>(null);
   const fileInputRef    = useRef<HTMLInputElement>(null);
   const socketRef       = useRef<Socket | null>(null);
@@ -386,8 +441,18 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
 
     socketRef.current = socket;
 
-    socket.on('connect', () => setConnected(true));
+    socket.on('connect', () => {
+      setConnected(true);
+      socket.emit('user_online', currentUserId);
+    });
     socket.on('disconnect', () => setConnected(false));
+
+    socket.on('user_online', ({ user_id }: { user_id: number }) => {
+      setOnlineUsers((prev) => { const s = new Set(prev); s.add(user_id); return s; });
+    });
+    socket.on('user_offline', ({ user_id }: { user_id: number }) => {
+      setOnlineUsers((prev) => { const s = new Set(prev); s.delete(user_id); return s; });
+    });
 
     // Incoming message from another user
     socket.on('new_message', ({ conversation_id, message }: { conversation_id: number; message: DirectMessage }) => {
@@ -494,8 +559,22 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
 
   // ── Scroll to bottom on new messages ───────────────────────────────────────
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, typingUsers]);
+    if (!scrolledUp) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, typingUsers, scrolledUp]);
+
+  // ── Scroll event listener for jump button ──────────────────────────────────
+  useEffect(() => {
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      setScrolledUp(distFromBottom > 200);
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [activeConvo?.id]);
 
   // ── Conversation helpers ────────────────────────────────────────────────────
   const openConversation = (convo: ChatConversation) => {
@@ -617,7 +696,12 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
   // ── Send message ────────────────────────────────────────────────────────────
   const sendMessage = useCallback(async () => {
     if ((!input.trim() && !pendingFile) || !activeConvo || sending || uploading) return;
-    const text = input.trim();
+    let text = input.trim();
+    if (replyingTo) {
+      const snippet = (replyingTo.content ?? '').slice(0, 80);
+      text = `↩ ${replyingTo.sender_name}: ${snippet}\n${text}`;
+      setReplyingTo(null);
+    }
     setInput('');
 
     // Stop typing indicator
@@ -631,7 +715,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
       // Upload file first if attached
       if (pendingFile) {
         setUploading(true);
-        const uploaded = await apiUploadFile(pendingFile.file);
+        const uploaded = await apiUploadFile(pendingFile.file, token);
         fileData = { file_url: uploaded.file_url, file_type: uploaded.file_type, file_name: uploaded.file_name };
         removePendingFile();
         setUploading(false);
@@ -660,6 +744,9 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
       // Broadcast via socket to other participants
       socketRef.current?.emit('send_message', { conversation_id: activeConvo.id, message: msg });
 
+      // Check achievements after first message
+      if (onAchievementUnlocked) onAchievementUnlocked();
+
     } catch (err) {
       setInput(text);
       console.error('Send failed:', err);
@@ -667,7 +754,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
       setSending(false);
       setUploading(false);
     }
-  }, [input, pendingFile, activeConvo, sending, uploading, token, currentUserId]);
+  }, [input, pendingFile, activeConvo, sending, uploading, token, currentUserId, replyingTo]);
 
   // ── Delete conversation ─────────────────────────────────────────────────────
   const handleDeleteConversation = useCallback(async (convo: ChatConversation) => {
@@ -743,8 +830,31 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
     }
   }, [token, currentUserId, activeConvo]);
 
+  // ── Mute helper ─────────────────────────────────────────────────────────────
+  const toggleMute = useCallback((convoId: number) => {
+    setMutedConvos((prev) => {
+      const next = new Set(prev);
+      if (next.has(convoId)) { next.delete(convoId); } else { next.add(convoId); }
+      try { localStorage.setItem('ironbuddy_muted_convos', JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  }, []);
+
+  // ── Pin helper ──────────────────────────────────────────────────────────────
+  const togglePin = useCallback((convoId: number, msgId: number) => {
+    setPinnedMsgs((prev) => {
+      const existing = prev[convoId] ?? [];
+      const next = existing.includes(msgId)
+        ? existing.filter((id) => id !== msgId)
+        : [...existing, msgId];
+      const updated = { ...prev, [convoId]: next };
+      try { localStorage.setItem('ironbuddy_pins', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  }, []);
+
   // ── Derived ─────────────────────────────────────────────────────────────────
-  const totalUnread = conversations.reduce((s, c) => s + c.unread_count, 0);
+  const totalUnread = conversations.reduce((s, c) => s + (mutedConvos.has(c.id) ? 0 : c.unread_count), 0);
 
   // Notify parent (UserProfile) so the Community tab can show a badge
   useEffect(() => { onUnreadChange?.(totalUnread); }, [totalUnread, onUnreadChange]);
@@ -765,18 +875,22 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
             <span className={`w-2 h-2 rounded-full shrink-0 ${connected ? 'bg-green-400' : 'bg-red-500'}`} title={connected ? 'Connected' : 'Reconnecting…'} />
           </h2>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-5">
           <button
             onClick={openCreateGroup}
-            className="px-2.5 py-1.5 sm:px-4 sm:py-2 bg-white/10 border border-white/15 text-white font-black rounded-xl uppercase text-xs
-              hover:bg-white/15 active:scale-95 transition-all duration-200"
+            className="text-xs font-black uppercase tracking-[0.14em] bg-transparent border-none outline-none cursor-pointer transition-all duration-200"
+            style={{ color: '#9ca3af' }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#facc15'; e.currentTarget.style.textShadow = '0 0 8px rgba(250,204,21,0.7), 0 0 18px rgba(250,204,21,0.35)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#9ca3af'; e.currentTarget.style.textShadow = 'none'; }}
           >
             👥 Group
           </button>
           <button
             onClick={() => setShowAddUser(true)}
-            className="px-2.5 py-1.5 sm:px-5 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs
-              hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200"
+            className="text-xs font-black uppercase tracking-[0.14em] bg-transparent border-none outline-none cursor-pointer transition-all duration-200"
+            style={{ color: '#facc15' }}
+            onMouseEnter={e => (e.currentTarget.style.textShadow = '0 0 8px rgba(250,204,21,0.8), 0 0 20px rgba(250,204,21,0.5)')}
+            onMouseLeave={e => (e.currentTarget.style.textShadow = 'none')}
           >
             + Athlete
           </button>
@@ -821,7 +935,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                   <p className="text-[--color-iron-gold] text-[10px] font-black tracking-widest uppercase">Community</p>
                   <h3 className="text-white font-black uppercase text-base">👥 Create Group</h3>
                 </div>
-                <button onClick={() => setShowCreateGroup(false)} className="text-gray-500 hover:text-white transition-colors text-xl leading-none">×</button>
+                <button onClick={() => setShowCreateGroup(false)} aria-label="Close create group dialog" className="text-gray-500 hover:text-white transition-colors text-xl leading-none">×</button>
               </div>
 
               <div className="p-5 space-y-4">
@@ -887,7 +1001,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                     {groupMembers.map((m) => (
                       <span key={m.id} className="flex items-center gap-1 bg-yellow-300/10 border border-yellow-300/20 text-yellow-300 rounded-full px-2.5 py-1 text-xs font-bold">
                         {m.name.split(' ')[0]}
-                        <button onClick={() => toggleGroupMember(m)} className="hover:text-red-400 transition-colors leading-none">×</button>
+                        <button onClick={() => toggleGroupMember(m)} aria-label={`Remove ${m.name} from group`} className="hover:text-red-400 transition-colors leading-none">×</button>
                       </span>
                     ))}
                   </div>
@@ -960,11 +1074,12 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                 </div>
               ) : conversations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
-                  <span className="text-4xl">💬</span>
-                  <p className="text-gray-500 text-sm">No messages yet.</p>
+                  <span className="text-5xl">💬</span>
+                  <p className="text-white font-black uppercase text-sm">No conversations yet</p>
+                  <p className="text-gray-500 text-xs">Connect with fellow athletes and start chatting.</p>
                   <button
                     onClick={() => setLeftTab('athletes')}
-                    className="text-yellow-300 text-xs font-black uppercase tracking-wider hover:underline"
+                    className="mt-1 px-4 py-2 bg-yellow-300 text-black text-xs font-black uppercase rounded-xl hover:bg-yellow-200 active:scale-95 transition-all"
                   >
                     Browse Athletes →
                   </button>
@@ -986,6 +1101,9 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                       ) : (
                         <Avatar name={c.other_user?.name ?? '?'} src={c.other_user?.profile_picture ?? undefined} size="md" />
                       )}
+                      {!c.is_group && c.other_user && onlineUsers.has(c.other_user.id) && (
+                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-[#0e0e12] rounded-full" title="Online" />
+                      )}
                       {c.unread_count > 0 && (
                         <span className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-300 text-black text-[9px] font-black rounded-full flex items-center justify-center">
                           {c.unread_count > 9 ? '9+' : c.unread_count}
@@ -996,6 +1114,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                       <div className="flex items-center justify-between">
                         <p className={`text-sm font-black uppercase truncate ${c.unread_count > 0 ? 'text-white' : 'text-gray-300'}`}>
                           {c.is_group ? (c.group_name ?? 'Group') : (c.other_user?.name ?? c.other_user?.username ?? '?')}
+                          {mutedConvos.has(c.id) && <span className="ml-1 text-gray-500 text-xs" title="Muted">🔇</span>}
                         </p>
                         {c.last_message && (
                           <span className="text-[10px] text-gray-600 shrink-0 ml-1">{timeAgo(c.last_message.created_at)}</span>
@@ -1061,10 +1180,22 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                       disabled={startingChat === u.id}
                       className="w-full flex items-center gap-3 px-3 py-3 transition-colors text-left border-b border-white/5 hover:bg-white/5 disabled:opacity-60"
                     >
-                      <Avatar name={u.name} src={u.profile_picture ?? undefined} size="md" />
+                      <div className="relative">
+                        <Avatar name={u.name} src={u.profile_picture ?? undefined} size="md" />
+                        {onlineUsers.has(u.id) && (
+                          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-[#0e0e12] rounded-full" title="Online" />
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-black uppercase truncate text-gray-200">{u.name}</p>
-                        <p className="text-xs text-gray-600 truncate">@{u.username}</p>
+                        {(() => {
+                          const recentConvo = conversations.find((c) => c.other_user?.id === u.id && c.last_message && (Date.now() - new Date(c.last_message.created_at).getTime()) < 86400000);
+                          return onlineUsers.has(u.id)
+                            ? <p className="text-xs text-green-400 truncate">Online</p>
+                            : recentConvo
+                              ? <p className="text-xs text-gray-500 truncate">Active recently</p>
+                              : <p className="text-xs text-gray-600 truncate">@{u.username}</p>;
+                        })()}
                       </div>
                       <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg shrink-0 ${
                         existingConvo
@@ -1089,8 +1220,14 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
           {!activeConvo ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-8">
               <span className="text-5xl">💬</span>
-              <p className="text-[--color-iron-gold] font-black uppercase">Select a conversation</p>
-              <p className="text-gray-500 text-sm">Choose a chat on the left or start a new one.</p>
+              <p className="text-[--color-iron-gold] font-black uppercase text-lg">Your messages</p>
+              <p className="text-gray-500 text-sm max-w-xs">Select a conversation to get started, or connect with a new athlete.</p>
+              <button
+                onClick={() => setLeftTab('athletes')}
+                className="mt-2 px-5 py-2.5 bg-yellow-300 text-black font-black uppercase text-xs rounded-xl hover:bg-yellow-200 active:scale-95 transition-all"
+              >
+                Find Athletes
+              </button>
             </div>
           ) : (
             <>
@@ -1103,20 +1240,45 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                   ←
                 </button>
                 {activeConvo.is_group ? (
-                  <div className="w-8 h-8 rounded-full bg-yellow-300/20 border-2 border-yellow-300/50 flex items-center justify-center text-base shrink-0">👥</div>
+                  <button
+                    onClick={() => setShowGroupInfo(true)}
+                    className="w-8 h-8 rounded-full bg-yellow-300/20 border-2 border-yellow-300/50 flex items-center justify-center text-base shrink-0 hover:border-yellow-300 transition-colors"
+                  >👥</button>
                 ) : (
                   <Avatar name={activeConvo.other_user?.name ?? '?'} src={activeConvo.other_user?.profile_picture ?? undefined} size="sm" />
                 )}
-                <div className="flex-1 min-w-0">
+                <div
+                  className={`flex-1 min-w-0 ${activeConvo.is_group ? 'cursor-pointer' : ''}`}
+                  onClick={() => { if (activeConvo.is_group) setShowGroupInfo(true); }}
+                >
                   <p className="text-white font-black text-sm uppercase">
                     {activeConvo.is_group ? (activeConvo.group_name ?? 'Group') : activeConvo.other_user?.name}
                   </p>
-                  <p className="text-gray-600 text-xs">
+                  <p className="text-xs">
                     {activeConvo.is_group
-                      ? `${activeConvo.members?.length ?? 0} members`
-                      : `@${activeConvo.other_user?.username}`}
+                      ? <span className="text-gray-600">{activeConvo.members?.length ?? 0} members</span>
+                      : activeConvo.other_user && onlineUsers.has(activeConvo.other_user.id)
+                        ? <span className="text-green-400">Online</span>
+                        : activeConvo.last_message
+                          ? <span className="text-gray-600">Last active {timeAgo(activeConvo.last_message.created_at)}</span>
+                          : <span className="text-gray-600">@{activeConvo.other_user?.username}</span>
+                    }
                   </p>
                 </div>
+                <button
+                  onClick={() => setShowMsgSearch((v) => !v)}
+                  title="Search messages"
+                  className={`text-sm px-2 py-1.5 rounded-lg transition-all ${showMsgSearch ? 'text-yellow-300 bg-yellow-300/10' : 'text-gray-600 hover:text-gray-300 hover:bg-white/10'}`}
+                >
+                  🔍
+                </button>
+                <button
+                  onClick={() => toggleMute(activeConvo.id)}
+                  title={mutedConvos.has(activeConvo.id) ? 'Unmute' : 'Mute'}
+                  className="text-gray-600 hover:text-gray-300 text-xs px-2 py-1.5 rounded-lg hover:bg-white/10 transition-all font-bold uppercase tracking-wide"
+                >
+                  {mutedConvos.has(activeConvo.id) ? '🔔' : '🔇'}
+                </button>
                 <button
                   onClick={() => handleDeleteConversation(activeConvo)}
                   title={activeConvo.is_group ? 'Leave group' : 'Delete conversation'}
@@ -1126,17 +1288,51 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                 </button>
               </div>
 
+              {/* Message search bar */}
+              {showMsgSearch && (
+                <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={msgSearch}
+                    onChange={(e) => setMsgSearch(e.target.value)}
+                    placeholder="Search messages…"
+                    autoFocus
+                    className="flex-1 bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-yellow-300/50"
+                  />
+                  <button onClick={() => { setShowMsgSearch(false); setMsgSearch(''); }} aria-label="Close message search" className="text-gray-500 hover:text-white text-lg leading-none">×</button>
+                </div>
+              )}
+
+              {/* Pin banner */}
+              {activeConvo && (pinnedMsgs[activeConvo.id]?.length ?? 0) > 0 && showPinBanner && (() => {
+                const pinIds = pinnedMsgs[activeConvo.id];
+                const latestPinId = pinIds[pinIds.length - 1];
+                const pinnedMsg = messages.find((m) => m.id === latestPinId);
+                return pinnedMsg ? (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-yellow-300/5 border-b border-yellow-300/20 text-xs">
+                    <span className="text-yellow-400">📌</span>
+                    <span className="flex-1 text-gray-400 truncate">{pinnedMsg.sender_name}: {pinnedMsg.content?.slice(0, 60) ?? ''}</span>
+                    <button onClick={() => setShowPinBanner(false)} aria-label="Dismiss pinned message" className="text-gray-600 hover:text-white leading-none">×</button>
+                  </div>
+                ) : null;
+              })()}
+
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+              <div ref={messagesScrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 relative">
                 {messages.length === 0 && (
-                  <p className="text-center text-gray-600 text-sm mt-8">No messages yet. Say hi! 👋</p>
+                  <div className="flex flex-col items-center justify-center h-full gap-3 text-center mt-8">
+                    <span className="text-4xl">👋</span>
+                    <p className="text-white font-black uppercase text-sm">No messages yet</p>
+                    <p className="text-gray-500 text-xs">Be the first to say hi!</p>
+                  </div>
                 )}
-                {messages.map((msg, i) => {
+                {(msgSearch ? messages.filter((m) => m.content?.toLowerCase().includes(msgSearch.toLowerCase())) : messages).map((msg, i, displayedMsgs) => {
                   const isMe          = msg.sender_id === currentUserId;
-                  const isNewGroup    = i === 0 || messages[i - 1].sender_id !== msg.sender_id;
-                  const isLastInGroup = i === messages.length - 1 || messages[i + 1].sender_id !== msg.sender_id;
+                  const isNewGroup    = i === 0 || displayedMsgs[i - 1].sender_id !== msg.sender_id;
+                  const isLastInGroup = i === displayedMsgs.length - 1 || displayedMsgs[i + 1].sender_id !== msg.sender_id;
                   const hasReactions  = (msg.reactions ?? []).length > 0;
                   const showPicker    = reactionPickerFor === msg.id;
+                  const isPinned      = (pinnedMsgs[activeConvo.id] ?? []).includes(msg.id);
                   return (
                     <div key={msg.id} className={`flex items-end gap-2 group ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
                       {/* Avatar — shown for received messages at the bottom of each group */}
@@ -1162,6 +1358,24 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                           }`}>
                             <MessageContent msg={msg} />
                           </div>
+
+                          {/* Reply button — visible on hover */}
+                          <button
+                            onClick={() => setReplyingTo(msg)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-sm"
+                            title="Reply"
+                          >
+                            ↩
+                          </button>
+
+                          {/* Pin button — visible on hover */}
+                          <button
+                            onClick={() => togglePin(activeConvo.id, msg.id)}
+                            className={`opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 flex items-center justify-center rounded-full text-sm ${isPinned ? 'bg-yellow-300/20 text-yellow-300' : 'bg-white/10 hover:bg-white/20'}`}
+                            title={isPinned ? 'Unpin' : 'Pin'}
+                          >
+                            📌
+                          </button>
 
                           {/* Delete button — own messages only, visible on hover */}
                           {isMe && (
@@ -1222,7 +1436,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                           </div>
                         )}
 
-                        <p className="text-[10px] text-gray-700 mt-0.5 mx-1">{timeAgo(msg.created_at)}</p>
+                        <p className="text-[10px] text-gray-700 mt-0.5 mx-1">{timeAgo(msg.created_at)}{isMe && <span className="ml-1 text-gray-600">✓</span>}</p>
                       </div>
                     </div>
                   );
@@ -1251,12 +1465,34 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                 </AnimatePresence>
 
                 <div ref={messagesEndRef} />
+
+                {/* Jump to latest button */}
+                {scrolledUp && (
+                  <button
+                    onClick={() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); setScrolledUp(false); }}
+                    className="sticky bottom-4 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 px-4 py-1.5 bg-yellow-300 text-black text-xs font-black rounded-full shadow-lg hover:bg-yellow-200 active:scale-95 transition-all z-10"
+                  >
+                    ↓ Latest
+                  </button>
+                )}
               </div>
 
               {/* File preview bar */}
               {pendingFile && (
                 <div className="px-4 pt-2 flex flex-wrap">
                   <FilePreview pending={pendingFile} onRemove={removePendingFile} />
+                </div>
+              )}
+
+              {/* Reply preview bar */}
+              {replyingTo && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border-t border-white/10">
+                  <span className="text-yellow-400 text-sm">↩</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-yellow-300 font-black uppercase">{replyingTo.sender_name}</p>
+                    <p className="text-xs text-gray-500 truncate">{replyingTo.content?.slice(0, 80) ?? ''}</p>
+                  </div>
+                  <button onClick={() => setReplyingTo(null)} aria-label="Cancel reply" className="text-gray-500 hover:text-white text-lg leading-none">×</button>
                 </div>
               )}
 
@@ -1319,6 +1555,62 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                   {uploading ? '⏫' : sending ? '…' : 'Send'}
                 </button>
               </div>
+
+              {/* Group info modal */}
+              <AnimatePresence>
+                {showGroupInfo && activeConvo.is_group && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                    style={{ background: 'rgba(0,0,0,0.75)' }}
+                    onClick={() => setShowGroupInfo(false)}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.93, y: 20 }}
+                      animate={{ scale: 1, y: 0 }}
+                      exit={{ scale: 0.93, y: 20 }}
+                      transition={{ duration: 0.2 }}
+                      className="w-full max-w-sm bg-[#0e0e12] border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                        <div>
+                          <p className="text-[--color-iron-gold] text-[10px] font-black tracking-widest uppercase">Group</p>
+                          <h3 className="text-white font-black uppercase text-base">👥 {activeConvo.group_name ?? 'Group'}</h3>
+                        </div>
+                        <button onClick={() => setShowGroupInfo(false)} aria-label="Close group info" className="text-gray-500 hover:text-white transition-colors text-xl leading-none">×</button>
+                      </div>
+                      <div className="p-4 space-y-3">
+                        <p className="text-xs text-gray-500 font-black uppercase tracking-wide">{activeConvo.members?.length ?? 0} Members</p>
+                        <div className="space-y-2 max-h-56 overflow-y-auto">
+                          {(activeConvo.members ?? []).map((m) => (
+                            <div key={m.id} className="flex items-center gap-3 px-3 py-2 bg-white/5 rounded-xl">
+                              <div className="relative">
+                                <Avatar name={m.name} src={m.profile_picture ?? undefined} size="sm" />
+                                {onlineUsers.has(m.id) && (
+                                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 border-2 border-[#0e0e12] rounded-full" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-black uppercase truncate text-gray-200">{m.name}</p>
+                                {onlineUsers.has(m.id) && <p className="text-[10px] text-green-400">Online</p>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => { setShowGroupInfo(false); handleDeleteConversation(activeConvo); }}
+                          className="w-full py-2.5 bg-red-500/10 border border-red-500/20 text-red-400 font-black uppercase text-xs rounded-xl hover:bg-red-500/20 transition-all active:scale-95"
+                        >
+                          Leave Group
+                        </button>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </>
           )}
         </div>

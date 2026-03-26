@@ -81,6 +81,7 @@ def _chat_completion(provider, api_key, model, system, messages, max_tokens=1024
 
 class CoachChatView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_scope = 'ai_chat'
 
     def post(self, request):
         import json, re as _re
@@ -335,6 +336,7 @@ Coach reply: {reply[:400]}"""
 
 class WorkoutPlanView(APIView):
     permission_classes = [AllowAny]
+    throttle_scope = 'ai_plan'
 
     def post(self, request):
         profile = request.data.get('profile', {})
@@ -854,6 +856,7 @@ def _search_meal_recipes(meal_type: str, goal: str, cuisine: str, allergies: str
 
 class AIMealPlanView(APIView):
     permission_classes = [AllowAny]
+    throttle_scope = 'ai_plan'
 
     def post(self, request):
         profile = request.data.get('profile', {})
@@ -965,6 +968,15 @@ RULES:
             raw = re.sub(r'^```(?:json)?\s*', '', raw)
             raw = re.sub(r'\s*```$', '', raw).strip()
             plan = json.loads(raw)
+            # Increment counter for authenticated users (for achievements)
+            if request.user and request.user.is_authenticated:
+                try:
+                    from django.db.models import F
+                    request.user.profile.__class__.objects.filter(user=request.user).update(
+                        ai_meal_plans_generated=F('ai_meal_plans_generated') + 1
+                    )
+                except Exception:
+                    pass
             return Response({'plan': plan})
         except json.JSONDecodeError as e:
             return Response({'error': f'AI returned invalid JSON: {str(e)}'}, status=500)
@@ -1621,6 +1633,7 @@ class UploadFileView(APIView):
 
 class TranslateInstructionsView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_scope = 'ai_import'
 
     LANGUAGE_NAMES = {
         'en': 'English', 'de': 'German', 'fr': 'French',
@@ -1666,3 +1679,361 @@ class TranslateInstructionsView(APIView):
             return Response({'instructions': translated})
         except Exception:
             return Response({'instructions': instructions})
+
+
+class AnalyzeMealPhotoView(APIView):
+    """POST /api/meals/analyze-photo/ — Upload a food photo, get AI macro estimate."""
+    permission_classes = [IsAuthenticated]
+    throttle_scope = 'ai_photo'
+
+    def post(self, request):
+        import base64, json, re as _re2
+        photo = request.FILES.get('photo')
+        if not photo:
+            return Response({'error': 'No photo provided.'}, status=400)
+        if photo.size > 10 * 1024 * 1024:
+            return Response({'error': 'Image too large (max 10 MB).'}, status=400)
+        allowed = {'image/jpeg', 'image/png', 'image/gif', 'image/webp'}
+        if photo.content_type not in allowed:
+            return Response({'error': 'Unsupported file type.'}, status=400)
+
+        img_b64 = base64.b64encode(photo.read()).decode('utf-8')
+        media_type = photo.content_type
+
+        system = (
+            "You are a nutrition expert AI. Analyze food photos and estimate nutritional content. "
+            "Always respond with ONLY valid JSON, no extra text."
+        )
+        prompt = (
+            'Analyze this food photo. Return ONLY valid JSON:\n'
+            '{"meal_name":"string","description":"string","calories":number,'
+            '"protein_g":number,"carbs_g":number,"fat_g":number,'
+            '"ingredients":["string"],"confidence":"high"|"medium"|"low"}\n'
+            'Base estimates on a typical single serving. If unclear, use medium confidence.'
+        )
+
+        try:
+            import anthropic as _anthropic
+            api_key = os.environ.get('ANTHROPIC_API_KEY', '')
+            if not api_key:
+                return Response({'error': 'Vision AI not configured (ANTHROPIC_API_KEY missing).'}, status=503)
+
+            client = _anthropic.Anthropic(api_key=api_key)
+            response = client.messages.create(
+                model='claude-haiku-4-5',
+                max_tokens=512,
+                system=system,
+                messages=[{
+                    'role': 'user',
+                    'content': [
+                        {'type': 'image', 'source': {'type': 'base64', 'media_type': media_type, 'data': img_b64}},
+                        {'type': 'text', 'text': prompt},
+                    ],
+                }],
+            )
+            raw = next(b.text for b in response.content if b.type == 'text').strip()
+            # Strip markdown code fences if present
+            raw = _re2.sub(r'^```[a-z]*\n?', '', raw).rstrip('`').strip()
+            data = json.loads(raw)
+            return Response(data)
+        except json.JSONDecodeError:
+            return Response({'error': 'AI returned invalid data. Please try again.'}, status=502)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+
+class ImportRecipeView(APIView):
+    """POST /api/meals/import-recipe/ — Scrape a recipe URL and return structured data."""
+    permission_classes = [IsAuthenticated]
+    throttle_scope = 'ai_import'
+
+    def post(self, request):
+        import json, re as _re3
+        url = (request.data.get('url') or '').strip()
+        if not url:
+            return Response({'error': 'URL is required.'}, status=400)
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+
+        recipe = _fetch_recipe(url)
+
+        # If JSON-LD extraction failed, try simple BS4 scrape
+        if not recipe:
+            try:
+                from bs4 import BeautifulSoup
+                resp = _requests.get(url, timeout=8, headers={'User-Agent': 'Mozilla/5.0'})
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                title = soup.find('h1')
+                title_text = title.get_text(strip=True) if title else ''
+                # Try common ingredient list selectors
+                ing_items = soup.select('[class*="ingredient"] li, [class*="Ingredient"] li, ul.ingredients li')
+                ingredients = [li.get_text(strip=True) for li in ing_items[:20]]
+                # Try image
+                og_img = soup.find('meta', property='og:image')
+                image_url = og_img['content'] if og_img and og_img.get('content') else ''
+                if title_text or ingredients:
+                    recipe = {'name': title_text, 'recipeIngredient': ingredients, 'recipeInstructions': [], 'image': image_url}
+            except Exception:
+                pass
+
+        if not recipe:
+            return Response({'error': 'Could not extract recipe from this URL. Try a direct recipe page.'}, status=422)
+
+        # Parse fields
+        name = recipe.get('name') or ''
+        ingredients = recipe.get('recipeIngredient') or []
+        raw_instructions = recipe.get('recipeInstructions') or []
+        instructions = []
+        for step in raw_instructions:
+            if isinstance(step, str):
+                instructions.append(step.strip())
+            elif isinstance(step, dict):
+                text = (step.get('text') or '').strip()
+                if text:
+                    instructions.append(text)
+
+        # Get image URL
+        img = recipe.get('image') or ''
+        if isinstance(img, list):
+            img = img[0] if img else ''
+        if isinstance(img, dict):
+            img = img.get('url', '')
+
+        # Ask AI to estimate macros from ingredients
+        calories = protein = carbs = fat = None
+        if ingredients:
+            try:
+                provider, api_key, main_model, fast_model = _get_ai_provider()
+                ing_text = '\n'.join(ingredients[:16])
+                macro_prompt = (
+                    f'Estimate macros for one serving of this recipe based on these ingredients:\n{ing_text}\n'
+                    'Return ONLY JSON: {"calories":number,"protein_g":number,"carbs_g":number,"fat_g":number}'
+                )
+                raw = _chat_completion(
+                    provider, api_key, fast_model,
+                    'You are a nutrition expert. Respond only with JSON.',
+                    [{'role': 'user', 'content': macro_prompt}],
+                    max_tokens=150, temperature=0.1,
+                )
+                raw = _re3.sub(r'^```[a-z]*\n?', '', raw.strip()).rstrip('`').strip()
+                macros = json.loads(raw)
+                calories = macros.get('calories')
+                protein = macros.get('protein_g')
+                carbs = macros.get('carbs_g')
+                fat = macros.get('fat_g')
+            except Exception:
+                pass
+
+        return Response({
+            'name': name,
+            'ingredients': ingredients,
+            'instructions': instructions,
+            'calories': calories,
+            'protein_g': protein,
+            'carbs_g': carbs,
+            'fat_g': fat,
+            'source_url': url,
+            'image_url': img,
+        })
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Wearable / Google Fit Integration
+# ─────────────────────────────────────────────────────────────υυ
+# Required env vars: GOOGLE_FIT_CLIENT_ID, GOOGLE_FIT_CLIENT_SECRET
+# GOOGLE_FIT_REDIRECT_URI  (e.g. http://localhost:3001/wearable/callback)
+# ─────────────────────────────────────────────────────────────────────────────
+
+_GFit_AUTH_URL  = 'https://accounts.google.com/o/oauth2/v2/auth'
+_GFit_TOKEN_URL = 'https://oauth2.googleapis.com/token'
+_GFit_SCOPES    = 'https://www.googleapis.com/auth/fitness.activity.read https://www.googleapis.com/auth/fitness.body.read'
+
+
+def _gfit_env():
+    return (
+        os.environ.get('GOOGLE_FIT_CLIENT_ID', '').strip(),
+        os.environ.get('GOOGLE_FIT_CLIENT_SECRET', '').strip(),
+        os.environ.get('GOOGLE_FIT_REDIRECT_URI', '').strip(),
+    )
+
+
+class WearableAuthUrlView(APIView):
+    """GET /api/wearable/auth-url/ — return the Google OAuth URL for the frontend to redirect to."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        client_id, _, redirect_uri = _gfit_env()
+        if not client_id:
+            return Response({'error': 'Google Fit not configured (GOOGLE_FIT_CLIENT_ID missing).'}, status=503)
+        from urllib.parse import urlencode
+        params = {
+            'client_id': client_id,
+            'redirect_uri': redirect_uri,
+            'response_type': 'code',
+            'scope': _GFit_SCOPES,
+            'access_type': 'offline',
+            'prompt': 'consent',
+        }
+        url = f'{_GFit_AUTH_URL}?{urlencode(params)}'
+        return Response({'url': url})
+
+
+class WearableConnectView(APIView):
+    """POST /api/wearable/connect/ — exchange OAuth code for tokens and save connection."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        import time
+        code = (request.data.get('code') or '').strip()
+        if not code:
+            return Response({'error': 'code is required.'}, status=400)
+
+        client_id, client_secret, redirect_uri = _gfit_env()
+        if not client_id or not client_secret:
+            return Response({'error': 'Google Fit not configured.'}, status=503)
+
+        try:
+            resp = _requests.post(_GFit_TOKEN_URL, data={
+                'code': code,
+                'client_id': client_id,
+                'client_secret': client_secret,
+                'redirect_uri': redirect_uri,
+                'grant_type': 'authorization_code',
+            }, timeout=10)
+            if not resp.ok:
+                return Response({'error': f'Token exchange failed: {resp.text}'}, status=502)
+            data = resp.json()
+        except Exception as e:
+            return Response({'error': str(e)}, status=502)
+
+        from .models import WearableConnection
+        expiry = int(time.time()) + int(data.get('expires_in', 3600))
+        WearableConnection.objects.update_or_create(
+            user=request.user,
+            defaults={
+                'provider': 'google_fit',
+                'access_token': data.get('access_token', ''),
+                'refresh_token': data.get('refresh_token', ''),
+                'token_expiry': expiry,
+            }
+        )
+        return Response({'status': 'connected'})
+
+
+class WearableDataView(APIView):
+    """GET /api/wearable/data/ — fetch today's steps & activity from Google Fit."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        import time
+        from .models import WearableConnection
+        try:
+            conn = WearableConnection.objects.get(user=request.user)
+        except WearableConnection.DoesNotExist:
+            return Response({'connected': False})
+
+        # Refresh token if near expiry
+        client_id, client_secret, redirect_uri = _gfit_env()
+        if conn.token_expiry and conn.token_expiry - int(time.time()) < 120 and conn.refresh_token:
+            try:
+                r = _requests.post(_GFit_TOKEN_URL, data={
+                    'grant_type': 'refresh_token',
+                    'refresh_token': conn.refresh_token,
+                    'client_id': client_id,
+                    'client_secret': client_secret,
+                }, timeout=10)
+                if r.ok:
+                    d = r.json()
+                    conn.access_token = d.get('access_token', conn.access_token)
+                    conn.token_expiry = int(time.time()) + int(d.get('expires_in', 3600))
+                    conn.save()
+            except Exception:
+                pass
+
+        # Today's time range in ms
+        import datetime
+        now = datetime.datetime.now()
+        start = int(datetime.datetime(now.year, now.month, now.day).timestamp() * 1000)
+        end   = int(time.time() * 1000)
+
+        headers = {'Authorization': f'Bearer {conn.access_token}', 'Content-Type': 'application/json'}
+        aggregate_url = 'https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate'
+
+        results = {'connected': True, 'steps': 0, 'calories': 0, 'active_minutes': 0}
+
+        try:
+            body = {
+                'aggregateBy': [
+                    {'dataTypeName': 'com.google.step_count.delta'},
+                    {'dataTypeName': 'com.google.calories.expended'},
+                    {'dataTypeName': 'com.google.active_minutes'},
+                ],
+                'bucketByTime': {'durationMillis': 86400000},
+                'startTimeMillis': start,
+                'endTimeMillis': end,
+            }
+            r = _requests.post(aggregate_url, json=body, headers=headers, timeout=10)
+            if r.ok:
+                for bucket in r.json().get('bucket', []):
+                    for ds in bucket.get('dataset', []):
+                        dtype = ds.get('dataSourceId', '')
+                        for pt in ds.get('point', []):
+                            val = pt.get('value', [{}])[0]
+                            if 'step_count' in dtype:
+                                results['steps'] += val.get('intVal', 0)
+                            elif 'calories' in dtype:
+                                results['calories'] += int(val.get('fpVal', 0))
+                            elif 'active_minutes' in dtype:
+                                results['active_minutes'] += val.get('intVal', 0)
+        except Exception as e:
+            results['error'] = str(e)
+
+        return Response(results)
+
+
+class WearableDisconnectView(APIView):
+    """DELETE /api/wearable/disconnect/ — remove stored Google Fit connection."""
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        from .models import WearableConnection
+        WearableConnection.objects.filter(user=request.user).delete()
+        return Response({'status': 'disconnected'})
+
+
+class WearableStatusView(APIView):
+    """GET /api/wearable/status/ — check if user has a wearable connected."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .models import WearableConnection
+        connected = WearableConnection.objects.filter(user=request.user).exists()
+        return Response({'connected': connected})
+
+
+class AchievementListView(APIView):
+    """GET /api/achievements/ — return all badges the user has earned."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .models import UserAchievement
+        from .serializers import UserAchievementSerializer
+        from .badges import BADGE_REGISTRY
+        earned = UserAchievement.objects.filter(user=request.user)
+        earned_ids = set(earned.values_list('badge_id', flat=True))
+        earned_data = UserAchievementSerializer(earned, many=True).data
+        return Response({
+            'earned': earned_data,
+            'all_badges': BADGE_REGISTRY,
+            'earned_ids': list(earned_ids),
+        })
+
+
+class AchievementCheckView(APIView):
+    """POST /api/achievements/check/ — evaluate all badges, return newly awarded ones."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from .badges import evaluate_all
+        newly_awarded = evaluate_all(request.user)
+        return Response({'newly_awarded': newly_awarded})

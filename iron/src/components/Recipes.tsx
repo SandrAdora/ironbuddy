@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { UserRecipe } from '../api';
+import { useTranslation } from 'react-i18next';
+import { apiImportRecipe, type UserRecipe } from '../api';
 
 interface Props {
   token: string;
@@ -50,17 +51,44 @@ function parseUrl(url: string): ParsedUrl {
 
 // ── Component ──────────────────────────────────────────────────────────────────
 export default function Recipes({ token }: Props) {
+  const { t } = useTranslation();
   const [recipes, setRecipes]       = useState<UserRecipe[]>([]);
   const [formOpen, setFormOpen]     = useState(false);
   const [editingId, setEditingId]   = useState<number | null>(null);
   const [error, setError]           = useState('');
   const [title, setTitle]           = useState('');
   const [url, setUrl]               = useState('');
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  // Recipe import
+  const [importUrl, setImportUrl]         = useState('');
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError]     = useState('');
+  const [importOpen, setImportOpen]       = useState(false);
 
   useEffect(() => { setRecipes(loadRecipes(token)); }, [token]);
 
   const resetForm = () => {
     setTitle(''); setUrl(''); setFormOpen(false); setEditingId(null); setError('');
+  };
+
+  const handleImport = async () => {
+    if (!importUrl.trim()) return;
+    setImportLoading(true); setImportError('');
+    try {
+      const data = await apiImportRecipe(token, importUrl.trim());
+      // Pre-fill the add form with the imported data
+      setTitle(data.name || '');
+      setUrl(data.source_url || importUrl.trim());
+      setImportUrl('');
+      setImportOpen(false);
+      setFormOpen(true);
+      setEditingId(null);
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : 'Import failed');
+    } finally {
+      setImportLoading(false);
+    }
   };
 
   const openEdit = (r: UserRecipe) => {
@@ -101,16 +129,65 @@ export default function Recipes({ token }: Props) {
           <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Video</p>
           <h2 className="text-2xl font-black uppercase italic mt-1">🎬 Video Recipes</h2>
         </div>
-        {!formOpen && (
-          <button
-            onClick={() => setFormOpen(true)}
-            className="w-7 h-7 rounded-lg text-base font-black active:scale-95 transition-all duration-200 flex items-center justify-center"
-            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
-          >
-            +
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {!formOpen && !importOpen && (
+            <button
+              onClick={() => setImportOpen(v => !v)}
+              className="px-3 py-1.5 rounded-lg text-xs font-black active:scale-95 transition-all duration-200"
+              style={{ background: 'rgba(250,204,21,0.08)', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)' }}
+              title="Import from URL"
+            >
+              🔗 {t('recipes.import_btn')}
+            </button>
+          )}
+          {!formOpen && !importOpen && (
+            <button
+              onClick={() => setFormOpen(true)}
+              aria-label="Add new recipe"
+              className="w-7 h-7 rounded-lg text-base font-black active:scale-95 transition-all duration-200 flex items-center justify-center"
+              style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
+            >
+              +
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Import form */}
+      <AnimatePresence>
+        {importOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="bg-white/5 backdrop-blur-md border border-yellow-300/20 rounded-2xl p-5 space-y-3"
+          >
+            <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">🔗 {t('recipes.import_title')}</p>
+            <div className="flex gap-2">
+              <input
+                value={importUrl}
+                onChange={e => setImportUrl(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleImport(); if (e.key === 'Escape') setImportOpen(false); }}
+                placeholder={t('recipes.import_placeholder')}
+                type="url"
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-yellow-300/60 focus:outline-none placeholder:text-gray-600"
+                autoFocus
+              />
+              <button
+                onClick={handleImport}
+                disabled={importLoading || !importUrl.trim()}
+                className="px-4 py-2 rounded-xl font-black text-xs uppercase active:scale-95 transition-all disabled:opacity-50"
+                style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 8px rgba(250,204,21,0.3)' }}
+              >
+                {importLoading ? '…' : t('recipes.import_go')}
+              </button>
+              <button onClick={() => { setImportOpen(false); setImportError(''); }} aria-label="Close import dialog" className="px-3 py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl text-xs hover:text-white transition-all">✕</button>
+            </div>
+            {importError && <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded-xl px-3 py-2">{importError}</p>}
+            <p className="text-gray-600 text-xs">{t('recipes.import_hint')}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {error && (
         <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3">{error}</p>
@@ -185,71 +262,84 @@ export default function Recipes({ token }: Props) {
           <p className="text-gray-400 text-sm">Add a YouTube link and it will appear here as a video player.</p>
         </motion.div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
           {recipes.map((r, i) => {
             const parsed = parseUrl(r.url);
+            const ytId = parsed.type === 'youtube' ? parsed.embedUrl.split('/embed/')[1]?.split('?')[0] : null;
+            const isExpanded = expandedId === r.id;
             return (
               <motion.div
                 key={r.id}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden
-                  hover:border-yellow-300/20 transition-all duration-300 group"
+                transition={{ delay: i * 0.04 }}
+                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:border-yellow-300/20 transition-all duration-300"
               >
-                {parsed.type === 'youtube' && (
-                  <iframe
-                    className="w-full aspect-video"
-                    src={parsed.embedUrl}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                )}
-                {parsed.type === 'recipe' && (
-                  <a href={parsed.url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-4 px-5 py-5 hover:bg-white/5 transition-colors"
-                  >
-                    <div className="w-12 h-12 bg-yellow-300/10 border border-yellow-300/20 rounded-xl flex items-center justify-center text-2xl shrink-0">🍽️</div>
-                    <div className="min-w-0">
-                      <p className="text-white font-black text-sm uppercase truncate">{parsed.slug.replace(/-/g, ' ')}</p>
-                      <p className="text-gray-500 text-xs mt-0.5">{parsed.domain}</p>
-                    </div>
-                    <span className="ml-auto text-gray-600 text-sm shrink-0">↗</span>
-                  </a>
-                )}
-                {parsed.type === 'unknown' && (
-                  <a href={parsed.url} target="_blank" rel="noopener noreferrer"
-                    className="w-full aspect-video bg-black/40 flex flex-col items-center justify-center gap-2 hover:bg-black/60 transition-colors"
-                    style={{ display: 'flex' }}
-                  >
-                    <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-200">🔗</div>
-                    <p className="text-gray-400 text-xs font-semibold uppercase tracking-wide">Open Link</p>
-                  </a>
-                )}
+                {/* List row */}
+                <div className="flex items-center gap-3 px-3 py-2.5">
+                  {/* Thumbnail / icon */}
+                  {parsed.type === 'youtube' && ytId ? (
+                    <button
+                      onClick={() => setExpandedId(isExpanded ? null : r.id)}
+                      className="shrink-0 relative w-20 h-12 rounded-xl overflow-hidden group/thumb"
+                    >
+                      <img
+                        src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`}
+                        alt={r.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover/thumb:bg-black/20 transition-colors">
+                        <span className="text-white text-lg">{isExpanded ? '⏸' : '▶'}</span>
+                      </div>
+                    </button>
+                  ) : parsed.type === 'recipe' ? (
+                    <div className="shrink-0 w-12 h-12 bg-yellow-300/10 border border-yellow-300/20 rounded-xl flex items-center justify-center text-xl">🍽️</div>
+                  ) : (
+                    <div className="shrink-0 w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-xl">🔗</div>
+                  )}
 
-                {/* Title + actions */}
-                <div className="px-4 py-3 flex items-center justify-between border-t border-white/5">
-                  <div className="min-w-0 flex-1">
+                  {/* Title + meta */}
+                  <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-sm uppercase truncate">{r.title}</p>
-                    <p className="text-gray-600 text-xs mt-0.5">{new Date(r.created_at).toLocaleDateString()}</p>
+                    <p className="text-gray-600 text-[10px] mt-0.5">
+                      {parsed.type === 'youtube' ? 'YouTube' : parsed.type === 'recipe' ? parsed.domain : new URL(r.url.startsWith('http') ? r.url : `https://${r.url}`).hostname}
+                      {' · '}{new Date(r.created_at).toLocaleDateString()}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-1 ml-3 shrink-0">
-                    <button
-                      onClick={() => openEdit(r)}
-                      className="text-yellow-300 text-sm p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors"
-                      title="Edit recipe"
-                    >
-                      ✎
-                    </button>
-                    <button
-                      onClick={() => handleDelete(r.id)}
-                      className="text-gray-600 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-400/10 transition-colors"
-                      title="Delete recipe"
-                    >
-                      🗑
-                    </button>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {(parsed.type === 'recipe' || parsed.type === 'unknown') && (
+                      <a
+                        href={r.url} target="_blank" rel="noopener noreferrer"
+                        className="text-gray-500 hover:text-yellow-300 p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors text-sm"
+                        title="Open link"
+                      >↗</a>
+                    )}
+                    <button onClick={() => openEdit(r)} className="text-yellow-300 text-sm p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors" title="Edit">✎</button>
+                    <button onClick={() => handleDelete(r.id)} className="text-gray-600 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-400/10 transition-colors" title="Delete">🗑</button>
                   </div>
                 </div>
+
+                {/* Inline YouTube player (expanded) */}
+                <AnimatePresence>
+                  {isExpanded && parsed.type === 'youtube' && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden border-t border-white/5"
+                    >
+                      <iframe
+                        className="w-full aspect-video"
+                        src={parsed.embedUrl + '?autoplay=1'}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             );
           })}

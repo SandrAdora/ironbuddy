@@ -27,15 +27,42 @@
   }
 }
 
+/* ── Theme variables ──────────────────────────────────────────────────────── */
+
+[data-theme="dark"], :root {
+  --bg-base:      #060608;
+  --bg-card:      rgba(255,255,255,0.05);
+  --bg-card-hover:rgba(255,255,255,0.08);
+  --border:       rgba(255,255,255,0.10);
+  --text-primary: rgba(255,255,255,0.87);
+  --text-muted:   rgba(255,255,255,0.45);
+  --nav-bg:       rgba(6,6,8,0.96);
+  --sidebar-bg:   rgba(6,6,8,0.97);
+  --input-bg:     rgba(255,255,255,0.05);
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg-base:      #f0f0f3;
+  --bg-card:      rgba(255,255,255,0.80);
+  --bg-card-hover:rgba(255,255,255,0.95);
+  --border:       rgba(0,0,0,0.09);
+  --text-primary: #0a0a0a;
+  --text-muted:   rgba(0,0,0,0.45);
+  --nav-bg:       rgba(240,240,243,0.96);
+  --sidebar-bg:   rgba(240,240,243,0.97);
+  --input-bg:     rgba(0,0,0,0.04);
+  color-scheme: light;
+}
+
 /* ── Base ─────────────────────────────────────────────────────────────────── */
 
 :root {
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color-scheme: dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #060608;
+  color: var(--text-primary);
+  background-color: var(--bg-base);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -59,11 +86,18 @@ a {
 }
 a:hover { color: #fde047; }
 
+[data-theme="light"] a {
+  color: #d97706;
+}
+[data-theme="light"] a:hover {
+  color: #b45309;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #060608;
+  background-color: var(--bg-base);
   background-image:
     radial-gradient(ellipse 90% 55% at 15%  8%,  rgba(250, 204, 21, 0.10) 0%, transparent 60%),
     radial-gradient(ellipse 70% 45% at 85% 92%,  rgba(250, 204, 21, 0.07) 0%, transparent 60%),
@@ -100,3 +134,44 @@ button:focus-visible {
   );
 }
 .card-gold > * { border-radius: calc(1.25rem - 1px); }
+
+/* ── Light mode overrides ─────────────────────────────────────────────────── */
+/* Most components use hardcoded Tailwind classes — these overrides fix them   */
+
+[data-theme="light"] {
+  /* Text */
+  & .text-white        { color: #111111; }
+  & .text-white\/90    { color: rgba(17,17,17,0.9); }
+  & .text-white\/80    { color: rgba(17,17,17,0.8); }
+  & .text-white\/70    { color: rgba(17,17,17,0.7); }
+  & .text-white\/60    { color: rgba(17,17,17,0.6); }
+  & .text-white\/50    { color: rgba(17,17,17,0.5); }
+  & .text-gray-100     { color: #222222; }
+  & .text-gray-200     { color: #333333; }
+  & .text-gray-300     { color: #444444; }
+  & .text-gray-400     { color: #555555; }
+  & .text-gray-500     { color: #666666; }
+  & .text-gray-600     { color: #444444; }
+
+  /* Backgrounds */
+  & .bg-black\/20      { background-color: rgba(0,0,0,0.06); }
+  & .bg-black\/30      { background-color: rgba(0,0,0,0.08); }
+  & .bg-black\/40      { background-color: rgba(0,0,0,0.10); }
+  & .bg-white\/5       { background-color: rgba(0,0,0,0.04); }
+  & .bg-white\/8       { background-color: rgba(0,0,0,0.06); }
+  & .bg-white\/10      { background-color: rgba(0,0,0,0.08); }
+
+  /* Borders */
+  & .border-white\/10  { border-color: rgba(0,0,0,0.10); }
+  & .border-white\/20  { border-color: rgba(0,0,0,0.15); }
+
+  /* Link colors */
+  & .text-yellow-400  { color: #d97706; }
+  & .text-\[--color-iron-gold\] { color: #d97706; }
+
+  /* Navbar override — it uses inline gradient style */
+  & nav[class*="fixed"] {
+    background: rgba(240,240,243,0.96) !important;
+    border-bottom-color: rgba(0,0,0,0.09) !important;
+  }
+}

@@ -15,6 +15,7 @@ import UserProfile from './components/UserProfile';
 import ResetPasswordPage from './components/pages/ResetPasswordPage';
 import TermsPage from './components/pages/TermsPage';
 import PrivacyPage from './components/pages/PrivacyPage';
+import WearableCallbackPage from './components/pages/WearableCallbackPage';
 
 
 function AnimatedRoutes(){
@@ -46,6 +47,7 @@ function AnimatedRoutes(){
           </PageWrapper>} />
         <Route path="/terms" element={<PageWrapper><TermsPage /></PageWrapper>} />
         <Route path="/privacy" element={<PageWrapper><PrivacyPage /></PageWrapper>} />
+        <Route path="/wearable-callback" element={<PageWrapper><WearableCallbackPage /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   )

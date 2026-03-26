@@ -1,0 +1,49 @@
+services:
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ironbuddy
+      POSTGRES_USER: ironbuddy
+      POSTGRES_PASSWORD: ironbuddy
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ironbuddy"]
+      interval: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: backend/backend.env
+    environment:
+      DATABASE_URL: postgres://ironbuddy:ironbuddy@db:5432/ironbuddy
+      FRONTEND_URL: http://localhost
+    depends_on:
+      db:
+        condition: service_healthy
+
+  socket:
+    build:
+      context: socket-server
+      dockerfile: Dockerfile
+    environment:
+      FRONTEND_URL: http://localhost
+      DJANGO_SECRET_KEY: ${SECRET_KEY:-change-me}
+    depends_on:
+      - backend
+
+  frontend:
+    build:
+      context: iron
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - socket
+
+volumes:
+  pgdata:

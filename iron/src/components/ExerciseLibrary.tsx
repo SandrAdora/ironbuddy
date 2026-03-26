@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   apiGetExercises, apiGetExerciseMeta, apiGetCustomWorkouts, apiUpdateCustomWorkout,
   apiFetchExerciseMedia, apiTranslateInstructions, apiGetYouTubeVideo,
-  Exercise, ExerciseMeta, CustomWorkout,
 } from '../api';
+import type { Exercise, ExerciseMeta, CustomWorkout } from '../api';
 import MuscleMap from './MuscleMap';
+import { useTheme } from '../context/themeContext';
 
 // ── Custom dropdown (fully dark, no browser flash) ──────────────────────────
 interface SelectOption { value: string; label: string }
@@ -21,6 +22,7 @@ interface CustomSelectProps {
 function CustomSelect({ value, onChange, options, placeholder = 'Select…', className = '', gold = false }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
 
   const selected = options.find(o => o.value === value);
 
@@ -32,19 +34,27 @@ function CustomSelect({ value, onChange, options, placeholder = 'Select…', cla
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const borderClass = gold ? 'border-yellow-300/20 hover:border-yellow-300/40' : 'border-white/10 hover:border-white/20';
-  const textClass   = gold ? 'text-yellow-200' : 'text-gray-300';
+  const isLight = theme === 'light';
+  const triggerColor = gold
+    ? (isLight ? '#d97706' : 'rgba(253,230,138,1)')
+    : (isLight ? '#333' : 'rgba(209,213,219,1)');
+  const triggerBorder = gold
+    ? (isLight ? '1px solid rgba(217,119,6,0.3)' : '1px solid rgba(253,224,71,0.2)')
+    : (isLight ? '1px solid rgba(0,0,0,0.12)' : '1px solid rgba(255,255,255,0.1)');
 
   return (
     <div ref={ref} className={`relative ${className}`}>
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl border text-sm ${borderClass} ${textClass} transition-colors`}
-        style={{ background: '#060608' }}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-sm transition-colors"
+        style={{ background: isLight ? '#fff' : '#060608', color: triggerColor, border: triggerBorder }}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={placeholder}
       >
         <span className="truncate">{selected ? selected.label : placeholder}</span>
-        <span className={`text-xs transition-transform duration-200 ${open ? 'rotate-180' : ''} shrink-0`}>▼</span>
+        <span className={`text-xs transition-transform duration-200 ${open ? 'rotate-180' : ''} shrink-0`} aria-hidden="true">▼</span>
       </button>
 
       <AnimatePresence>
@@ -54,19 +64,19 @@ function CustomSelect({ value, onChange, options, placeholder = 'Select…', cla
             animate={{ opacity: 1, y: 0, scaleY: 1 }}
             exit={{ opacity: 0, y: -6, scaleY: 0.95 }}
             transition={{ duration: 0.12 }}
-            className="absolute z-50 top-full mt-1 w-full rounded-xl border border-white/10 shadow-2xl overflow-hidden overflow-y-auto max-h-56"
-            style={{ background: '#060608', transformOrigin: 'top' }}
+            className="absolute z-50 top-full mt-1 w-full rounded-xl shadow-2xl overflow-hidden overflow-y-auto max-h-56"
+            style={{ background: isLight ? '#fff' : '#060608', border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', transformOrigin: 'top' }}
           >
             {options.map(opt => (
               <li key={opt.value}>
                 <button
                   type="button"
                   onClick={() => { onChange(opt.value); setOpen(false); }}
-                  className={`w-full text-left px-3 py-2 text-sm transition-colors ${
-                    opt.value === value
-                      ? 'bg-yellow-300/10 text-yellow-300'
-                      : 'text-gray-300 hover:bg-white/5 hover:text-white'
-                  }`}
+                  className="w-full text-left px-3 py-2 text-sm transition-colors"
+                  style={opt.value === value
+                    ? { background: 'rgba(250,204,21,0.1)', color: isLight ? '#d97706' : 'rgba(253,224,71,1)' }
+                    : { color: isLight ? '#444' : 'rgba(209,213,219,1)' }
+                  }
                 >
                   {opt.label}
                 </button>
@@ -132,12 +142,13 @@ function FilterBadge({ label, onRemove }: { label: string; onRemove: () => void 
   return (
     <span className="flex items-center gap-1 text-xs text-yellow-300 bg-yellow-300/10 border border-yellow-300/20 px-2.5 py-1 rounded-full">
       {label}
-      <button onClick={onRemove} className="ml-0.5 text-yellow-400 hover:text-white leading-none">✕</button>
+      <button onClick={onRemove} aria-label={`Remove filter: ${label}`} className="ml-0.5 text-yellow-400 hover:text-white leading-none">✕</button>
     </span>
   );
 }
 
 const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
+  const { theme } = useTheme();
   const [meta, setMeta]               = useState<ExerciseMeta | null>(null);
   const [exercises, setExercises]     = useState<Exercise[]>([]);
   const [total, setTotal]             = useState(0);
@@ -235,10 +246,6 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
     setSearch('');
     setSelectedWorkoutId('');
     setWorkoutFilterLabel('');
-  }
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
   }
 
   // Feature B: add exercise to workout
@@ -397,15 +404,35 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
 
       {/* States */}
       {seeding && (
-        <div className="flex flex-col items-center gap-3 py-12 text-gray-400">
-          <div className="w-8 h-8 border-2 border-yellow-300/30 border-t-yellow-300 rounded-full animate-spin" />
-          <p className="text-sm">Loading exercise library for the first time…</p>
-          <p className="text-xs text-gray-600">This may take 10–15 seconds</p>
-        </div>
+        <>
+          <div className="flex flex-col items-center gap-2 py-6 text-gray-400">
+            <p className="text-sm font-bold">Loading exercise library for the first time…</p>
+            <p className="text-xs text-gray-600">This may take 10–15 seconds</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden animate-pulse">
+                <div className="aspect-square bg-white/10" />
+                <div className="p-2.5 space-y-2">
+                  <div className="h-3 bg-white/10 rounded w-3/4" />
+                  <div className="h-2.5 bg-white/5 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
       {loading && !seeding && (
-        <div className="flex justify-center py-8">
-          <div className="w-7 h-7 border-2 border-yellow-300/30 border-t-yellow-300 rounded-full animate-spin" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden animate-pulse">
+              <div className="aspect-square bg-white/10" />
+              <div className="p-2.5 space-y-2">
+                <div className="h-3 bg-white/10 rounded w-3/4" />
+                <div className="h-2.5 bg-white/5 rounded w-1/2" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
       {error && (
@@ -467,10 +494,10 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
       {/* Pagination */}
       {!loading && !seeding && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 pt-2">
-          <button onClick={() => goPage(currentPage - 1)} disabled={currentPage === 1}
+          <button onClick={() => goPage(currentPage - 1)} disabled={currentPage === 1} aria-label="Previous page"
             className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">←</button>
-          <span className="text-sm text-gray-400">{currentPage} / {totalPages}</span>
-          <button onClick={() => goPage(currentPage + 1)} disabled={currentPage === totalPages}
+          <span className="text-sm text-gray-400" aria-live="polite">{currentPage} / {totalPages}</span>
+          <button onClick={() => goPage(currentPage + 1)} disabled={currentPage === totalPages} aria-label="Next page"
             className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">→</button>
         </div>
       )}
@@ -484,22 +511,26 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
             onClick={() => setSelected(null)}
           >
             <motion.div
-              className="bg-[#111827] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+              className="rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+              style={{
+                background: theme === 'light' ? '#ffffff' : '#111827',
+                border: theme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)',
+              }}
               initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-start justify-between p-5 border-b border-white/10">
+              <div className="flex items-start justify-between p-5" style={{ borderBottom: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
                 <div>
-                  <h2 className="text-white font-black text-lg">{capitalize(selected.name)}</h2>
+                  <h2 className="font-black text-lg" style={{ color: theme === 'light' ? '#111' : '#fff' }}>{capitalize(selected.name)}</h2>
                   <div className="flex gap-2 mt-1 flex-wrap">
-                    <span className="bg-yellow-300/10 text-yellow-300 text-xs px-2 py-0.5 rounded-full">{capitalize(selected.body_part)}</span>
-                    <span className="bg-white/5 text-gray-400 text-xs px-2 py-0.5 rounded-full">{capitalize(selected.equipment)}</span>
-                    <span className="bg-white/5 text-gray-300 text-xs px-2 py-0.5 rounded-full">Target: {capitalize(selected.target)}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(250,204,21,0.1)', color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,1)' }}>{capitalize(selected.body_part)}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: theme === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)', color: theme === 'light' ? '#555' : 'rgba(156,163,175,1)' }}>{capitalize(selected.equipment)}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: theme === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)', color: theme === 'light' ? '#444' : 'rgba(209,213,219,1)' }}>Target: {capitalize(selected.target)}</span>
                   </div>
                 </div>
-                <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-white transition-colors text-xl leading-none p-1">✕</button>
+                <button onClick={() => setSelected(null)} aria-label="Close exercise details" className="transition-colors text-xl leading-none p-1" style={{ color: theme === 'light' ? '#999' : 'rgba(107,114,128,1)' }}>✕</button>
               </div>
 
               <div className="p-5 space-y-5">
@@ -508,9 +539,10 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
                   <div className="w-full sm:w-80 shrink-0 rounded-xl overflow-hidden">
                     {/* Loading */}
                     {videoCache[selected.exercise_id] === null && (
-                      <div className="relative w-full rounded-xl overflow-hidden bg-black" style={{ paddingTop: '56.25%' }}>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-6 h-6 border-2 border-yellow-300/30 border-t-yellow-300 rounded-full animate-spin" />
+                      <div className="relative w-full rounded-xl overflow-hidden animate-pulse bg-white/5" style={{ paddingTop: '56.25%' }}>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                          <div className="w-10 h-10 rounded-full bg-white/10" />
+                          <div className="h-2.5 bg-white/10 rounded w-1/3" />
                         </div>
                       </div>
                     )}
@@ -566,8 +598,8 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
 
                 {/* Feature B: Add to Workout */}
                 {workouts.length > 0 && (
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
-                    <p className="text-sm font-bold text-white">Add to Workout</p>
+                  <div className="rounded-xl p-4 space-y-3" style={{ background: theme === 'light' ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.05)', border: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
+                    <p className="text-sm font-bold" style={{ color: theme === 'light' ? '#111' : '#fff' }}>Add to Workout</p>
                     <div className="flex gap-2">
                       <CustomSelect
                         value={String(addToWorkoutId)}
@@ -599,14 +631,14 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
                 {/* Instructions */}
                 {selected.instructions.length > 0 && (
                   <div>
-                    <h3 className="text-white font-bold text-sm mb-2">How to perform</h3>
+                    <h3 className="font-bold text-sm mb-2" style={{ color: theme === 'light' ? '#111' : '#fff' }}>How to perform</h3>
                     {language !== 'en' && !translatedInstructions[selected.exercise_id] && (
                       <p className="text-xs text-gray-500 mb-2 animate-pulse">Translating…</p>
                     )}
                     <ol className="space-y-2">
                       {(translatedInstructions[selected.exercise_id] ?? selected.instructions).map((step, i) => (
-                        <li key={i} className="flex gap-3 text-sm text-gray-300">
-                          <span className="shrink-0 w-5 h-5 bg-yellow-300/10 text-yellow-300 rounded-full flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                        <li key={i} className="flex gap-3 text-sm" style={{ color: theme === 'light' ? '#444' : 'rgba(209,213,219,1)' }}>
+                          <span className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'rgba(250,204,21,0.1)', color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,1)' }}>{i + 1}</span>
                           {step}
                         </li>
                       ))}

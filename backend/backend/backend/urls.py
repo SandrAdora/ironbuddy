@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from api.views import CreateUserView, CoachChatView, WorkoutPlanView, AIMealPlanView, UserProfileView, CustomWorkoutListView, CustomWorkoutDetailView, CustomMealListView, CustomMealDetailView, UserRecipeListView, UserRecipeDetailView, WorkoutVideoListView, WorkoutVideoDetailView, UserListView, UserSearchView, UserDetailView, ConversationListView, ConversationDetailView, MessageListView, MessageDetailView, WorkoutSessionListView, WorkoutSessionDetailView, PasswordResetRequestView, PasswordResetConfirmView, PasswordChangeView, MessageReactionView, WeightLogListView, WeightLogDetailView, DeleteAccountView, DeactivateAccountView, ReactivatingTokenView, ContactView, BodyMeasurementListView, BodyMeasurementDetailView, ExerciseListView, ExerciseDetailView, ExerciseMetaView, ExerciseFetchMediaView, YouTubeVideoView, UploadFileView, TranslateInstructionsView
+from api.views import CreateUserView, CoachChatView, WorkoutPlanView, AIMealPlanView, UserProfileView, CustomWorkoutListView, CustomWorkoutDetailView, CustomMealListView, CustomMealDetailView, UserRecipeListView, UserRecipeDetailView, WorkoutVideoListView, WorkoutVideoDetailView, UserListView, UserSearchView, UserDetailView, ConversationListView, ConversationDetailView, MessageListView, MessageDetailView, WorkoutSessionListView, WorkoutSessionDetailView, PasswordResetRequestView, PasswordResetConfirmView, PasswordChangeView, MessageReactionView, WeightLogListView, WeightLogDetailView, DeleteAccountView, DeactivateAccountView, ReactivatingTokenView, ContactView, BodyMeasurementListView, BodyMeasurementDetailView, ExerciseListView, ExerciseDetailView, ExerciseMetaView, ExerciseFetchMediaView, YouTubeVideoView, UploadFileView, TranslateInstructionsView, AnalyzeMealPhotoView, ImportRecipeView, WearableAuthUrlView, WearableConnectView, WearableDataView, WearableDisconnectView, WearableStatusView, AchievementListView, AchievementCheckView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
@@ -68,4 +68,13 @@ urlpatterns = [
     path("api/youtube-video/", YouTubeVideoView.as_view(), name="youtube_video"),
     path("api/upload/", UploadFileView.as_view(), name="upload_file"),
     path("api/translate-instructions/", TranslateInstructionsView.as_view(), name="translate_instructions"),
+    path("api/meals/analyze-photo/", AnalyzeMealPhotoView.as_view(), name="analyze_meal_photo"),
+    path("api/meals/import-recipe/", ImportRecipeView.as_view(), name="import_recipe"),
+    path("api/wearable/auth-url/", WearableAuthUrlView.as_view(), name="wearable_auth_url"),
+    path("api/wearable/connect/", WearableConnectView.as_view(), name="wearable_connect"),
+    path("api/wearable/data/", WearableDataView.as_view(), name="wearable_data"),
+    path("api/wearable/disconnect/", WearableDisconnectView.as_view(), name="wearable_disconnect"),
+    path("api/wearable/status/", WearableStatusView.as_view(), name="wearable_status"),
+    path("api/achievements/", AchievementListView.as_view(), name="achievements"),
+    path("api/achievements/check/", AchievementCheckView.as_view(), name="achievements_check"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

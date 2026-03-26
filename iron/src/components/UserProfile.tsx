@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n, { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../i18n';
 import { useUser } from '../context/userContext';
-import { apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, apiSaveProfile, type AIMealItem, type AIMealPlan, type WorkoutSession, type CustomWorkout } from '../api';
+import { useTheme } from '../context/themeContext';
+import { apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, apiSaveProfile, apiAnalyzeMealPhoto, apiCheckAchievements, type AIMealItem, type AIMealPlan, type WorkoutSession, type CustomWorkout, type BadgeMeta } from '../api';
+import BadgeToast from './BadgeToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import CoachChat from './CoachChat';
@@ -12,7 +14,6 @@ import MyWorkouts from './MyWorkouts';
 import MyMeals from './MyMeals';
 import Recipes from './Recipes';
 import CustomRecipeBuilder from './CustomRecipeBuilder';
-import WorkoutVideos from './WorkoutVideos';
 import ExerciseLibrary from './ExerciseLibrary';
 import CommunityChat from './CommunityChat';
 import ProgressTab from './ProgressTab';
@@ -152,7 +153,8 @@ function bmiCategory(bmi: number): { key: string; color: string } {
 }
 
 export default function UserProfile() {
-  const { profile, token, setProfile } = useUser();
+  const { profile, token, setProfile, logout } = useUser();
+  const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -166,11 +168,13 @@ export default function UserProfile() {
   const [communityUnread, setCommunityUnread] = useState(0);
   const [workoutTab, setWorkoutTab] = useState<'ai' | 'my' | 'library'>('ai');
   const [mealTab, setMealTab] = useState<'ai' | 'my' | 'recipes' | 'custom' | 'ingredients'>('ai');
-  const [settingsTab, setSettingsTab] = useState<'account' | 'password' | 'legal' | 'delete_account' | 'languages'>('account');
-  const [editingWeight, setEditingWeight] = useState(false);
-  const [weightInput, setWeightInput] = useState(String(profile.weight ?? ''));
-  const [editingGoal, setEditingGoal] = useState(false);
-  const [editingLevel, setEditingLevel] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<'account' | 'password' | 'legal' | 'delete_account' | 'languages' | 'appearance'>('account');
+  // Meal photo analysis
+  const [photoAnalyzing, setPhotoAnalyzing] = useState(false);
+  const [photoResult, setPhotoResult]       = useState<null | { meal_name: string; description: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; ingredients: string[]; confidence: string }>(null);
+  const [photoError, setPhotoError]         = useState('');
+  const photoInputRef                       = useRef<HTMLInputElement>(null);
+
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const [uploadError, setUploadError] = useState('');
@@ -187,6 +191,29 @@ export default function UserProfile() {
   const [mealSuggIdx, setMealSuggIdx] = useState<Record<string, number>>({});
   const [nutritionOpen, setNutritionOpen] = useState(false);
   const [closedMealCards, setClosedMealCards] = useState<Set<string>>(new Set());
+
+  // Achievement toast state
+  const [pendingBadges, setPendingBadges] = useState<BadgeMeta[]>([]);
+
+  function isTokenFresh(t: string): boolean {
+    try {
+      const exp = JSON.parse(atob(t.split('.')[1])).exp as number;
+      return exp > Date.now() / 1000 + 60; // at least 60s left
+    } catch { return false; }
+  }
+
+  const triggerAchievementCheck = () => {
+    if (!token || !isTokenFresh(token)) return;
+    apiCheckAchievements(token).then((badges) => {
+      if (badges.length > 0) setPendingBadges(prev => [...prev, ...badges]);
+    }).catch(() => {});
+  };
+
+  // Check achievements only when we have a fresh token (fires after login / token refresh)
+  useEffect(() => {
+    if (token && isTokenFresh(token)) triggerAchievementCheck();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   // AI Meal Plan state
   const [aiMealPlan, setAiMealPlan] = useState<AIMealPlan | null>(null);
@@ -247,6 +274,8 @@ export default function UserProfile() {
   // Editable ingredients in AI Meals
   const [editedIngredients, setEditedIngredients] = useState<Record<string, string[]>>({});
   const [newIngInputs, setNewIngInputs] = useState<Record<string, string>>({});
+  const [shoppingListOpen, setShoppingListOpen] = useState(false);
+  const [shoppingListCopied, setShoppingListCopied] = useState(false);
 
   function getMealIngredients(meal: AIMealItem): string[] {
     return editedIngredients[meal.meal] ?? meal.ingredients;
@@ -461,18 +490,17 @@ export default function UserProfile() {
 
   if (!token) return null;
 
-  const saveWeight = () => {
-    const val = parseFloat(weightInput);
-    if (!isNaN(val) && val > 0) setProfile((p) => ({ ...p, weight: val }));
-    setEditingWeight(false);
-  };
-
   const bmi = calcBMI(profile.weight, profile.height);
   const bmiInfo = bmi ? bmiCategory(bmi) : null;
   const goalData = buildGoalData(profile.fitnessGoals);
 
   return (
     <div className="flex min-h-screen bg-[--color-gym-dark] text-white pt-16">
+
+      {/* Achievement toast */}
+      {pendingBadges.length > 0 && (
+        <BadgeToast badges={pendingBadges} onDone={() => setPendingBadges([])} />
+      )}
 
       {/* Hidden file input — outside sidebar so it works on mobile too */}
       <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
@@ -537,7 +565,7 @@ export default function UserProfile() {
         )}
 
         {/* Nav */}
-        <nav className="flex flex-col gap-1">
+        <nav className="flex flex-col gap-1 mt-6">
           {NAV_IDS.map((item) => (
             <button
               key={item.id}
@@ -545,9 +573,9 @@ export default function UserProfile() {
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wide transition-all duration-200
                 ${active === item.id
                   ? 'bg-yellow-300/15 text-[--color-iron-gold] shadow-[0_0_12px_rgba(250,204,21,0.2)]'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                  : theme === 'light' ? 'text-gray-500 hover:text-gray-900 hover:bg-black/5' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
             >
-              <span className="text-lg">{item.icon}</span>
+              <span className="text-lg" style={{ filter: theme === 'light' ? 'none' : 'grayscale(1) sepia(1) saturate(8) hue-rotate(0deg) brightness(1.2)' }}>{item.icon}</span>
               {t(item.key)}
               {item.id === 'community' && communityUnread > 0 && (
                 <span className="ml-auto bg-yellow-300 text-black text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none">
@@ -558,18 +586,27 @@ export default function UserProfile() {
           ))}
         </nav>
 
-        {/* Logout */}
-        <Link 
-          to={"/" }
-          className="mt-6 w-full py-1.5 sm:py-2.5 text-black font-bold rounded-lg uppercase text-xs sm:text-sm"
-        >
-          {t('common.sign_out')}
-        </Link>
+        <div className="mt-auto pt-6">
+          <button
+            onClick={() => { logout(); navigate('/'); }}
+            className="text-xs font-bold uppercase tracking-[0.14em] text-gray-400 hover:text-white transition-colors duration-200 bg-transparent border-none cursor-pointer p-0"
+          >
+            {t('nav.sign_out')}
+          </button>
+        </div>
+
       </motion.aside>
 
 
       {/* ── Mobile bottom nav (mobile only) ─────────────── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[--color-gym-dark]/95 backdrop-blur-xl border-t border-white/10 flex items-center gap-1 px-2 py-2 overflow-x-auto">
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl flex items-center gap-1 px-2 py-2 overflow-x-auto"
+        style={{
+          background: theme === 'light' ? 'rgba(240,240,243,0.97)' : 'rgba(6,6,8,0.95)',
+          borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.08)',
+          boxShadow: theme === 'light' ? '0 -2px 16px rgba(0,0,0,0.08)' : 'none',
+        }}
+      >
         {NAV_IDS.map((item) => (
           <button
             key={item.id}
@@ -577,9 +614,26 @@ export default function UserProfile() {
             className={`shrink-0 flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 min-w-0 relative
               ${active === item.id
                 ? 'text-[--color-iron-gold]'
-                : 'text-gray-500'}`}
+                : theme === 'light' ? 'text-gray-600' : 'text-gray-500'}`}
           >
-            <span className="text-xl">{item.icon}</span>
+            <span
+              className="w-9 h-9 flex items-center justify-center rounded-xl text-xl transition-all duration-300"
+              style={theme === 'light' ? {
+                background: active === item.id ? 'rgba(250,204,21,0.15)' : 'rgba(0,0,0,0.06)',
+                border: active === item.id ? '1px solid rgba(250,204,21,0.6)' : '1px solid rgba(0,0,0,0.1)',
+                boxShadow: active === item.id ? '0 0 10px rgba(250,204,21,0.5), 0 0 20px rgba(250,204,21,0.25)' : 'none',
+              } : {
+                background: active === item.id
+                  ? 'rgba(250,204,21,0.12)'
+                  : 'rgba(255,255,255,0.06)',
+                border: active === item.id
+                  ? '1px solid rgba(250,204,21,0.45)'
+                  : '1px solid rgba(255,255,255,0.09)',
+                boxShadow: active === item.id
+                  ? '0 0 12px rgba(250,204,21,0.5), 0 0 24px rgba(250,204,21,0.2), inset 0 1px 0 rgba(255,255,255,0.08)'
+                  : 'inset 0 1px 0 rgba(255,255,255,0.06)',
+              }}
+            >{item.icon}</span>
             <span className="text-[10px] font-bold uppercase tracking-wide">{t(item.key)}</span>
             {item.id === 'community' && communityUnread > 0 && (
               <span className="absolute -top-0.5 right-0 bg-yellow-300 text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center leading-none">
@@ -588,13 +642,13 @@ export default function UserProfile() {
             )}
           </button>
         ))}
-        <Link
-          to="/"
-          className="shrink-0 flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-gray-500 transition-all duration-200"
+        <button
+          onClick={() => { logout(); navigate('/'); }}
+          className={`shrink-0 flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 bg-transparent border-none cursor-pointer ${theme === 'light' ? 'text-gray-600' : 'text-gray-500'}`}
         >
           <span className="text-xl">🚪</span>
           <span className="text-[10px] font-bold uppercase tracking-wide">{t('common.out')}</span>
-        </Link>
+        </button>
       </nav>
 
       {/* ── Active session banner ────────────────────── */}
@@ -683,11 +737,11 @@ export default function UserProfile() {
               >
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
-                    <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Today</p>
-                    <h2 className="text-lg font-black uppercase italic mt-0.5">🏋️ Today's Workout</h2>
+                    <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.today_label')}</p>
+                    <h2 className="text-lg font-black uppercase italic mt-0.5">{t('dashboard.today_workout')}</h2>
                   </div>
                   {trainedToday && (
-                    <span className="text-[10px] font-black bg-green-500/15 text-green-400 px-2.5 py-1 rounded-full border border-green-500/30 shrink-0">✓ Done today</span>
+                    <span className="text-[10px] font-black bg-green-500/15 text-green-400 px-2.5 py-1 rounded-full border border-green-500/30 shrink-0">{t('dashboard.done_today')}</span>
                   )}
                 </div>
 
@@ -696,7 +750,7 @@ export default function UserProfile() {
                     <div className="flex items-center justify-between gap-4 flex-wrap">
                       <div>
                         <p className="text-white font-black text-base">{suggestedWorkout.name}</p>
-                        <p className="text-gray-500 text-xs mt-0.5">{suggestedWorkout.exercises.length} exercise{suggestedWorkout.exercises.length !== 1 ? 's' : ''}</p>
+                        <p className="text-gray-500 text-xs mt-0.5">{t('dashboard.exercises', { count: suggestedWorkout.exercises.length })}</p>
                       </div>
                       <button
                         onClick={() => {
@@ -705,9 +759,9 @@ export default function UserProfile() {
                         }}
                         disabled={!!activeSession}
                         className="font-black text-sm border-none outline-none bg-transparent active:scale-95 transition-colors disabled:opacity-40 shrink-0"
-                        style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.9), 0 0 24px rgba(250,204,21,0.5), 0 0 40px rgba(250,204,21,0.25)' }}
+                        style={{ color: theme === 'light' ? '#000000' : '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.9), 0 0 24px rgba(250,204,21,0.5), 0 0 40px rgba(250,204,21,0.25)' }}
                       >
-                        {activeSession ? 'In Progress' : trainedToday ? '▶ Go Again' : '▶ Start'}
+                        {activeSession ? t('dashboard.in_progress_btn') : trainedToday ? t('dashboard.go_again') : t('dashboard.start_btn')}
                       </button>
                     </div>
                     {/* Exercise preview */}
@@ -716,18 +770,18 @@ export default function UserProfile() {
                         <span key={i} className="text-[10px] bg-white/5 border border-white/10 text-gray-400 px-2 py-0.5 rounded-full font-bold">{ex.name}</span>
                       ))}
                       {suggestedWorkout.exercises.length > 5 && (
-                        <span className="text-[10px] text-gray-600 px-1 py-0.5 font-bold">+{suggestedWorkout.exercises.length - 5} more</span>
+                        <span className="text-[10px] text-gray-600 px-1 py-0.5 font-bold">{t('dashboard.more_exercises', { count: suggestedWorkout.exercises.length - 5 })}</span>
                       )}
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center justify-between gap-4 flex-wrap">
-                    <p className="text-gray-500 text-sm">No workouts saved yet.</p>
+                    <p className="text-gray-500 text-sm">{t('dashboard.no_workouts')}</p>
                     <button
                       onClick={() => setActive('workouts')}
                       className="text-xs font-black border-none outline-none bg-transparent"
-                      style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7)' }}
-                    >+ Create workout</button>
+                      style={{ color: theme === 'light' ? '#d97706' : '#facc15', textShadow: theme === 'light' ? 'none' : '0 0 10px rgba(250,204,21,0.7)' }}
+                    >{t('dashboard.create_workout')}</button>
                   </div>
                 )}
               </motion.div>
@@ -740,8 +794,8 @@ export default function UserProfile() {
                   className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 md:p-6 hover:border-yellow-300/20 transition-all duration-300"
                 >
                   <div className="mb-4">
-                    <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">This Week</p>
-                    <h2 className="text-lg font-black uppercase italic mt-0.5">🎯 Weekly Goal</h2>
+                    <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.this_week_label')}</p>
+                    <h2 className="text-lg font-black uppercase italic mt-0.5">{t('dashboard.weekly_goal')}</h2>
                   </div>
                   <div className="flex items-center gap-5">
                     <svg viewBox="0 0 110 110" className="w-24 h-24 shrink-0">
@@ -755,16 +809,16 @@ export default function UserProfile() {
                             strokeDasharray={`${pct * circ} ${circ}`} transform="rotate(-90 55 55)"
                             style={{ filter: `drop-shadow(0 0 6px ${col}aa)` }} />
                           <text x={55} y={51} textAnchor="middle" fill={col} fontSize="18" fontWeight="900" fontFamily="helvetica">{thisWeekDone}</text>
-                          <text x={55} y={64} textAnchor="middle" fill="rgba(156,163,175,0.6)" fontSize="9" fontFamily="helvetica">of {weeklyGoal}</text>
+                          <text x={55} y={64} textAnchor="middle" fill="rgba(156,163,175,0.6)" fontSize="9" fontFamily="helvetica">{t('dashboard.of_goal', { count: weeklyGoal })}</text>
                         </>);
                       })()}
                     </svg>
                     <div className="space-y-2 flex-1">
                       <p className="text-white font-black text-xl">{thisWeekDone}<span className="text-gray-500 text-sm font-bold"> / {weeklyGoal}</span></p>
-                      <p className="text-gray-400 text-xs">workouts this week</p>
+                      <p className="text-gray-400 text-xs">{t('dashboard.workouts_this_week')}</p>
                       {thisWeekDone >= weeklyGoal
-                        ? <p className="text-green-400 text-xs font-black">🎉 Goal reached!</p>
-                        : <p className="text-gray-500 text-xs">{weeklyGoal - thisWeekDone} more to go</p>
+                        ? <p className="text-green-400 text-xs font-black">{t('dashboard.goal_reached')}</p>
+                        : <p className="text-gray-500 text-xs">{t('dashboard.more_to_go', { count: weeklyGoal - thisWeekDone })}</p>
                       }
                       <button
                         onClick={() => setActive('goals')}
@@ -772,7 +826,7 @@ export default function UserProfile() {
                         style={{ color: 'rgba(156,163,175,0.5)' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 8px rgba(250,204,21,0.6)'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.5)'; }}
-                      >✎ Change goal</button>
+                      >{t('dashboard.change_goal')}</button>
                     </div>
                   </div>
                 </motion.div>
@@ -783,8 +837,8 @@ export default function UserProfile() {
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">History</p>
-                      <h2 className="text-lg font-black uppercase italic mt-0.5">📋 Recent Activity</h2>
+                      <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.history_label')}</p>
+                      <h2 className="text-lg font-black uppercase italic mt-0.5">{t('dashboard.recent_activity')}</h2>
                     </div>
                     <button
                       onClick={() => setActive('progress')}
@@ -792,10 +846,10 @@ export default function UserProfile() {
                       style={{ color: 'rgba(156,163,175,0.5)' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 8px rgba(250,204,21,0.6)'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.5)'; }}
-                    >View all →</button>
+                    >{t('dashboard.view_all')}</button>
                   </div>
                   {finishedSessions.length === 0 ? (
-                    <p className="text-gray-500 text-sm text-center py-6">No workouts completed yet.</p>
+                    <p className="text-gray-500 text-sm text-center py-6">{t('dashboard.no_completed')}</p>
                   ) : (
                     <div className="space-y-1">
                       {[...finishedSessions]
@@ -809,7 +863,7 @@ export default function UserProfile() {
                               <span className="text-base shrink-0">{s.workout_type === 'ai' ? '🤖' : '✎'}</span>
                               <div className="flex-1 min-w-0">
                                 <p className="text-white text-sm font-bold truncate">{s.workout_name}</p>
-                                <p className="text-gray-500 text-[10px]">{isToday ? 'Today' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                                <p className="text-gray-500 text-[10px]">{isToday ? t('dashboard.today_label') : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
                               </div>
                               {s.duration_min && (
                                 <span className="text-[--color-iron-gold] text-xs font-black shrink-0">{s.duration_min}m</span>
@@ -842,8 +896,8 @@ export default function UserProfile() {
               {/* ── Weekly Goal ── */}
               <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
                 <div>
-                  <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Goal</p>
-                  <h2 className="text-lg font-black uppercase italic mt-0.5">🎯 Weekly Goal</h2>
+                  <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('goals.goal_label')}</p>
+                  <h2 className="text-lg font-black uppercase italic mt-0.5">{t('goals.weekly_goal')}</h2>
                 </div>
                 <div className="flex items-center gap-6 flex-wrap">
                   {/* ring */}
@@ -859,15 +913,15 @@ export default function UserProfile() {
                           strokeDasharray={`${dash} ${circ}`} transform="rotate(-90 55 55)"
                           style={{ filter: `drop-shadow(0 0 6px ${pct >= 1 ? 'rgba(74,222,128,0.7)' : 'rgba(253,224,71,0.7)'})` }} />
                         <text x={55} y={51} textAnchor="middle" fill={col} fontSize="18" fontWeight="900" fontFamily="helvetica">{thisWeekDone}</text>
-                        <text x={55} y={64} textAnchor="middle" fill="rgba(156,163,175,0.6)" fontSize="9" fontFamily="helvetica">of {weeklyGoal}</text>
+                        <text x={55} y={64} textAnchor="middle" fill="rgba(156,163,175,0.6)" fontSize="9" fontFamily="helvetica">{t('goals.of_goal', { count: weeklyGoal })}</text>
                       </>);
                     })()}
                   </svg>
                   <div className="flex-1 min-w-[160px] space-y-3">
                     <div>
                       <p className="text-white font-black text-2xl">{thisWeekDone}<span className="text-gray-500 text-base font-bold"> / {weeklyGoal}</span></p>
-                      <p className="text-gray-400 text-xs mt-0.5">workouts this week</p>
-                      {thisWeekDone >= weeklyGoal && <p className="text-green-400 text-xs font-black mt-1">🎉 Goal reached!</p>}
+                      <p className="text-gray-400 text-xs mt-0.5">{t('goals.workouts_this_week')}</p>
+                      {thisWeekDone >= weeklyGoal && <p className="text-green-400 text-xs font-black mt-1">{t('goals.goal_reached')}</p>}
                     </div>
                     {editingWeeklyGoal ? (
                       <div className="flex gap-2 items-center">
@@ -878,8 +932,8 @@ export default function UserProfile() {
                           className="w-16 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-white text-sm text-center focus:outline-none focus:border-yellow-300/60"
                           autoFocus
                         />
-                        <button onClick={() => saveWeeklyGoal(parseInt(weeklyGoalDraft))} className="text-xs font-black text-yellow-300">Save</button>
-                        <button onClick={() => setEditingWeeklyGoal(false)} className="text-xs text-gray-500">Cancel</button>
+                        <button onClick={() => saveWeeklyGoal(parseInt(weeklyGoalDraft))} className="text-xs font-black text-yellow-300">{t('common.save')}</button>
+                        <button onClick={() => setEditingWeeklyGoal(false)} className="text-xs text-gray-500">{t('common.cancel')}</button>
                       </div>
                     ) : (
                       <button
@@ -888,7 +942,7 @@ export default function UserProfile() {
                         style={{ color: 'rgba(156,163,175,0.6)' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 10px rgba(250,204,21,0.7)'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
-                      >✎ Change goal</button>
+                      >{t('goals.change_goal')}</button>
                     )}
                   </div>
                 </div>
@@ -899,16 +953,16 @@ export default function UserProfile() {
                 const w = profile.weight ?? null;
                 const h = profile.height ?? null;
                 const bmi = w && h ? +(w / ((h / 100) ** 2)).toFixed(1) : null;
-                const cat = bmi === null ? '' : bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Overweight' : 'Obese';
+                const cat = bmi === null ? '' : bmi < 18.5 ? t('bmi.underweight') : bmi < 25 ? t('bmi.normal') : bmi < 30 ? t('bmi.overweight') : t('bmi.obese');
                 const col = bmi === null ? '' : bmi < 18.5 ? '#60a5fa' : bmi < 25 ? '#4ade80' : bmi < 30 ? '#fde047' : '#f87171';
                 return (
                   <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
                     <div>
-                      <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Body</p>
-                      <h2 className="text-lg font-black uppercase italic mt-0.5">📊 BMI & Body Stats</h2>
+                      <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('goals.body_label')}</p>
+                      <h2 className="text-lg font-black uppercase italic mt-0.5">{t('goals.bmi_stats')}</h2>
                     </div>
                     {!bmi ? (
-                      <p className="text-gray-500 text-sm text-center py-4">Add your height and weight in your profile to see BMI.</p>
+                      <p className="text-gray-500 text-sm text-center py-4">{t('goals.bmi_missing')}</p>
                     ) : (
                       <>
                         <div className="flex items-center gap-6 flex-wrap">
@@ -917,15 +971,15 @@ export default function UserProfile() {
                             <p className="text-xs font-black uppercase tracking-widest mt-1" style={{ color: col }}>{cat}</p>
                           </div>
                           <div className="flex-1 space-y-2 min-w-[160px]">
-                            {w && <div className="flex justify-between text-sm"><span className="text-gray-400">Weight</span><span className="text-white font-black">{w} kg</span></div>}
-                            {h && <div className="flex justify-between text-sm"><span className="text-gray-400">Height</span><span className="text-white font-black">{h} cm</span></div>}
+                            {w && <div className="flex justify-between text-sm"><span className="text-gray-400">{t('goals.weight_label')}</span><span className="text-white font-black">{w} kg</span></div>}
+                            {h && <div className="flex justify-between text-sm"><span className="text-gray-400">{t('goals.height_label')}</span><span className="text-white font-black">{h} cm</span></div>}
                           </div>
                         </div>
                         <div className="relative h-3 rounded-full overflow-hidden" style={{ background: 'linear-gradient(to right, #60a5fa 0%, #4ade80 27%, #fde047 55%, #f87171 100%)' }}>
                           <div className="absolute top-0 w-1 h-full bg-white rounded-full shadow-lg" style={{ left: `${Math.min(Math.max((bmi - 15) / 25, 0), 1) * 100}%`, transform: 'translateX(-50%)' }} />
                         </div>
                         <div className="flex justify-between text-[9px] text-gray-500 font-bold">
-                          <span>15 Underweight</span><span>18.5</span><span>25 Overweight</span><span>30 Obese</span><span>40</span>
+                          <span>15 {t('bmi.underweight')}</span><span>18.5</span><span>25 {t('bmi.overweight')}</span><span>30 {t('bmi.obese')}</span><span>40</span>
                         </div>
                       </>
                     )}
@@ -966,34 +1020,90 @@ export default function UserProfile() {
                 {mealTab === 'ai' && (
                   <motion.div key="ai-meals" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }} className="space-y-4">
 
-                    {/* ── Today's Macro Tracker ── */}
+                    {/* ── Today's Macro Tracker (always visible) ── */}
                     {(() => {
                       const log = getDailyLog();
-                      if (log.length === 0) return null;
                       const totKcal = log.reduce((s, e) => s + e.kcal, 0);
                       const totP    = log.reduce((s, e) => s + e.protein_g, 0);
                       const totC    = log.reduce((s, e) => s + e.carbs_g, 0);
                       const totF    = log.reduce((s, e) => s + e.fat_g, 0);
+                      const empty = log.length === 0;
                       return (
-                        <div className="bg-teal-500/5 border border-teal-500/20 rounded-2xl px-4 py-3 flex items-center gap-4 flex-wrap">
-                          <span className="text-sm font-black text-teal-300 uppercase tracking-wide">📊 Today's Log</span>
-                          <div className="flex items-center gap-3 flex-wrap text-xs font-bold">
-                            <span className="text-white">{totKcal} kcal</span>
-                            <span className="text-gray-600">·</span>
-                            <span className="text-red-300">P {totP}g</span>
-                            <span className="text-sky-300">C {totC}g</span>
-                            <span className="text-orange-300">F {totF}g</span>
-                            <span className="text-gray-500 text-[10px]">({log.length} meal{log.length !== 1 ? 's' : ''} logged)</span>
-                          </div>
-                          <button
-                            onClick={() => { localStorage.removeItem(todayKey); setLoggedMeals({}); }}
-                            className="ml-auto text-[10px] text-gray-600 hover:text-red-400 transition-colors font-bold uppercase tracking-wide"
-                          >
-                            Clear
-                          </button>
+                        <div className={`border rounded-2xl px-4 py-3 flex items-center gap-4 flex-wrap transition-colors ${empty ? 'bg-white/3 border-white/8' : 'bg-teal-500/5 border-teal-500/20'}`}>
+                          <span className={`text-sm font-black uppercase tracking-wide ${empty ? 'text-gray-500' : 'text-teal-300'}`}>📊 Today's Log</span>
+                          {empty ? (
+                            <span className="text-xs text-gray-600 italic">No meals logged yet — tap <strong className="text-gray-400 not-italic">Log</strong> on any meal below</span>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-3 flex-wrap text-xs font-bold">
+                                <span style={{ color: theme === 'light' ? '#d97706' : '#ffffff' }}>{totKcal} kcal</span>
+                                <span className="text-gray-600">·</span>
+                                <span className="text-red-300">P {totP}g</span>
+                                <span className="text-sky-300">C {totC}g</span>
+                                <span className="text-orange-300">F {totF}g</span>
+                                <span className="text-gray-500 text-[10px]">({log.length} meal{log.length !== 1 ? 's' : ''} logged)</span>
+                              </div>
+                              <button
+                                onClick={() => { localStorage.removeItem(todayKey); setLoggedMeals({}); }}
+                                className="ml-auto text-[10px] text-gray-600 hover:text-red-400 transition-colors font-bold uppercase tracking-wide"
+                              >Clear</button>
+                            </>
+                          )}
                         </div>
                       );
                     })()}
+
+                    {/* ── AI Meal Photo Analyzer ── */}
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-[--color-iron-gold] font-black text-xs uppercase tracking-widest">📷 {t('meals.photo_title')}</p>
+                          <p className="text-gray-400 text-xs mt-0.5">{t('meals.photo_desc')}</p>
+                        </div>
+                        <button
+                          onClick={() => photoInputRef.current?.click()}
+                          disabled={photoAnalyzing}
+                          className="font-black text-xs uppercase tracking-wide active:scale-95 transition-all disabled:opacity-50 bg-transparent border-none p-0 cursor-pointer"
+                          style={{ color: theme === 'light' ? '#d97706' : '#facc15', textShadow: theme === 'light' ? 'none' : '0 0 10px rgba(250,204,21,0.9), 0 0 24px rgba(250,204,21,0.5)' }}
+                        >
+                          {photoAnalyzing ? t('common.processing') : `📷 ${t('meals.photo_btn')}`}
+                        </button>
+                        <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                          const file = e.target.files?.[0]; if (!file || !token) return;
+                          setPhotoAnalyzing(true); setPhotoError(''); setPhotoResult(null);
+                          try { setPhotoResult(await apiAnalyzeMealPhoto(token, file)); }
+                          catch (err) { setPhotoError(err instanceof Error ? err.message : 'Error'); }
+                          finally { setPhotoAnalyzing(false); e.target.value = ''; }
+                        }} />
+                      </div>
+                      {photoError && <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded-xl px-3 py-2">{photoError}</p>}
+                      {photoResult && (
+                        <div className="space-y-2 pt-1 border-t border-white/10">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-white font-black text-sm uppercase">{photoResult.meal_name}</p>
+                              <p className="text-gray-400 text-xs mt-0.5">{photoResult.description}</p>
+                            </div>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${photoResult.confidence === 'high' ? 'bg-green-500/15 text-green-400 border border-green-500/30' : photoResult.confidence === 'medium' ? 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/30' : 'bg-gray-500/15 text-gray-400 border border-gray-500/30'}`}>
+                              {photoResult.confidence}
+                            </span>
+                          </div>
+                          <div className="flex gap-3 flex-wrap text-xs font-bold">
+                            <span style={{ color: theme === 'light' ? '#d97706' : '#ffffff' }}>{photoResult.calories} kcal</span>
+                            <span className="text-red-300">P {photoResult.protein_g}g</span>
+                            <span className="text-sky-300">C {photoResult.carbs_g}g</span>
+                            <span className="text-orange-300">F {photoResult.fat_g}g</span>
+                          </div>
+                          {photoResult.ingredients.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {photoResult.ingredients.map((ing, i) => (
+                                <span key={i} className="text-[10px] bg-white/5 border border-white/10 text-gray-400 px-2 py-0.5 rounded-full">{ing}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
                     {/* Header row */}
                     <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -1007,13 +1117,29 @@ export default function UserProfile() {
                           </p>
                         )}
                       </div>
-                      <button
-                        onClick={() => fetchAIMeals(true)}
-                        disabled={aiMealLoading}
-                        className="shrink-0 text-yellow-300/70 hover:text-yellow-300 text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-transparent border-none outline-none"
-                      >
-                        {aiMealLoading ? `⏳ ${t('meals.generating')}` : `🔄 ${t('meals.regenerate')}`}
-                      </button>
+                      <div className="flex items-center gap-3">
+                        {aiMealPlan && (
+                          <button
+                            onClick={() => setShoppingListOpen(true)}
+                            className="shrink-0 text-gray-400 hover:text-yellow-300 text-xs font-bold transition-colors bg-transparent border-none outline-none"
+                            style={{ transition: 'color 0.2s, text-shadow 0.2s' }}
+                            onMouseEnter={e => (e.currentTarget.style.textShadow = '0 0 8px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)')}
+                            onMouseLeave={e => (e.currentTarget.style.textShadow = 'none')}
+                          >
+                            🛒 Shopping List
+                          </button>
+                        )}
+                        <button
+                          onClick={() => fetchAIMeals(true)}
+                          disabled={aiMealLoading}
+                          className="shrink-0 text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-transparent border-none outline-none"
+                          style={{ color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,0.7)' }}
+                          onMouseEnter={e => (e.currentTarget.style.color = theme === 'light' ? '#b45309' : 'rgba(253,224,71,1)')}
+                          onMouseLeave={e => (e.currentTarget.style.color = theme === 'light' ? '#d97706' : 'rgba(253,224,71,0.7)')}
+                        >
+                          {aiMealLoading ? `⏳ ${t('meals.generating')}` : `🔄 ${t('meals.regenerate')}`}
+                        </button>
+                      </div>
                     </div>
 
                     {aiMealError && (
@@ -1036,137 +1162,74 @@ export default function UserProfile() {
 
                     {!aiMealLoading && aiMealPlan && (
                       <>
-                        {/* Meal time sub-tabs */}
-                        <div className="flex gap-1.5 p-1 bg-white/5 border border-white/10 rounded-2xl">
-                          {([
-                            { id: 'breakfast', emoji: '☀️', label: t('meals.breakfast') },
-                            { id: 'lunch',     emoji: '🌤️', label: t('meals.lunch') },
-                            { id: 'dinner',    emoji: '🌙', label: t('meals.dinner') },
-                            { id: 'snacks',    emoji: '🍎', label: t('meals.snacks') },
-                          ] as const).map((tab) => (
-                            <button
-                              key={tab.id}
-                              onClick={() => { setMealTimeTab(tab.id); setClosedMealCards(s => { const n = new Set(s); n.delete(tab.id); return n; }); }}
-                              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-1 sm:px-3 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wide transition-all duration-200 ${
-                                mealTimeTab === tab.id
-                                  ? 'bg-gradient-to-br from-yellow-400/90 to-amber-500/80 text-black shadow-[0_2px_12px_rgba(251,191,36,0.4)]'
-                                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                              }`}
-                            >
-                              <span>{tab.emoji}</span>
-                              <span className="hidden sm:inline">{tab.label}</span>
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* Daily nutrition summary — collapsible dropdown */}
+                        {/* ── All-meals overview row ── */}
                         {(() => {
-                          const dayMeals = [
-                            (aiMealPlan.breakfast ?? [])[0],
-                            (aiMealPlan.lunch ?? [])[0],
-                            (aiMealPlan.dinner ?? [])[0],
-                            (aiMealPlan.snacks ?? [])[0],
-                          ].filter(Boolean);
-                          const hasNutrition = dayMeals.some(m => m.protein_g || m.carbs_g || m.fat_g);
-                          if (!hasNutrition) return null;
-                          const totalKcal = dayMeals.reduce((s, m) => s + (typeof m.kcal === 'number' ? m.kcal : parseInt(String(m.kcal)) || 0), 0);
-                          const totalP = dayMeals.reduce((s, m) => s + (m.protein_g ?? 0), 0);
-                          const totalC = dayMeals.reduce((s, m) => s + (m.carbs_g ?? 0), 0);
-                          const totalF = dayMeals.reduce((s, m) => s + (m.fat_g ?? 0), 0);
-                          const pct = (val: number, total: number) => total ? Math.round((val / total) * 100) : 0;
-                          const kcalFromP = totalP * 4;
-                          const kcalFromC = totalC * 4;
-                          const kcalFromF = totalF * 9;
+                          const slots = [
+                            { id: 'breakfast' as const, emoji: '☀️', label: t('meals.breakfast') },
+                            { id: 'lunch'     as const, emoji: '🌤️', label: t('meals.lunch') },
+                            { id: 'dinner'    as const, emoji: '🌙', label: t('meals.dinner') },
+                            { id: 'snacks'    as const, emoji: '🍎', label: t('meals.snacks') },
+                          ];
                           return (
-                            <div className="border border-white/10 rounded-2xl overflow-hidden">
-                              {/* Header / toggle */}
-                              <button
-                                onClick={() => setNutritionOpen(o => !o)}
-                                className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white/5 hover:bg-white/8 transition-colors"
-                              >
-                                <div className="flex flex-col gap-1 min-w-0">
-                                  <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{t('meals.daily_total')}</span>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    <span className="text-xs bg-yellow-400/15 text-yellow-300 font-black px-2.5 py-0.5 rounded-full border border-yellow-400/20">🔥 {totalKcal} kcal</span>
-                                    <span className="text-xs bg-red-500/10 text-red-300 font-bold px-2 py-0.5 rounded-full">P {totalP}g</span>
-                                    <span className="text-xs bg-sky-500/10 text-sky-300 font-bold px-2 py-0.5 rounded-full">C {totalC}g</span>
-                                    <span className="text-xs bg-orange-500/10 text-orange-300 font-bold px-2 py-0.5 rounded-full">F {totalF}g</span>
-                                  </div>
-                                </div>
-                                <span className={`text-gray-400 transition-transform duration-300 text-xs ${nutritionOpen ? 'rotate-180' : ''}`}>▼</span>
-                              </button>
-
-                              {/* Expandable body */}
-                              <AnimatePresence initial={false}>
-                                {nutritionOpen && (
-                                  <motion.div
-                                    key="nutrition-body"
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.25, ease: 'easeInOut' }}
-                                    className="overflow-hidden"
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {slots.map(slot => {
+                                const meal = (aiMealPlan[slot.id] ?? [])[mealSuggIdx[slot.id] ?? 0];
+                                if (!meal) return null;
+                                const k = typeof meal.kcal === 'number' ? meal.kcal : parseInt(String(meal.kcal)) || 0;
+                                const isLogged = !!loggedMeals[meal.meal];
+                                const isActive = mealTimeTab === slot.id;
+                                return (
+                                  <button
+                                    key={slot.id}
+                                    onClick={() => { setMealTimeTab(slot.id); setClosedMealCards(s => { const n = new Set(s); n.delete(slot.id); return n; }); }}
+                                    className={`text-left rounded-xl p-2.5 border transition-all duration-200 ${isActive ? 'border-yellow-400/40 bg-yellow-400/8 shadow-[0_0_12px_rgba(250,204,21,0.15)]' : 'border-white/10 bg-white/3 hover:bg-white/6 hover:border-white/20'}`}
                                   >
-                                    <div className="px-4 py-4 space-y-4 border-t border-white/10 bg-black/20">
-                                      {/* Macro bars */}
-                                      {[
-                                        { label: 'Protein', val: totalP, kcal: kcalFromP, pct: pct(kcalFromP, totalKcal), color: 'bg-red-400', text: 'text-red-300', border: 'border-red-400/30', bg: 'bg-red-500/10', emoji: '🥩' },
-                                        { label: 'Carbs',   val: totalC, kcal: kcalFromC, pct: pct(kcalFromC, totalKcal), color: 'bg-sky-400',  text: 'text-sky-300',  border: 'border-sky-400/30',  bg: 'bg-sky-500/10',  emoji: '🌾' },
-                                        { label: 'Fat',     val: totalF, kcal: kcalFromF, pct: pct(kcalFromF, totalKcal), color: 'bg-orange-400', text: 'text-orange-300', border: 'border-orange-400/30', bg: 'bg-orange-500/10', emoji: '🫒' },
-                                      ].map(macro => (
-                                        <div key={macro.label}>
-                                          <div className="flex items-center justify-between mb-1.5">
-                                            <span className={`text-xs font-black ${macro.text} flex items-center gap-1.5`}>
-                                              {macro.emoji} {macro.label}
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                              <span className={`text-[11px] font-bold ${macro.text} ${macro.bg} border ${macro.border} px-2 py-0.5 rounded-full`}>{macro.val}g</span>
-                                              <span className="text-[11px] text-gray-500 font-bold">{macro.kcal} kcal · {macro.pct}%</span>
-                                            </div>
-                                          </div>
-                                          <div className="h-2 bg-white/8 rounded-full overflow-hidden">
-                                            <motion.div
-                                              initial={{ width: 0 }}
-                                              animate={{ width: `${macro.pct}%` }}
-                                              transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-                                              className={`h-full ${macro.color} rounded-full`}
-                                            />
-                                          </div>
-                                        </div>
-                                      ))}
-
-                                      {/* Per-meal breakdown */}
-                                      <div className="pt-2 border-t border-white/10">
-                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Per Meal</p>
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                          {[
-                                            { label: t('meals.breakfast'), emoji: '☀️', meal: (aiMealPlan.breakfast ?? [])[0] },
-                                            { label: t('meals.lunch'),     emoji: '🌤️', meal: (aiMealPlan.lunch ?? [])[0] },
-                                            { label: t('meals.dinner'),    emoji: '🌙', meal: (aiMealPlan.dinner ?? [])[0] },
-                                            { label: t('meals.snacks'),    emoji: '🍎', meal: (aiMealPlan.snacks ?? [])[0] },
-                                          ].filter(x => x.meal).map(({ label, emoji, meal }) => {
-                                            const k = typeof meal!.kcal === 'number' ? meal!.kcal : parseInt(String(meal!.kcal)) || 0;
-                                            return (
-                                              <div key={label} className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-center">
-                                                <div className="text-lg mb-0.5">{emoji}</div>
-                                                <div className="text-[10px] text-gray-400 font-black uppercase mb-1">{label}</div>
-                                                <div className="text-xs text-yellow-300 font-black">{k} kcal</div>
-                                                <div className="text-[10px] text-gray-500 mt-0.5">
-                                                  P{meal!.protein_g ?? '—'} · C{meal!.carbs_g ?? '—'} · F{meal!.fat_g ?? '—'}
-                                                </div>
-                                              </div>
-                                            );
-                                          })}
-                                        </div>
-                                      </div>
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className="text-base">{slot.emoji}</span>
+                                      {isLogged && <span className="text-[9px] text-teal-400 font-black uppercase tracking-wide">✓ logged</span>}
                                     </div>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
+                                    <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-0.5">{slot.label}</div>
+                                    <div className="text-xs font-black text-white truncate">{meal.icon} {meal.meal}</div>
+                                    <div className="text-[10px] font-bold mt-0.5" style={{ color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,0.7)' }}>{k} kcal</div>
+                                  </button>
+                                );
+                              })}
                             </div>
                           );
                         })()}
 
+                        {/* ── Meal time sub-tabs with status dots ── */}
+                        <div className="flex gap-1.5 p-1 bg-white/5 border border-white/10 rounded-2xl">
+                          {([
+                            { id: 'breakfast' as const, emoji: '☀️', label: t('meals.breakfast') },
+                            { id: 'lunch'     as const, emoji: '🌤️', label: t('meals.lunch') },
+                            { id: 'dinner'    as const, emoji: '🌙', label: t('meals.dinner') },
+                            { id: 'snacks'    as const, emoji: '🍎', label: t('meals.snacks') },
+                          ]).map((tab) => {
+                            const meal = (aiMealPlan[tab.id] ?? [])[mealSuggIdx[tab.id] ?? 0];
+                            const isLogged = meal ? !!loggedMeals[meal.meal] : false;
+                            const isSaved  = meal ? !!savedMeals[meal.meal] : false;
+                            return (
+                              <button
+                                key={tab.id}
+                                onClick={() => { setMealTimeTab(tab.id); setClosedMealCards(s => { const n = new Set(s); n.delete(tab.id); return n; }); }}
+                                className={`relative flex-1 flex items-center justify-center gap-1.5 py-2 px-1 sm:px-3 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wide transition-all duration-200 ${
+                                  mealTimeTab === tab.id
+                                    ? 'bg-gradient-to-br from-yellow-400/90 to-amber-500/80 text-black shadow-[0_2px_12px_rgba(251,191,36,0.4)]'
+                                    : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                                }`}
+                              >
+                                <span>{tab.emoji}</span>
+                                <span className="hidden sm:inline">{tab.label}</span>
+                                {(isLogged || isSaved) && (
+                                  <span className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full ${isLogged ? 'bg-teal-400' : 'bg-yellow-400'}`} />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* ── Active meal card ── */}
                         <AnimatePresence mode="wait">
                           <motion.div
                             key={mealTimeTab}
@@ -1176,47 +1239,6 @@ export default function UserProfile() {
                             transition={{ duration: 0.18 }}
                             className="space-y-3"
                           >
-                            {/* Suggestion dropdown */}
-                            {(aiMealPlan[mealTimeTab] ?? []).length > 1 && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest shrink-0">Suggestion</span>
-                                <select
-                                  value={mealSuggIdx[mealTimeTab] ?? 0}
-                                  onChange={e => {
-                                    setMealSuggIdx(p => ({ ...p, [mealTimeTab]: Number(e.target.value) }));
-                                    setClosedMealCards(s => { const n = new Set(s); n.delete(mealTimeTab); return n; });
-                                  }}
-                                  className="flex-1 text-sm font-bold text-white border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-yellow-300/50 cursor-pointer"
-                                  style={{ background: '#060608' }}
-                                >
-                                  {(aiMealPlan[mealTimeTab] ?? []).map((m, i) => (
-                                    <option key={i} value={i} style={{ background: '#060608' }}>
-                                      {m.icon} {m.meal}
-                                    </option>
-                                  ))}
-                                </select>
-                                {/* Delete current suggestion */}
-                                <button
-                                  onClick={() => {
-                                    const idx = mealSuggIdx[mealTimeTab] ?? 0;
-                                    setAiMealPlan(prev => {
-                                      if (!prev) return prev;
-                                      const list = [...(prev[mealTimeTab] ?? [])];
-                                      list.splice(idx, 1);
-                                      const updated = { ...prev, [mealTimeTab]: list };
-                                      saveMealCache(userId ?? 0, profile.fitnessGoals, profile.language ?? 'en', updated);
-                                      return updated;
-                                    });
-                                    setMealSuggIdx(p => ({ ...p, [mealTimeTab]: Math.max(0, idx - 1) }));
-                                    setClosedMealCards(s => { const n = new Set(s); n.delete(mealTimeTab); return n; });
-                                  }}
-                                  className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-red-400 border border-white/10 hover:border-red-400/30 transition-all shrink-0"
-                                  style={{ background: '#060608' }}
-                                  title="Delete this suggestion"
-                                >🗑</button>
-                              </div>
-                            )}
-
                             {(() => {
                               const meals = aiMealPlan[mealTimeTab] ?? [];
                               const idx = mealSuggIdx[mealTimeTab] ?? 0;
@@ -1236,43 +1258,107 @@ export default function UserProfile() {
                                 <motion.div key={m.meal} {...fadeUp(0)}
                                   className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4
                                     hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)] transition-all duration-300">
+
+                                  {/* Card header: icon + name/desc + suggestion picker + close */}
                                   <div className="flex items-start gap-3">
                                     <span className="text-4xl shrink-0">{m.icon}</span>
                                     <div className="min-w-0 flex-1">
                                       <p className="font-black text-[--color-iron-gold] uppercase text-sm">{m.meal}</p>
                                       <p className="text-gray-400 text-xs mt-0.5">{m.desc}</p>
+                                      {/* Suggestion picker — integrated in header */}
+                                      {meals.length > 1 && (
+                                        <div className="flex items-center gap-1.5 mt-2">
+                                          <select
+                                            value={idx}
+                                            onChange={e => {
+                                              setMealSuggIdx(p => ({ ...p, [mealTimeTab]: Number(e.target.value) }));
+                                              setClosedMealCards(s => { const n = new Set(s); n.delete(mealTimeTab); return n; });
+                                            }}
+                                            className="flex-1 text-[11px] font-bold rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+                                            style={{
+                                              background: theme === 'light' ? '#ffffff' : '#0d0d10',
+                                              color: theme === 'light' ? '#111111' : 'rgba(255,255,255,0.75)',
+                                              border: theme === 'light' ? '1px solid rgba(0,0,0,0.15)' : '1px solid rgba(255,255,255,0.1)',
+                                            }}
+                                          >
+                                            {meals.map((opt, i) => (
+                                              <option key={i} value={i} style={{ background: theme === 'light' ? '#ffffff' : '#0d0d10', color: theme === 'light' ? '#111111' : '#ffffff' }}>
+                                                {opt.icon} {opt.meal}
+                                              </option>
+                                            ))}
+                                          </select>
+                                          <button
+                                            onClick={() => {
+                                              setAiMealPlan(prev => {
+                                                if (!prev) return prev;
+                                                const list = [...(prev[mealTimeTab] ?? [])];
+                                                list.splice(idx, 1);
+                                                const updated = { ...prev, [mealTimeTab]: list };
+                                                saveMealCache(userId ?? 0, profile.fitnessGoals, profile.language ?? 'en', updated);
+                                                return updated;
+                                              });
+                                              setMealSuggIdx(p => ({ ...p, [mealTimeTab]: Math.max(0, idx - 1) }));
+                                              setClosedMealCards(s => { const n = new Set(s); n.delete(mealTimeTab); return n; });
+                                            }}
+                                            className="w-6 h-6 rounded-md flex items-center justify-center text-gray-500 hover:text-red-400 transition-all shrink-0 text-[11px]"
+                                            style={{
+                                              background: theme === 'light' ? '#ffffff' : '#0d0d10',
+                                              border: theme === 'light' ? '1px solid rgba(0,0,0,0.15)' : '1px solid rgba(255,255,255,0.1)',
+                                            }}
+                                            title="Remove this suggestion"
+                                            aria-label="Remove meal suggestion"
+                                          >🗑</button>
+                                        </div>
+                                      )}
                                     </div>
                                     <button
                                       onClick={() => setClosedMealCards(s => new Set(s).add(mealTimeTab))}
                                       className="shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/10 transition-all text-base leading-none"
                                       title="Close"
+                                      aria-label="Close meal card"
                                     >×</button>
                                   </div>
-                                  <div className="flex flex-wrap items-center justify-between gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-2.5">
-                                    <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{t('meals.servings')}</span>
+
+                                  {/* Servings */}
+                                  <div
+                                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl px-3 py-2.5"
+                                    style={{
+                                      background: theme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(0,0,0,0.3)',
+                                      border: theme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)',
+                                    }}
+                                  >
+                                    <span className="text-[10px] uppercase font-black tracking-widest" style={{ color: theme === 'light' ? '#888' : 'rgba(156,163,175,1)' }}>{t('meals.servings')}</span>
                                     <div className="flex items-center gap-2">
                                       <div className="flex items-center gap-1.5">
                                         <button onClick={() => setSrv(m.meal, srv - 1)} disabled={srv <= 1}
-                                          className="w-7 h-7 rounded-lg bg-white/10 border border-white/10 hover:bg-red-500/20 hover:border-red-400/40 hover:text-red-300 text-gray-300 font-black text-sm
-                                            flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed active:scale-90">−</button>
-                                        <span className="text-white font-black text-sm w-5 text-center tabular-nums">{srv}</span>
+                                          className="w-7 h-7 rounded-lg font-black text-sm flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed active:scale-90 hover:text-red-400"
+                                          style={{
+                                            background: theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.1)',
+                                            border: theme === 'light' ? '1px solid rgba(0,0,0,0.12)' : '1px solid rgba(255,255,255,0.1)',
+                                            color: theme === 'light' ? '#444' : 'rgba(209,213,219,1)',
+                                          }}>−</button>
+                                        <span className="font-black text-sm w-5 text-center tabular-nums" style={{ color: theme === 'light' ? '#111' : '#fff' }}>{srv}</span>
                                         <button onClick={() => setSrv(m.meal, srv + 1)} disabled={srv >= 10}
-                                          className="w-7 h-7 rounded-lg bg-white/10 border border-white/10 hover:bg-green-500/20 hover:border-green-400/40 hover:text-green-300 text-gray-300 font-black text-sm
-                                            flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed active:scale-90">+</button>
+                                          className="w-7 h-7 rounded-lg font-black text-sm flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed active:scale-90 hover:text-green-500"
+                                          style={{
+                                            background: theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.1)',
+                                            border: theme === 'light' ? '1px solid rgba(0,0,0,0.12)' : '1px solid rgba(255,255,255,0.1)',
+                                            color: theme === 'light' ? '#444' : 'rgba(209,213,219,1)',
+                                          }}>+</button>
                                       </div>
-                                      <span className="text-xs bg-yellow-400/15 text-yellow-300 font-black px-3 py-1 rounded-full border border-yellow-400/20 shrink-0">
+                                      <span className="text-xs font-black px-3 py-1 rounded-full shrink-0"
+                                        style={{
+                                          background: theme === 'light' ? 'rgba(217,119,6,0.1)' : 'rgba(250,204,21,0.15)',
+                                          color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,1)',
+                                          border: theme === 'light' ? '1px solid rgba(217,119,6,0.25)' : '1px solid rgba(250,204,21,0.2)',
+                                        }}>
                                         {scaleKcal(m.kcal, srv)}
                                       </span>
                                     </div>
                                   </div>
-                                  {(m.protein_g || m.carbs_g || m.fat_g) && (
-                                    <div className="flex flex-wrap gap-1.5">
-                                      <span className="text-[11px] bg-red-500/10 text-red-300 font-bold px-2 py-0.5 rounded-full">P {scaleMacro(m.protein_g, srv)}g</span>
-                                      <span className="text-[11px] bg-sky-500/10 text-sky-300 font-bold px-2 py-0.5 rounded-full">C {scaleMacro(m.carbs_g, srv)}g</span>
-                                      <span className="text-[11px] bg-orange-500/10 text-orange-300 font-bold px-2 py-0.5 rounded-full">F {scaleMacro(m.fat_g, srv)}g</span>
-                                    </div>
-                                  )}
-                                  <div className="border-t border-white/10 pt-3 space-y-1.5">
+
+                                  {/* Ingredients (moved above macros) */}
+                                  <div className="space-y-1.5">
                                     <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">{t('meals.ingredients')}</p>
                                     <div className="flex flex-wrap gap-1.5 mb-2">
                                       {getMealIngredients(m).map((ing, j) => (
@@ -1284,6 +1370,7 @@ export default function UserProfile() {
                                               [m.meal]: getMealIngredients(m).filter((_, i) => i !== j),
                                             }))}
                                             className="text-gray-500 hover:text-red-400 transition-colors ml-0.5 leading-none"
+                                            aria-label={`Remove ingredient: ${scaleIngredient(ing, srv)}`}
                                           >×</button>
                                         </span>
                                       ))}
@@ -1312,83 +1399,77 @@ export default function UserProfile() {
                                           setEditedIngredients((prev) => ({ ...prev, [m.meal]: [...getMealIngredients(m), val] }));
                                           setNewIngInputs((p) => ({ ...p, [m.meal]: '' }));
                                         }}
-                                        className="px-3 py-1 bg-yellow-400/15 border border-yellow-400/30 text-yellow-300 rounded-lg text-[11px] hover:bg-yellow-400/25 transition-all font-black"
+                                        className="px-3 py-1 rounded-lg text-[11px] transition-all font-black"
+                                        style={{
+                                          background: theme === 'light' ? 'rgba(217,119,6,0.1)' : 'rgba(250,204,21,0.15)',
+                                          border: theme === 'light' ? '1px solid rgba(217,119,6,0.3)' : '1px solid rgba(250,204,21,0.3)',
+                                          color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,1)',
+                                        }}
                                       >+</button>
                                     </div>
                                   </div>
+
+                                  {/* Macros (now after ingredients) */}
+                                  {(m.protein_g || m.carbs_g || m.fat_g) && (
+                                    <div className="flex flex-wrap gap-1.5 border-t border-white/10 pt-3">
+                                      <span className="text-[11px] bg-red-500/10 text-red-300 font-bold px-2 py-0.5 rounded-full">P {scaleMacro(m.protein_g, srv)}g</span>
+                                      <span className="text-[11px] bg-sky-500/10 text-sky-300 font-bold px-2 py-0.5 rounded-full">C {scaleMacro(m.carbs_g, srv)}g</span>
+                                      <span className="text-[11px] bg-orange-500/10 text-orange-300 font-bold px-2 py-0.5 rounded-full">F {scaleMacro(m.fat_g, srv)}g</span>
+                                    </div>
+                                  )}
+
                                   {m.steps && m.steps.length > 0 && <MealSteps steps={m.steps} />}
+
+                                  {/* Action links */}
                                   {token && (
-                                    <div className="flex flex-wrap gap-2 pt-1">
-                                      <button
-                                        disabled={!!savedMeals[m.meal]}
-                                        onClick={async () => {
-                                          try {
-                                            await apiCreateCustomMeal(token, {
-                                              name: m.meal,
-                                              icon: m.icon,
-                                              kcal: scaleKcal(m.kcal, getSrv(m.meal)),
-                                              description: m.desc,
-                                              recipe_url: '',
-                                              ingredients: [],
-                                            });
-                                            setSavedMeals(prev => ({ ...prev, [m.meal]: true }));
-                                          } catch { /* ignore */ }
-                                        }}
-                                        className="flex-1 py-1 rounded-xl font-black uppercase tracking-wide transition-all duration-200 active:scale-95"
-                                        style={savedMeals[m.meal]
-                                          ? { fontSize: '0.6rem', background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', boxShadow: 'none', cursor: 'default' }
-                                          : { fontSize: '0.6rem', background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 24px rgba(250,204,21,0.08)' }
-                                        }
-                                      >
-                                        {savedMeals[m.meal] ? '✓ Saved' : t('meals.save_meal')}
-                                      </button>
-                                      <button
-                                        disabled={!!savedAsRecipes[m.meal]}
-                                        onClick={() => {
-                                          const key = `ironbuddy_custom_recipes_${userId}`;
-                                          const existing = JSON.parse(localStorage.getItem(key) || '[]');
-                                          const entry = {
-                                            id: Date.now(),
-                                            name: m.meal,
-                                            description: m.desc,
-                                            icon: m.icon,
-                                            prepTime: '',
-                                            cookTime: '',
-                                            servings: m.servings ?? String(getSrv(m.meal)),
-                                            kcal: scaleKcal(m.kcal, getSrv(m.meal)),
-                                            ingredients: getMealIngredients(m),
-                                            steps: Array.isArray(m.steps) ? m.steps : [],
-                                            created_at: new Date().toISOString(),
-                                          };
-                                          localStorage.setItem(key, JSON.stringify([entry, ...existing]));
-                                          setSavedAsRecipes(prev => ({ ...prev, [m.meal]: true }));
-                                          setMealTab('custom');
-                                        }}
-                                        className="px-2.5 py-1 rounded-lg font-black transition-all duration-200 active:scale-95 flex items-center gap-1 shrink-0 text-[10px] uppercase tracking-wide"
-                                        style={savedAsRecipes[m.meal]
-                                          ? { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', boxShadow: 'none', cursor: 'default' }
-                                          : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }
-                                        }
-                                        title="Save to My Recipes"
-                                      >
-                                        {savedAsRecipes[m.meal] ? '✓ Saved' : '📋 Recipe'}
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          logMealToday(m, getSrv(m.meal));
-                                          setLoggedMeals(prev => ({ ...prev, [m.meal]: true }));
-                                        }}
-                                        className="px-2 py-0.5 rounded-lg font-black uppercase tracking-wide transition-all duration-200 active:scale-95 shrink-0"
-                                        style={{
-                                          fontSize: '0.6rem',
-                                          ...(loggedMeals[m.meal]
-                                            ? { background: 'rgba(20,184,166,0.12)', color: '#2dd4bf', border: '1px solid rgba(20,184,166,0.3)', boxShadow: 'none', cursor: 'default' }
-                                            : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 24px rgba(250,204,21,0.08)' })
-                                        }}
-                                        title="Log to today's macro tracker"
-                                      >
-                                        {loggedMeals[m.meal] ? '✓' : 'Log'}
-                                      </button>
+                                    <div className="flex items-center gap-5 pt-2 border-t border-white/10 flex-wrap">
+                                      {/* Log — primary link */}
+                                      {loggedMeals[m.meal] ? (
+                                        <span className="text-xs font-black text-teal-400 uppercase tracking-wide">✓ Logged</span>
+                                      ) : (
+                                        <button
+                                          onClick={() => { logMealToday(m, getSrv(m.meal)); setLoggedMeals(prev => ({ ...prev, [m.meal]: true })); }}
+                                          className="text-xs font-black uppercase tracking-wide bg-transparent border-none outline-none cursor-pointer transition-all duration-200"
+                                          style={{ color: theme === 'light' ? '#d97706' : '#facc15' }}
+                                          onMouseEnter={e => { e.currentTarget.style.textShadow = theme === 'light' ? 'none' : '0 0 8px rgba(250,204,21,0.8), 0 0 20px rgba(250,204,21,0.5)'; e.currentTarget.style.color = theme === 'light' ? '#b45309' : '#facc15'; }}
+                                          onMouseLeave={e => { e.currentTarget.style.textShadow = 'none'; e.currentTarget.style.color = theme === 'light' ? '#d97706' : '#facc15'; }}
+                                        ><span style={{ filter: theme === 'light' ? 'none' : 'sepia(1) saturate(8) brightness(1.2)' }}>📊</span> Log to Today</button>
+                                      )}
+                                      {/* Save */}
+                                      {savedMeals[m.meal] ? (
+                                        <span className="text-xs font-black text-green-400 uppercase tracking-wide">✓ Saved</span>
+                                      ) : (
+                                        <button
+                                          onClick={async () => {
+                                            try {
+                                              await apiCreateCustomMeal(token, { name: m.meal, icon: m.icon, kcal: scaleKcal(m.kcal, getSrv(m.meal)), description: m.desc, recipe_url: '', ingredients: [] });
+                                              setSavedMeals(prev => ({ ...prev, [m.meal]: true }));
+                                            } catch { /* ignore */ }
+                                          }}
+                                          className="text-xs font-black uppercase tracking-wide bg-transparent border-none outline-none cursor-pointer transition-all duration-200"
+                                          style={{ color: theme === 'light' ? '#d97706' : '#facc15' }}
+                                          onMouseEnter={e => { e.currentTarget.style.textShadow = theme === 'light' ? 'none' : '0 0 8px rgba(250,204,21,0.8), 0 0 20px rgba(250,204,21,0.5)'; e.currentTarget.style.color = theme === 'light' ? '#b45309' : '#facc15'; }}
+                                          onMouseLeave={e => { e.currentTarget.style.textShadow = 'none'; e.currentTarget.style.color = theme === 'light' ? '#d97706' : '#facc15'; }}
+                                        >{t('meals.save_meal')}</button>
+                                      )}
+                                      {/* Recipe */}
+                                      {savedAsRecipes[m.meal] ? (
+                                        <span className="text-xs font-black text-green-400 uppercase tracking-wide">✓ Recipe Saved</span>
+                                      ) : (
+                                        <button
+                                          onClick={() => {
+                                            const key = `ironbuddy_custom_recipes_${userId}`;
+                                            const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                                            localStorage.setItem(key, JSON.stringify([{ id: Date.now(), name: m.meal, description: m.desc, icon: m.icon, prepTime: '', cookTime: '', servings: m.servings ?? String(getSrv(m.meal)), kcal: scaleKcal(m.kcal, getSrv(m.meal)), ingredients: getMealIngredients(m), steps: Array.isArray(m.steps) ? m.steps : [], created_at: new Date().toISOString() }, ...existing]));
+                                            setSavedAsRecipes(prev => ({ ...prev, [m.meal]: true }));
+                                            setMealTab('custom');
+                                          }}
+                                          className="text-xs font-black uppercase tracking-wide bg-transparent border-none outline-none cursor-pointer transition-all duration-200"
+                                          style={{ color: theme === 'light' ? '#d97706' : '#facc15' }}
+                                          onMouseEnter={e => { e.currentTarget.style.textShadow = theme === 'light' ? 'none' : '0 0 8px rgba(250,204,21,0.8), 0 0 20px rgba(250,204,21,0.5)'; e.currentTarget.style.color = theme === 'light' ? '#b45309' : '#facc15'; }}
+                                          onMouseLeave={e => { e.currentTarget.style.textShadow = 'none'; e.currentTarget.style.color = theme === 'light' ? '#d97706' : '#facc15'; }}
+                                        ><span style={{ filter: theme === 'light' ? 'none' : 'sepia(1) saturate(8) brightness(1.2)' }}>📋</span> Save Recipe</button>
+                                      )}
                                     </div>
                                   )}
                                 </motion.div>
@@ -1396,8 +1477,214 @@ export default function UserProfile() {
                             })()}
                           </motion.div>
                         </AnimatePresence>
+
+                        {/* ── Daily nutrition summary (moved below meal card) ── */}
+                        {(() => {
+                          const dayMeals = [
+                            (aiMealPlan.breakfast ?? [])[0],
+                            (aiMealPlan.lunch ?? [])[0],
+                            (aiMealPlan.dinner ?? [])[0],
+                            (aiMealPlan.snacks ?? [])[0],
+                          ].filter(Boolean);
+                          const hasNutrition = dayMeals.some(m => m.protein_g || m.carbs_g || m.fat_g);
+                          if (!hasNutrition) return null;
+                          const totalKcal = dayMeals.reduce((s, m) => s + (typeof m.kcal === 'number' ? m.kcal : parseInt(String(m.kcal)) || 0), 0);
+                          const totalP = dayMeals.reduce((s, m) => s + (m.protein_g ?? 0), 0);
+                          const totalC = dayMeals.reduce((s, m) => s + (m.carbs_g ?? 0), 0);
+                          const totalF = dayMeals.reduce((s, m) => s + (m.fat_g ?? 0), 0);
+                          const pct = (val: number, total: number) => total ? Math.round((val / total) * 100) : 0;
+                          const kcalFromP = totalP * 4;
+                          const kcalFromC = totalC * 4;
+                          const kcalFromF = totalF * 9;
+                          return (
+                            <div className="border border-white/10 rounded-2xl overflow-hidden">
+                              <button
+                                onClick={() => setNutritionOpen(o => !o)}
+                                className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white/5 hover:bg-white/8 transition-colors"
+                              >
+                                <div className="flex flex-col gap-1 min-w-0">
+                                  <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{t('meals.daily_total')}</span>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    <span className="text-xs font-black px-2.5 py-0.5 rounded-full" style={{ background: theme === 'light' ? 'rgba(217,119,6,0.1)' : 'rgba(250,204,21,0.15)', color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,1)', border: theme === 'light' ? '1px solid rgba(217,119,6,0.25)' : '1px solid rgba(250,204,21,0.2)' }}>🔥 {totalKcal} kcal</span>
+                                    <span className="text-xs bg-red-500/10 text-red-300 font-bold px-2 py-0.5 rounded-full">P {totalP}g</span>
+                                    <span className="text-xs bg-sky-500/10 text-sky-300 font-bold px-2 py-0.5 rounded-full">C {totalC}g</span>
+                                    <span className="text-xs bg-orange-500/10 text-orange-300 font-bold px-2 py-0.5 rounded-full">F {totalF}g</span>
+                                  </div>
+                                </div>
+                                <span className={`text-gray-400 transition-transform duration-300 text-xs ${nutritionOpen ? 'rotate-180' : ''}`}>▼</span>
+                              </button>
+                              <AnimatePresence initial={false}>
+                                {nutritionOpen && (
+                                  <motion.div
+                                    key="nutrition-body"
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                                    className="overflow-hidden"
+                                  >
+                                    <div className="px-4 py-4 space-y-4 border-t border-white/10 bg-black/20">
+                                      {[
+                                        { label: 'Protein', val: totalP, kcal: kcalFromP, pct: pct(kcalFromP, totalKcal), color: 'bg-red-400', text: 'text-red-300', border: 'border-red-400/30', bg: 'bg-red-500/10', emoji: '🥩' },
+                                        { label: 'Carbs',   val: totalC, kcal: kcalFromC, pct: pct(kcalFromC, totalKcal), color: 'bg-sky-400',  text: 'text-sky-300',  border: 'border-sky-400/30',  bg: 'bg-sky-500/10',  emoji: '🌾' },
+                                        { label: 'Fat',     val: totalF, kcal: kcalFromF, pct: pct(kcalFromF, totalKcal), color: 'bg-orange-400', text: 'text-orange-300', border: 'border-orange-400/30', bg: 'bg-orange-500/10', emoji: '🫒' },
+                                      ].map(macro => (
+                                        <div key={macro.label}>
+                                          <div className="flex items-center justify-between mb-1.5">
+                                            <span className={`text-xs font-black ${macro.text} flex items-center gap-1.5`}>{macro.emoji} {macro.label}</span>
+                                            <div className="flex items-center gap-2">
+                                              <span className={`text-[11px] font-bold ${macro.text} ${macro.bg} border ${macro.border} px-2 py-0.5 rounded-full`}>{macro.val}g</span>
+                                              <span className="text-[11px] text-gray-500 font-bold">{macro.kcal} kcal · {macro.pct}%</span>
+                                            </div>
+                                          </div>
+                                          <div className="h-2 bg-white/8 rounded-full overflow-hidden">
+                                            <motion.div
+                                              initial={{ width: 0 }}
+                                              animate={{ width: `${macro.pct}%` }}
+                                              transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
+                                              className={`h-full ${macro.color} rounded-full`}
+                                            />
+                                          </div>
+                                        </div>
+                                      ))}
+                                      <div className="pt-2 border-t border-white/10">
+                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Per Meal</p>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                          {[
+                                            { label: t('meals.breakfast'), emoji: '☀️', meal: (aiMealPlan.breakfast ?? [])[0] },
+                                            { label: t('meals.lunch'),     emoji: '🌤️', meal: (aiMealPlan.lunch ?? [])[0] },
+                                            { label: t('meals.dinner'),    emoji: '🌙', meal: (aiMealPlan.dinner ?? [])[0] },
+                                            { label: t('meals.snacks'),    emoji: '🍎', meal: (aiMealPlan.snacks ?? [])[0] },
+                                          ].filter(x => x.meal).map(({ label, emoji, meal }) => {
+                                            const k = typeof meal!.kcal === 'number' ? meal!.kcal : parseInt(String(meal!.kcal)) || 0;
+                                            return (
+                                              <div key={label} className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-center">
+                                                <div className="text-lg mb-0.5">{emoji}</div>
+                                                <div className="text-[10px] text-gray-400 font-black uppercase mb-1">{label}</div>
+                                                <div className="text-xs font-black" style={{ color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,1)' }}>{k} kcal</div>
+                                                <div className="text-[10px] text-gray-500 mt-0.5">P{meal!.protein_g ?? '—'} · C{meal!.carbs_g ?? '—'} · F{meal!.fat_g ?? '—'}</div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          );
+                        })()}
                       </>
                     )}
+
+                    {/* Shopping List Modal */}
+                    <AnimatePresence>
+                      {shoppingListOpen && aiMealPlan && (() => {
+                        const sections = [
+                          { label: t('meals.breakfast'), emoji: '☀️', key: 'breakfast' as const },
+                          { label: t('meals.lunch'),     emoji: '🌤️', key: 'lunch' as const },
+                          { label: t('meals.dinner'),    emoji: '🌙', key: 'dinner' as const },
+                          { label: t('meals.snacks'),    emoji: '🍎', key: 'snacks' as const },
+                        ];
+                        const allLines: string[] = [];
+                        sections.forEach(sec => {
+                          const items = aiMealPlan[sec.key] ?? [];
+                          if (!items.length) return;
+                          allLines.push(`${sec.emoji} ${sec.label.toUpperCase()}`);
+                          items.forEach(meal => {
+                            const ings = editedIngredients[meal.meal] ?? meal.ingredients;
+                            ings.forEach(ing => allLines.push(`  • ${ing}`));
+                          });
+                          allLines.push('');
+                        });
+                        const copyText = allLines.join('\n').trim();
+                        return (
+                          <motion.div
+                            key="shopping-overlay"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+                            style={{ background: 'rgba(0,0,0,0.75)' }}
+                            onClick={() => setShoppingListOpen(false)}
+                          >
+                            <motion.div
+                              initial={{ y: 40, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              exit={{ y: 40, opacity: 0 }}
+                              transition={{ duration: 0.22 }}
+                              className="w-full max-w-md rounded-2xl border border-white/15 overflow-hidden"
+                              style={{ background: '#0d0d10' }}
+                              onClick={e => e.stopPropagation()}
+                            >
+                              {/* Header */}
+                              <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+                                <div>
+                                  <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">AI Meal Plan</p>
+                                  <h3 className="text-base font-black text-white">🛒 Shopping List</h3>
+                                </div>
+                                <button
+                                  onClick={() => setShoppingListOpen(false)}
+                                  aria-label="Close shopping list"
+                                  className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all text-lg"
+                                >×</button>
+                              </div>
+
+                              {/* Sections */}
+                              <div className="px-5 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+                                {sections.map(sec => {
+                                  const items = aiMealPlan[sec.key] ?? [];
+                                  if (!items.length) return null;
+                                  const allIngs = items.flatMap(meal => editedIngredients[meal.meal] ?? meal.ingredients);
+                                  const unique = [...new Set(allIngs)];
+                                  return (
+                                    <div key={sec.key}>
+                                      <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">
+                                        {sec.emoji} {sec.label}
+                                      </p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {unique.map((ing, i) => (
+                                          <span key={i} className="bg-white/8 border border-white/10 rounded-full px-2.5 py-1 text-xs text-gray-200">
+                                            {ing}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Footer */}
+                              <div className="px-5 py-4 border-t border-white/10 flex gap-3">
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(copyText).then(() => {
+                                      setShoppingListCopied(true);
+                                      setTimeout(() => setShoppingListCopied(false), 2000);
+                                    });
+                                  }}
+                                  className="flex-1 py-2.5 rounded-xl font-black uppercase tracking-wide text-sm transition-all duration-200 active:scale-95"
+                                  style={shoppingListCopied
+                                    ? { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }
+                                    : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }
+                                  }
+                                >
+                                  {shoppingListCopied ? '✓ Copied!' : '📋 Copy List'}
+                                </button>
+                                <button
+                                  onClick={() => setShoppingListOpen(false)}
+                                  className="px-4 py-2.5 rounded-xl font-black uppercase tracking-wide text-sm text-gray-400 hover:text-white border border-white/10 hover:border-white/20 transition-all"
+                                >
+                                  Close
+                                </button>
+                              </div>
+                            </motion.div>
+                          </motion.div>
+                        );
+                      })()}
+                    </AnimatePresence>
 
                     {!aiMealLoading && !aiMealPlan && !aiMealError && (
                       <div className="bg-white/5 border border-white/10 rounded-2xl p-4 md:p-12 flex flex-col items-center gap-4 text-center">
@@ -1437,6 +1724,7 @@ export default function UserProfile() {
                             <span key={i} className="flex items-center gap-1 bg-green-500/10 border border-green-400/20 text-green-300 rounded-full px-3 py-1 text-xs font-semibold">
                               {ing}
                               <button onClick={() => setProfile((p) => ({ ...p, preferredIngredients: (p.preferredIngredients ?? []).filter((x) => x !== ing) }))}
+                                aria-label={`Remove preferred ingredient: ${ing}`}
                                 className="text-green-500 hover:text-red-400 transition-colors ml-0.5">×</button>
                             </span>
                           ))}
@@ -1451,6 +1739,7 @@ export default function UserProfile() {
                             <span key={i} className="flex items-center gap-1 bg-red-500/10 border border-red-400/20 text-red-300 rounded-full px-3 py-1 text-xs font-semibold">
                               {ing.slice(1)}
                               <button onClick={() => setProfile((p) => ({ ...p, preferredIngredients: (p.preferredIngredients ?? []).filter((x) => x !== ing) }))}
+                                aria-label={`Remove disliked ingredient: ${ing.slice(1)}`}
                                 className="text-red-500 hover:text-red-300 transition-colors ml-0.5">×</button>
                             </span>
                           ))}
@@ -1519,7 +1808,7 @@ export default function UserProfile() {
                         ? <><span style={{ color: '#facc15' }}>✎</span> {t(tab.key)}</>
                         : tab.id === 'library'
                           ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}>📚</span> {t(tab.key)}</>
-                          : t(tab.key)
+                          : t((tab as {key: string}).key)
                     }
                   </button>
                 ))}
@@ -1543,6 +1832,7 @@ export default function UserProfile() {
                       onStartWorkout={activeSession ? undefined : startWorkout}
                       autoStartName={pendingStartName}
                       onAutoStartConsumed={() => setPendingStartName(undefined)}
+                      onAchievementUnlocked={triggerAchievementCheck}
                     />
                   </motion.div>
                 )}
@@ -1562,6 +1852,7 @@ export default function UserProfile() {
                 token={token!}
                 currentUserId={getUserIdFromToken(token!) ?? 0}
                 onUnreadChange={setCommunityUnread}
+                onAchievementUnlocked={triggerAchievementCheck}
               />
             </motion.div>
           )}
@@ -1577,6 +1868,7 @@ export default function UserProfile() {
                 currentWeight={profile.weight ?? null}
                 height={profile.height ?? null}
                 userId={userId ?? 0}
+                onAchievementUnlocked={triggerAchievementCheck}
               />
             </motion.div>
           )}
@@ -1594,6 +1886,7 @@ export default function UserProfile() {
                     { id: 'password',       icon: '🔑', label: t('settings.tabs.password'), desc: t('settings.tabs.password_desc') },
                     { id: 'legal',          icon: '📜', label: t('settings.tabs.legal'),    desc: t('settings.tabs.legal_desc') },
                     { id: 'languages',      icon: '🌍', label: t('settings.tabs.languages'),desc: t('settings.tabs.languages_desc') },
+                    { id: 'appearance',     icon: '🎨', label: t('settings.tabs.appearance'), desc: t('settings.tabs.appearance_desc') },
                     { id: 'delete_account', icon: '⚠️', label: t('settings.tabs.danger'),   desc: t('settings.tabs.danger_desc') },
                   ] as const).map((tab) => (
                     <button
@@ -2053,6 +2346,33 @@ export default function UserProfile() {
                     </div>
                   </motion.div>
                 )}
+                {settingsTab === 'appearance' && (
+                  <motion.div key="appearance" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6 space-y-5">
+                      <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">🎨 {t('settings.tabs.appearance')}</p>
+
+                      {/* Dark / Light toggle */}
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="text-white font-bold text-sm">{t('appearance.theme')}</p>
+                          <p className="text-gray-400 text-xs mt-0.5">{t('appearance.theme_desc')}</p>
+                        </div>
+                        <button
+                          onClick={toggleTheme}
+                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm uppercase tracking-wide transition-all duration-300 active:scale-95"
+                          style={{
+                            background: theme === 'dark' ? 'rgba(250,204,21,0.12)' : 'rgba(0,0,0,0.08)',
+                            border: theme === 'dark' ? '1px solid rgba(250,204,21,0.3)' : '1px solid rgba(0,0,0,0.15)',
+                            color: theme === 'dark' ? '#facc15' : '#0a0a0a',
+                          }}
+                        >
+                          <span>{theme === 'dark' ? '🌙' : '☀️'}</span>
+                          <span>{theme === 'dark' ? t('appearance.dark') : t('appearance.light')}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
               </AnimatePresence>
                 </div>{/* end content panel */}
               </div>{/* end sidebar + content flex */}
@@ -2165,15 +2485,6 @@ export default function UserProfile() {
 
 // ── Sub-components ─────────────────────────────────────────────
 
-function SidebarStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between items-center">
-      <span className="text-xs text-gray-500 uppercase font-bold">{label}</span>
-      <span className="text-white text-xs font-semibold truncate max-w-28 text-right">{value}</span>
-    </div>
-  );
-}
-
 function SectionHeader({ title, sub }: { title: string; sub: string }) {
   return (
     <div>
@@ -2255,58 +2566,6 @@ function MealSteps({ steps }: { steps: string[] }) {
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-function MealCard({ meals, onNavigate }: { meals: AIMealItem[] | null; onNavigate: () => void }) {
-  const { t } = useTranslation();
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
-      className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-4
-        hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)] transition-all duration-300"
-    >
-      <button onClick={onNavigate} className="flex items-center justify-between group text-left">
-        <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">{t('meals.ai_tab')}</p>
-        <span className="text-gray-600 group-hover:text-yellow-300 text-xs font-bold uppercase tracking-wide transition-colors">
-          {t('meals.view_all')}
-        </span>
-      </button>
-      {meals === null ? (
-        <button
-          onClick={onNavigate}
-          className="flex flex-col items-center gap-2 py-6 text-center bg-white/5 border border-white/10 rounded-xl
-            hover:border-yellow-300/30 hover:bg-yellow-300/5 transition-all duration-150"
-        >
-          <span className="text-3xl">🥗</span>
-          <p className="text-gray-400 text-xs">{t('meals.tap_to_generate')}</p>
-        </button>
-      ) : (
-        <>
-          {[
-            { label: `☀️ ${t('meals.breakfast')}`, meal: meals[0] },
-            { label: `🌤️ ${t('meals.lunch')}`,     meal: meals[1] },
-            { label: `🌙 ${t('meals.dinner')}`,    meal: meals[2] },
-          ].map(({ label, meal }) => meal && (
-            <button
-              key={meal.meal}
-              onClick={onNavigate}
-              className="flex items-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3
-                hover:border-yellow-300/30 hover:bg-yellow-300/5 active:scale-[0.98] transition-all duration-150 text-left w-full"
-            >
-              <span className="text-xl shrink-0">{meal.icon}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-gray-500 uppercase font-bold">{label}</p>
-                <p className="text-white text-sm font-bold truncate leading-tight">{meal.meal}</p>
-              </div>
-              <span className="text-yellow-300 text-xs font-bold shrink-0">{meal.kcal}</span>
-            </button>
-          ))}
-        </>
-      )}
-    </motion.div>
   );
 }
 

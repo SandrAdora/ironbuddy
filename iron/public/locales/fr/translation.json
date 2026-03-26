@@ -29,7 +29,9 @@
       "languages": "Paramètres de langue",
       "languages_desc": "Langue de l'app & du Coach",
       "danger": "Zone de danger",
-      "danger_desc": "Désactiver ou supprimer"
+      "danger_desc": "Désactiver ou supprimer",
+      "appearance": "Apparence",
+      "appearance_desc": "Thème & affichage"
     }
   },
   "language": {
@@ -91,7 +93,44 @@
     "quick_workout": "Donne-moi un entraînement {{goal}}",
     "quick_eat": "Que manger aujourd'hui ?",
     "quick_recover": "Comment récupérer plus vite ?",
-    "quick_progress": "Évalue ma progression"
+    "quick_progress": "Évalue ma progression",
+    "tab_workouts": "Mes entraînements",
+    "tab_meals": "Mes repas",
+    "tab_my_recipes": "Mes recettes",
+    "save_prompt_title": "Sauvegarder \"{{label}}\" dans {{tab}} ?",
+    "ingredients_label": "Ingrédients",
+    "add_ingredient": "Ajouter un ingrédient…",
+    "saved_to_tab": "✓ Sauvegardé dans {{tab}} !",
+    "saved_to_tab_and_recipes": "✓ Sauvegardé dans {{tab}} & Mes recettes !",
+    "saving": "Enregistrement…",
+    "save_to_tab": "💾 Sauvegarder dans {{tab}}",
+    "added_to_recipes": "✓ Ajouté aux recettes",
+    "add_to_my_recipes": "👨‍🍳 Ajouter à mes recettes",
+    "not_now": "Pas maintenant",
+    "error_generic": "Une erreur s'est produite. Réessaie."
+  },
+  "recipes": {
+    "eyebrow": "Vidéo",
+    "title": "Recettes vidéo",
+    "form_add": "Ajouter une recette",
+    "form_edit": "Modifier la recette",
+    "label_title": "Titre de la recette",
+    "placeholder_title": "ex. Pâtes riches en protéines",
+    "label_url": "URL vidéo ou recette",
+    "hint_youtube": "Les liens YouTube seront intégrés comme un lecteur vidéo.",
+    "btn_cancel": "Annuler",
+    "btn_save": "Sauvegarder la recette",
+    "btn_update": "Mettre à jour la recette",
+    "empty_title": "Pas encore de recettes",
+    "empty_desc": "Ajoute un lien YouTube et il apparaîtra ici comme un lecteur vidéo.",
+    "open_link": "Ouvrir le lien",
+    "error_title_required": "Le titre est obligatoire",
+    "error_url_required": "L'URL est obligatoire",
+    "import_btn": "Importer",
+    "import_title": "Importer une recette depuis une URL",
+    "import_placeholder": "https://marmiton.org/recettes/...",
+    "import_go": "Importer",
+    "import_hint": "Colle n'importe quelle URL de recette ou YouTube. Les ingrédients & macros seront extraits automatiquement."
   },
   "dashboard": {
     "title": "Aperçu",
@@ -106,7 +145,29 @@
     "ai_plan": "Plan IA",
     "ai_plan_desc": "Généré pour ton objectif",
     "my_workouts": "Mes entraînements",
-    "my_workouts_desc": "Tes routines personnalisées"
+    "my_workouts_desc": "Tes routines personnalisées",
+    "today_label": "Aujourd'hui",
+    "today_workout": "🏋️ Entraînement du jour",
+    "done_today": "✓ Fait aujourd'hui",
+    "exercises_one": "{{count}} exercice",
+    "exercises_other": "{{count}} exercices",
+    "in_progress_btn": "En cours",
+    "go_again": "▶ Recommencer",
+    "start_btn": "▶ Démarrer",
+    "more_exercises": "+{{count}} de plus",
+    "no_workouts": "Aucun entraînement enregistré.",
+    "create_workout": "+ Créer un entraînement",
+    "this_week_label": "Cette semaine",
+    "weekly_goal": "🎯 Objectif hebdo",
+    "of_goal": "sur {{count}}",
+    "workouts_this_week": "entraînements cette semaine",
+    "goal_reached": "🎉 Objectif atteint !",
+    "more_to_go": "encore {{count}} à faire",
+    "change_goal": "✎ Modifier l'objectif",
+    "history_label": "Historique",
+    "recent_activity": "📋 Activité récente",
+    "view_all": "Tout voir →",
+    "no_completed": "Aucun entraînement terminé pour l'instant."
   },
   "goals": {
     "title": "Objectifs",
@@ -116,6 +177,17 @@
     "muscle_gain": "Gain musculaire",
     "endurance": "Endurance",
     "general_fitness": "Forme générale",
+    "goal_label": "Objectif",
+    "weekly_goal": "🎯 Objectif hebdo",
+    "of_goal": "sur {{count}}",
+    "workouts_this_week": "entraînements cette semaine",
+    "goal_reached": "🎉 Objectif atteint !",
+    "change_goal": "✎ Modifier l'objectif",
+    "body_label": "Corps",
+    "bmi_stats": "📊 IMC & Mensurations",
+    "bmi_missing": "Ajoute ta taille et ton poids dans ton profil pour voir l'IMC.",
+    "weight_label": "Poids",
+    "height_label": "Taille",
     "seg": {
       "fat_loss": "Perte de graisse",
       "cardio": "Cardio",
@@ -197,7 +269,10 @@
     "prefs_tab": "🧂 Préférences",
     "view_all": "Tout voir →",
     "tap_to_generate": "Appuie pour générer ton plan alimentaire IA",
-    "daily_total": "Estimation journalière"
+    "daily_total": "Estimation journalière",
+    "photo_title": "Analyser une photo de repas",
+    "photo_desc": "Télécharge une photo et l'IA estimera les macros",
+    "photo_btn": "Télécharger une photo"
   },
   "workouts": {
     "title": "Entraînements",
@@ -206,6 +281,7 @@
     "videos": "Vidéos",
     "ai_tab": "Plan IA",
     "my_tab": "Mes entraînements",
+    "videos_tab": "🎬 Vidéos",
     "library_tab": "Bibliothèque d'exercices",
     "start_ai": "▶ Démarrer l'entraînement IA",
     "in_progress": "🏋️ Entraînement en cours — "
@@ -429,5 +505,31 @@
     "sent_title": "Message envoyé !",
     "sent_desc": "Nous te contacterons bientôt.",
     "send_another": "Envoyer un autre"
+  },
+  "appearance": {
+    "theme": "Thème",
+    "theme_desc": "Basculer entre le mode sombre et clair",
+    "dark": "Sombre",
+    "light": "Clair"
+  },
+  "achievements": {
+    "title": "Succès",
+    "toast_label": "Succès débloqué !",
+    "first_workout": { "title": "Première rep", "desc": "Premier entraînement terminé" },
+    "workout_10":    { "title": "10 Entraînements", "desc": "10 entraînements terminés" },
+    "workout_50":    { "title": "Vétéran de fer", "desc": "50 entraînements terminés" },
+    "streak_3":      { "title": "En feu", "desc": "3 jours consécutifs" },
+    "streak_7":      { "title": "Guerrier de la semaine", "desc": "7 jours consécutifs" },
+    "week_warrior":  { "title": "Guerrier de la semaine", "desc": "7 jours de suite" },
+    "first_weight_log":   { "title": "Pesée faite", "desc": "Premier poids enregistré" },
+    "weight_log_10":      { "title": "Suivi régulier", "desc": "Poids enregistré 10 fois" },
+    "first_measurement":  { "title": "Bilan corporel", "desc": "Premières mesures enregistrées" },
+    "first_meal_plan":    { "title": "Plein d'énergie", "desc": "Premier plan IA généré" },
+    "meal_plan_5":        { "title": "Pro nutrition", "desc": "5 plans IA générés" },
+    "first_custom_meal":  { "title": "Chef maison", "desc": "Premier repas personnalisé créé" },
+    "first_message":      { "title": "Gains sociaux", "desc": "Premier message envoyé" },
+    "first_login":        { "title": "Bienvenue !", "desc": "A rejoint IronBuddy" },
+    "profile_complete":   { "title": "Tout prêt", "desc": "Profil complété" },
+    "custom_workout_created": { "title": "Mode coach", "desc": "Entraînement personnalisé créé" }
   }
 }

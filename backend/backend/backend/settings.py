@@ -26,9 +26,11 @@ if _env_file.exists():
 else:
     load_dotenv()
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-insecure-key-change-me')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is not set. Set it in your .env file.")
 
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
@@ -40,6 +42,15 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.ScopedRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "ai_chat":         "30/hour",   # Coach chat — conversational, higher limit
+        "ai_plan":         "10/hour",   # Workout & meal AI plan generation
+        "ai_photo":        "15/hour",   # Meal photo analysis
+        "ai_import":       "20/hour",   # Recipe import / instruction translate
+    },
 }
 
 # life time for the jwt token
@@ -167,11 +178,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD="django.db.models.BigAutoField"
 
 _frontend_url = os.environ.get('FRONTEND_URL', '')
-if _frontend_url:
-    CORS_ALLOW_ALL_ORIGINS = False
-    CORS_ALLOWED_ORIGINS = [_frontend_url]
-else:
-    CORS_ALLOW_ALL_ORIGINS = True
+if not _frontend_url and not DEBUG:
+    raise ValueError("FRONTEND_URL must be set in production (DEBUG=False).")
+CORS_ALLOW_ALL_ORIGINS = not bool(_frontend_url)
+CORS_ALLOWED_ORIGINS = [_frontend_url] if _frontend_url else []
 CORS_ALLOW_CREDENTIALS = True
 
 # Email — Gmail SMTP

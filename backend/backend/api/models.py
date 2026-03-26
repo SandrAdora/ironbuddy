@@ -21,6 +21,7 @@ class UserProfile(models.Model):
     community_visible = models.BooleanField(default=False)
     preferred_ingredients = models.JSONField(default=list, blank=True)
     excluded_ingredients = models.JSONField(default=list, blank=True)
+    ai_meal_plans_generated = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.user.username} – {self.name or 'no name'}"
@@ -197,3 +198,30 @@ class Exercise(models.Model):
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
+
+
+class WearableConnection(models.Model):
+    PROVIDER_CHOICES = [('google_fit', 'Google Fit')]
+    user          = models.OneToOneField(User, on_delete=models.CASCADE, related_name='wearable')
+    provider      = models.CharField(max_length=50, choices=PROVIDER_CHOICES, default='google_fit')
+    access_token  = models.TextField()
+    refresh_token = models.TextField(blank=True)
+    token_expiry  = models.BigIntegerField(null=True, blank=True)  # unix timestamp
+    created_at    = models.DateTimeField(auto_now_add=True)
+    updated_at    = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username} – {self.provider}"
+
+
+class UserAchievement(models.Model):
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements')
+    badge_id   = models.CharField(max_length=50)
+    awarded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'badge_id')
+        ordering = ['-awarded_at']
+
+    def __str__(self):
+        return f"{self.user.username} – {self.badge_id}"

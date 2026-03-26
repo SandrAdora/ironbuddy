@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiWorkout, apiGetYouTubeVideo, type WorkoutPlan, type WorkoutExercise, type CustomWorkout } from '../api';
 import type { UserProfile } from '../context/userContext';
+import { useTheme } from '../context/themeContext';
 import { savePR } from '../prStorage';
 
 interface Props {
@@ -52,6 +53,7 @@ function parseRestSecs(rest: string): number {
 }
 
 export default function WorkoutPlanView({ profile, token, onStartSession, onFinishSession }: Props) {
+  const { theme } = useTheme();
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -309,11 +311,15 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
             <select
               value={numDays}
               onChange={e => setNumDays(Number(e.target.value))}
-              className="bg-white/5 border border-white/10 text-white text-xs font-black rounded-lg px-3 py-1.5 focus:outline-none focus:border-yellow-300/50 cursor-pointer"
-              style={{ background: '#060608' }}
+              className="text-xs font-black rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer"
+              style={{
+                background: theme === 'light' ? '#ffffff' : '#060608',
+                color: theme === 'light' ? '#111111' : '#ffffff',
+                border: theme === 'light' ? '1px solid rgba(0,0,0,0.15)' : '1px solid rgba(255,255,255,0.1)',
+              }}
             >
               {[2, 3, 4, 5, 6].map(d => (
-                <option key={d} value={d} style={{ background: '#060608' }}>{d} days / week</option>
+                <option key={d} value={d} style={{ background: theme === 'light' ? '#ffffff' : '#060608', color: theme === 'light' ? '#111111' : '#ffffff' }}>{d} days / week</option>
               ))}
             </select>
           </div>
@@ -336,7 +342,7 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
             onClick={generate}
             disabled={loading}
             className="font-black text-xs no-underline border-none outline-none bg-transparent transition-colors active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
+            style={{ color: theme === 'light' ? '#d97706' : '#facc15', textShadow: theme === 'light' ? 'none' : '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
           >
             {loading ? (
               <>
@@ -370,13 +376,49 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
 
       {/* Loading skeleton */}
       {loading && (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6 animate-pulse">
-              <div className="h-4 bg-white/10 rounded w-1/3 mb-3" />
-              <div className="h-3 bg-white/5 rounded w-2/3" />
+        <div className="space-y-5 animate-pulse">
+          {/* Stat grid */}
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-4 grid grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-2.5 bg-white/10 rounded w-1/2" />
+                <div className="h-4 bg-white/10 rounded w-3/4" />
+              </div>
+            ))}
+          </div>
+          {/* Day tabs */}
+          <div className="flex gap-2 border-b border-white/10 pb-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-6 w-12 bg-white/10 rounded-lg" />
+            ))}
+          </div>
+          {/* Day header */}
+          <div className="bg-white/5 border border-white/10 rounded-2xl px-6 py-4 flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="h-5 bg-white/10 rounded w-24" />
+              <div className="h-3 bg-white/5 rounded w-36" />
             </div>
-          ))}
+            <div className="h-7 w-16 bg-white/10 rounded-lg" />
+          </div>
+          {/* Exercise cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3.5 bg-white/10 rounded w-2/3" />
+                    <div className="h-2.5 bg-white/5 rounded w-1/3" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {[1, 2, 3].map((s) => (
+                    <div key={s} className="h-8 flex-1 bg-white/5 rounded-xl" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

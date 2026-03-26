@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTheme } from '../context/themeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LineChart, Line, ReferenceLine,
@@ -8,9 +9,10 @@ import {
 import {
   apiGetWeightLogs, apiAddWeightLog, apiDeleteWeightLog,
   apiGetBodyMeasurements, apiAddBodyMeasurement, apiDeleteBodyMeasurement,
-  apiDeleteSession,
-  type WorkoutSession, type WeightLog, type BodyMeasurement,
+  apiDeleteSession, apiGetAchievements,
+  type WorkoutSession, type WeightLog, type BodyMeasurement, type BadgeMeta, type AchievementsData,
 } from '../api';
+import { useTranslation } from 'react-i18next';
 import { getPRs, getMuscleData, type PR } from '../prStorage';
 
 interface Props {
@@ -20,6 +22,7 @@ interface Props {
   currentWeight?: number | null;
   height?: number | null;
   userId?: number;
+  onAchievementUnlocked?: () => void;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -304,7 +307,15 @@ function MeasureTooltip({ active, payload, label }: { active?: boolean; payload?
   );
 }
 
-export default function ProgressTab({ token, sessions, onDeleteSession, currentWeight, height, userId = 0 }: Props) {
+export default function ProgressTab({ token, sessions, onDeleteSession, currentWeight, height, userId = 0, onAchievementUnlocked: _onAchievementUnlocked }: Props) {
+  const { theme } = useTheme();
+  const { t } = useTranslation();
+  const [achievements, setAchievements] = useState<AchievementsData | null>(null);
+  const [achievementsOpen, setAchievementsOpen] = useState(true);
+
+  useEffect(() => {
+    apiGetAchievements(token).then(setAchievements).catch(() => {});
+  }, [token]);
   const [weightLogs, setWeightLogs]   = useState<WeightLog[]>([]);
   const [weightInput, setWeightInput] = useState('');
   const [dateInput, setDateInput]     = useState(new Date().toISOString().split('T')[0]);
@@ -624,7 +635,7 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
           onMouseEnter={e => { if (!pdfLoading) (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 10px rgba(250,204,21,0.7),0 0 20px rgba(250,204,21,0.4)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
         >
-          {pdfLoading ? '⏳ Generating...' : '📄 Download PDF'}
+          {pdfLoading ? '⏳ Generating...' : '📄 Download Progress'}
         </button>
       </div>
 
@@ -888,15 +899,23 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
             onChange={(e) => setWeightInput(e.target.value)}
             placeholder="Weight (kg)"
             step="0.1"
-            className="flex-1 min-w-[120px] bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm
-              focus:border-yellow-300/60 focus:outline-none transition-all placeholder:text-gray-600"
+            className="flex-1 min-w-[120px] rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-all"
+            style={{
+              background: theme === 'light' ? '#fff' : 'rgba(255,255,255,0.05)',
+              border: theme === 'light' ? '1px solid rgba(0,0,0,0.15)' : '1px solid rgba(255,255,255,0.1)',
+              color: theme === 'light' ? '#111' : '#fff',
+            }}
           />
           <input
             type="date"
             value={dateInput}
             onChange={(e) => setDateInput(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm
-              focus:border-yellow-300/60 focus:outline-none transition-all"
+            className="rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-all"
+            style={{
+              background: theme === 'light' ? '#fff' : 'rgba(255,255,255,0.05)',
+              border: theme === 'light' ? '1px solid rgba(0,0,0,0.15)' : '1px solid rgba(255,255,255,0.1)',
+              color: theme === 'light' ? '#111' : '#fff',
+            }}
           />
           <button
             onClick={handleAddWeight}
@@ -937,10 +956,10 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
               <Line
                 type="monotone"
                 dataKey="weight"
-                stroke="#fde047"
+                stroke={theme === 'light' ? '#d97706' : '#fde047'}
                 strokeWidth={2.5}
-                dot={{ fill: '#fde047', r: 4, strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: '#fde047', strokeWidth: 0 }}
+                dot={{ fill: theme === 'light' ? '#d97706' : '#fde047', r: 4, strokeWidth: 0 }}
+                activeDot={{ r: 6, fill: theme === 'light' ? '#d97706' : '#fde047', strokeWidth: 0 }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -948,8 +967,8 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
 
         {/* Log history */}
         {weightLogs.length > 0 && (
-          <div className="border-t border-white/10 pt-4 space-y-2 max-h-48 overflow-y-auto">
-            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-3">Log history</p>
+          <div className="pt-4 space-y-2 max-h-48 overflow-y-auto" style={{ borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
+            <p className="text-[10px] uppercase font-black tracking-widest mb-3" style={{ color: theme === 'light' ? '#888' : 'rgba(107,114,128,1)' }}>Log history</p>
             <AnimatePresence>
               {[...weightLogs].reverse().map((l) => (
                 <motion.div
@@ -957,14 +976,19 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 8 }}
-                  className="flex items-center justify-between text-sm px-3 py-1.5 rounded-lg bg-yellow-300/5 border border-yellow-300/10"
+                  className="flex items-center justify-between text-sm px-3 py-1.5 rounded-lg"
+                  style={{
+                    background: theme === 'light' ? 'rgba(217,119,6,0.06)' : 'rgba(250,204,21,0.05)',
+                    border: theme === 'light' ? '1px solid rgba(217,119,6,0.15)' : '1px solid rgba(250,204,21,0.1)',
+                  }}
                 >
-                  <span className="text-yellow-200/70">{l.logged_at}</span>
+                  <span style={{ color: theme === 'light' ? '#666' : 'rgba(253,230,138,0.7)' }}>{l.logged_at}</span>
                   <div className="flex items-center gap-3">
-                    <span className="text-yellow-300 font-black">{l.weight} kg</span>
+                    <span className="font-black" style={{ color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,1)' }}>{l.weight} kg</span>
                     <button
                       onClick={() => handleDeleteWeight(l.id)}
-                      className="text-gray-600 hover:text-red-400 text-xs transition-colors"
+                      className="text-xs transition-colors hover:text-red-400"
+                      style={{ color: theme === 'light' ? '#aaa' : 'rgba(75,85,99,1)' }}
                       title="Remove entry"
                     >
                       ✕
@@ -1018,8 +1042,12 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
                 onChange={(e) => setMeasureInputs((p) => ({ ...p, [f.key]: e.target.value }))}
                 placeholder="—"
                 step="0.1"
-                className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm
-                  focus:outline-none focus:border-yellow-300/60 transition-all placeholder:text-gray-600"
+                className="rounded-xl px-3 py-2 text-sm focus:outline-none transition-all"
+                style={{
+                  background: theme === 'light' ? '#fff' : 'rgba(255,255,255,0.05)',
+                  border: theme === 'light' ? '1px solid rgba(0,0,0,0.15)' : '1px solid rgba(255,255,255,0.1)',
+                  color: theme === 'light' ? '#111' : '#fff',
+                }}
               />
             </div>
           ))}
@@ -1029,8 +1057,12 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
             type="date"
             value={measureDate}
             onChange={(e) => setMeasureDate(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm
-              focus:border-yellow-300/60 focus:outline-none transition-all"
+            className="rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-all"
+            style={{
+              background: theme === 'light' ? '#fff' : 'rgba(255,255,255,0.05)',
+              border: theme === 'light' ? '1px solid rgba(0,0,0,0.15)' : '1px solid rgba(255,255,255,0.1)',
+              color: theme === 'light' ? '#111' : '#fff',
+            }}
           />
           <button
             onClick={handleAddMeasurement}
@@ -1066,8 +1098,8 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
 
         {/* Log history */}
         {measurements.length > 0 && (
-          <div className="border-t border-white/10 pt-4 space-y-2 max-h-40 overflow-y-auto">
-            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-3">Log history</p>
+          <div className="pt-4 space-y-2 max-h-40 overflow-y-auto" style={{ borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
+            <p className="text-[10px] uppercase font-black tracking-widest mb-3" style={{ color: theme === 'light' ? '#888' : 'rgba(107,114,128,1)' }}>Log history</p>
             <AnimatePresence>
               {[...measurements].reverse().map((m) => (
                 <motion.div
@@ -1077,12 +1109,12 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
                   exit={{ opacity: 0, x: 8 }}
                   className="flex items-center justify-between text-xs"
                 >
-                  <span className="text-gray-400">{m.logged_at}</span>
+                  <span style={{ color: theme === 'light' ? '#666' : 'rgba(156,163,175,1)' }}>{m.logged_at}</span>
                   <div className="flex items-center gap-3">
                     {MEASURE_FIELDS.filter((f) => m[f.key] != null).map((f) => (
                       <span key={f.key} style={{ color: f.color }} className="font-bold">{f.label[0]}: {m[f.key]}cm</span>
                     ))}
-                    <button onClick={() => handleDeleteMeasurement(m.id)} className="text-gray-600 hover:text-red-400 transition-colors">✕</button>
+                    <button onClick={() => handleDeleteMeasurement(m.id)} className="transition-colors hover:text-red-400" style={{ color: theme === 'light' ? '#aaa' : 'rgba(75,85,99,1)' }}>✕</button>
                   </div>
                 </motion.div>
               ))}
@@ -1208,6 +1240,92 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* ── Achievements / Badges ── */}
+      {achievements && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden"
+        >
+          <button
+            onClick={() => setAchievementsOpen(o => !o)}
+            className="w-full flex items-center justify-between p-5 text-left"
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+          >
+            <span className="text-sm font-black uppercase tracking-widest text-[--color-iron-gold]">
+              {t('achievements.title', 'Achievements')}
+              <span className="ml-2 text-xs font-normal text-gray-400 normal-case tracking-normal">
+                {achievements.earned_ids.length} / {achievements.all_badges.length}
+              </span>
+            </span>
+            <span style={{ color: theme === 'light' ? '#d97706' : '#fbbf24', fontSize: 12, transition: 'transform 0.2s', display: 'inline-block', transform: achievementsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+          </button>
+
+          <AnimatePresence initial={false}>
+          {achievementsOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              style={{ overflow: 'hidden' }}
+            >
+          <div className="px-5 pb-5 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
+            {achievements.all_badges.map((badge: BadgeMeta) => {
+              const earned = achievements.earned_ids.includes(badge.id);
+              return (
+                <div
+                  key={badge.id}
+                  title={t(badge.title_key, badge.id) + (earned ? '' : ' (locked)')}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 4,
+                    opacity: earned ? 1 : 0.3,
+                    filter: earned ? 'none' : 'grayscale(1)',
+                    cursor: 'default',
+                  }}
+                >
+                  <div style={{
+                    fontSize: 32,
+                    lineHeight: 1,
+                    background: earned
+                      ? theme === 'light' ? 'rgba(217,119,6,0.12)' : 'rgba(251,191,36,0.12)'
+                      : 'rgba(255,255,255,0.04)',
+                    border: `1.5px solid ${earned
+                      ? theme === 'light' ? '#d97706' : '#fbbf24'
+                      : 'rgba(255,255,255,0.08)'}`,
+                    borderRadius: 12,
+                    padding: '8px 10px',
+                  }}>
+                    {badge.icon}
+                  </div>
+                  <span style={{
+                    fontSize: 9,
+                    textAlign: 'center',
+                    color: earned
+                      ? theme === 'light' ? '#d97706' : '#fbbf24'
+                      : theme === 'light' ? '#999' : '#555',
+                    fontWeight: 700,
+                    lineHeight: 1.2,
+                    maxWidth: 64,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {t(badge.title_key, badge.id)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+            </motion.div>
+          )}
+          </AnimatePresence>
+        </motion.div>
+      )}
 
     </div>
   );

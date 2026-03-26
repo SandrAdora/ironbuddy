@@ -35,8 +35,10 @@ services:
     buildCommand: "npm install"
     startCommand: "npm start"
     envVars:
-      - key: PORT
-        value: "3001"
+      - key: FRONTEND_URL
+        sync: false
+      - key: DJANGO_SECRET_KEY
+        sync: false
 
   # ── React Frontend ──────────────────────────────────────────────
   - type: web
@@ -45,6 +47,11 @@ services:
     rootDir: iron
     buildCommand: "npm install && npm run build"
     staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_SOCKET_URL
+        sync: false
     routes:
       - type: rewrite
         source: /*

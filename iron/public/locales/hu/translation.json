@@ -29,7 +29,9 @@
       "languages": "Nyelvi beállítások",
       "languages_desc": "App és Coach nyelve",
       "danger": "Veszélyzóna",
-      "danger_desc": "Deaktiválás vagy törlés"
+      "danger_desc": "Deaktiválás vagy törlés",
+      "appearance": "Megjelenés",
+      "appearance_desc": "Téma és megjelenítés"
     }
   },
   "language": {
@@ -91,7 +93,21 @@
     "quick_workout": "{{goal}} edzés nekem",
     "quick_eat": "Mit egyek ma?",
     "quick_recover": "Hogyan regenerálódjak gyorsabban?",
-    "quick_progress": "Értékeld a fejlődésem"
+    "quick_progress": "Értékeld a fejlődésem",
+    "tab_workouts": "Edzéseim",
+    "tab_meals": "Étkezéseim",
+    "tab_my_recipes": "Receptjeim",
+    "save_prompt_title": "\"{{label}}\" mentése ide: {{tab}}?",
+    "ingredients_label": "Hozzávalók",
+    "add_ingredient": "Hozzávaló hozzáadása…",
+    "saved_to_tab": "✓ Elmentve: {{tab}}!",
+    "saved_to_tab_and_recipes": "✓ Elmentve: {{tab}} és Receptjeim!",
+    "saving": "Mentés…",
+    "save_to_tab": "💾 Mentés ide: {{tab}}",
+    "added_to_recipes": "✓ Hozzáadva a receptekhez",
+    "add_to_my_recipes": "👨‍🍳 Hozzáadás a Receptjeimhez",
+    "not_now": "Most nem",
+    "error_generic": "Valami hiba történt. Próbáld újra."
   },
   "dashboard": {
     "title": "Áttekintés",
@@ -106,7 +122,29 @@
     "ai_plan": "AI Edzésterv",
     "ai_plan_desc": "A céljaidhoz generálva",
     "my_workouts": "Edzéseim",
-    "my_workouts_desc": "Egyéni rutinjaid"
+    "my_workouts_desc": "Egyéni rutinjaid",
+    "today_label": "Ma",
+    "today_workout": "🏋️ Mai edzés",
+    "done_today": "✓ Ma elvégezve",
+    "exercises_one": "{{count}} gyakorlat",
+    "exercises_other": "{{count}} gyakorlat",
+    "in_progress_btn": "Folyamatban",
+    "go_again": "▶ Újra",
+    "start_btn": "▶ Start",
+    "more_exercises": "+{{count}} további",
+    "no_workouts": "Még nincs mentett edzés.",
+    "create_workout": "+ Edzés létrehozása",
+    "this_week_label": "Ezen a héten",
+    "weekly_goal": "🎯 Heti cél",
+    "of_goal": "/ {{count}}",
+    "workouts_this_week": "edzés ezen a héten",
+    "goal_reached": "🎉 Cél elérve!",
+    "more_to_go": "még {{count}} van hátra",
+    "change_goal": "✎ Cél módosítása",
+    "history_label": "Előzmények",
+    "recent_activity": "📋 Legutóbbi aktivitás",
+    "view_all": "Összes megtekintése →",
+    "no_completed": "Még nincs befejezett edzés."
   },
   "goals": {
     "title": "Célok",
@@ -116,6 +154,17 @@
     "muscle_gain": "Izomépítés",
     "endurance": "Állóképesség",
     "general_fitness": "Általános fitnesz",
+    "goal_label": "Cél",
+    "weekly_goal": "🎯 Heti cél",
+    "of_goal": "/ {{count}}",
+    "workouts_this_week": "edzés ezen a héten",
+    "goal_reached": "🎉 Cél elérve!",
+    "change_goal": "✎ Cél módosítása",
+    "body_label": "Test",
+    "bmi_stats": "📊 BMI & Testadatok",
+    "bmi_missing": "Add meg a magasságodat és testsúlyodat a profilodban a BMI megtekintéséhez.",
+    "weight_label": "Testsúly",
+    "height_label": "Magasság",
     "seg": {
       "fat_loss": "Zsírégetés",
       "cardio": "Kardió",
@@ -197,7 +246,10 @@
     "prefs_tab": "🧂 Preferenciák",
     "view_all": "Összes megtekintése →",
     "tap_to_generate": "Érintsd meg az AI étkezési terv generálásához",
-    "daily_total": "Napi becslés"
+    "daily_total": "Napi becslés",
+    "photo_title": "Ételfotó elemzése",
+    "photo_desc": "Tölts fel egy fotót, és az AI megbecsüli a makrókat",
+    "photo_btn": "Fotó feltöltése"
   },
   "workouts": {
     "title": "Edzések",
@@ -206,6 +258,7 @@
     "videos": "Videók",
     "ai_tab": "AI Terv",
     "my_tab": "Edzéseim",
+    "videos_tab": "🎬 Videók",
     "library_tab": "Gyakorlatkönyvtár",
     "start_ai": "▶ AI Edzés indítása",
     "in_progress": "🏋️ Edzés folyamatban — "
@@ -429,5 +482,38 @@
     "sent_title": "Üzenet elküldve!",
     "sent_desc": "Hamarosan felvesszük veled a kapcsolatot.",
     "send_another": "Újabb küldése"
+  },
+  "appearance": {
+    "theme": "Téma",
+    "theme_desc": "Váltás sötét és világos mód között",
+    "dark": "Sötét",
+    "light": "Világos"
+  },
+  "recipes": {
+    "import_btn": "Importálás",
+    "import_title": "Recept importálása URL-ről",
+    "import_placeholder": "https://nosalty.hu/recept/...",
+    "import_go": "Importálás",
+    "import_hint": "Illessz be bármilyen recept- vagy YouTube-linket. A hozzávalók és makrók automatikusan kinyerésre kerülnek."
+  },
+  "achievements": {
+    "title": "Eredmények",
+    "toast_label": "Eredmény feloldva!",
+    "first_workout": { "title": "Első ismétlés", "desc": "Első edzés teljesítve" },
+    "workout_10":    { "title": "10 edzés", "desc": "10 edzés teljesítve" },
+    "workout_50":    { "title": "Vas-veterán", "desc": "50 edzés teljesítve" },
+    "streak_3":      { "title": "Lángban", "desc": "3 napos edzéssorozat" },
+    "streak_7":      { "title": "Hét bajnoka", "desc": "7 napos edzéssorozat" },
+    "week_warrior":  { "title": "Hét bajnoka", "desc": "7 egymást követő nap" },
+    "first_weight_log":   { "title": "Mérleg ellenőrzve", "desc": "Első súly rögzítve" },
+    "weight_log_10":      { "title": "Következetes", "desc": "Súly 10-szer rögzítve" },
+    "first_measurement":  { "title": "Testmérés", "desc": "Első testméretek rögzítve" },
+    "first_meal_plan":    { "title": "Feltöltve", "desc": "Első AI étkezési terv létrehozva" },
+    "meal_plan_5":        { "title": "Táplálkozási profi", "desc": "5 AI étkezési terv létrehozva" },
+    "first_custom_meal":  { "title": "Házi séf", "desc": "Első egyéni étel létrehozva" },
+    "first_message":      { "title": "Közösségi gyümölcs", "desc": "Első üzenet elküldve" },
+    "first_login":        { "title": "Üdvözöllek!", "desc": "Csatlakoztál az IronBuddyhoz" },
+    "profile_complete":   { "title": "Minden kész", "desc": "Profil kitöltve" },
+    "custom_workout_created": { "title": "Edző mód", "desc": "Egyéni edzés létrehozva" }
   }
 }

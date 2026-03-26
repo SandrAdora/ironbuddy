@@ -99,6 +99,7 @@ export default function MyMeals({ token }: Props) {
         {!formOpen && (
           <button
             onClick={() => setFormOpen(true)}
+            aria-label="Add new meal"
             className="w-7 h-7 rounded-lg text-base font-black active:scale-95 transition-all duration-200 flex items-center justify-center"
             style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
           >
@@ -132,6 +133,8 @@ export default function MyMeals({ token }: Props) {
                   <button
                     key={e}
                     onClick={() => setIcon(e)}
+                    aria-label={`Select icon ${e}`}
+                    aria-pressed={icon === e}
                     className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all duration-150 ${
                       icon === e
                         ? 'bg-yellow-300/20 border-2 border-yellow-300 scale-110'
@@ -178,7 +181,22 @@ export default function MyMeals({ token }: Props) {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6 animate-pulse h-32" />
+            <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3 animate-pulse">
+              <div className="flex items-start justify-between">
+                <div className="w-10 h-10 rounded-xl bg-white/10" />
+                <div className="flex gap-1.5">
+                  <div className="w-7 h-7 rounded-lg bg-white/10" />
+                  <div className="w-7 h-7 rounded-lg bg-white/10" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-3.5 bg-white/10 rounded w-3/5" />
+                <div className="h-2.5 bg-white/5 rounded w-4/5" />
+              </div>
+              <div className="flex items-center justify-between mt-auto pt-1">
+                <div className="h-5 bg-white/10 rounded-full w-16" />
+              </div>
+            </div>
           ))}
         </div>
       ) : meals.length === 0 && !formOpen ? (
@@ -209,6 +227,7 @@ export default function MyMeals({ token }: Props) {
                     onClick={() => openEdit(m)}
                     className="text-yellow-300 p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors text-sm"
                     title="Edit meal"
+                    aria-label={`Edit meal: ${m.name}`}
                   >
                     ✎
                   </button>
@@ -216,6 +235,7 @@ export default function MyMeals({ token }: Props) {
                     onClick={() => handleDelete(m.id)}
                     className="text-gray-600 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-400/10 transition-colors"
                     title="Delete meal"
+                    aria-label={`Delete meal: ${m.name}`}
                   >
                     🗑
                   </button>

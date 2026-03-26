@@ -4,9 +4,11 @@ import { AnimatePresence } from "framer-motion";
 import OnboardingForm from "../Register";
 import type {JSX} from "react";
 import Modal from "../Modal";
+import { useTheme } from "../../context/themeContext";
 
 export default function Signup(): JSX.Element {
   const [showModal, setShowModal] = useState<boolean>(true);
+  const { theme } = useTheme();
 
   // Process of storing agreement in localStorage
   useEffect(() => {
@@ -24,7 +26,10 @@ export default function Signup(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-[--color-gym-dark] text-white pt-28">
+    <div
+      className="min-h-screen pt-28"
+      style={{ background: theme === 'light' ? '#f0f0f3' : 'var(--color-gym-dark)', color: theme === 'light' ? '#111' : '#fff' }}
+    >
       <AnimatePresence>
         {showModal && <Modal onClose={handleAccept} />}
       </AnimatePresence>

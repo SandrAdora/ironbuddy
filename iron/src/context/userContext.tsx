@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import React from "react";
 import type { ReactNode } from "react";
 import { apiLogin, apiGetProfile, apiSaveProfile } from "../api";
@@ -154,16 +154,21 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     return () => clearInterval(interval);
   }, [token, applyNewToken, logout]);
 
-  // Sync profile to localStorage and backend on every change
+  // Sync profile to localStorage and backend — debounced so rapid field edits
+  // don't flood localStorage or fire an API call on every keystroke.
+  const profileSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (profile.email) {
-      localStorage.setItem(profileKey(profile.email), JSON.stringify(profile));
+    if (!profile.email) return;
+    if (profileSaveTimer.current) clearTimeout(profileSaveTimer.current);
+    profileSaveTimer.current = setTimeout(() => {
+      localStorage.setItem(profileKey(profile.email!), JSON.stringify(profile));
       if (token && profile.onboarded) {
         const { email: _e, password: _p, onboarded: _o, disclaimerAcceptedAt: _d, ...profileData } = profile;
         apiSaveProfile(token, profileData as Record<string, unknown>).catch(() => {});
       }
-    }
-  }, [profile]);
+    }, 600);
+    return () => { if (profileSaveTimer.current) clearTimeout(profileSaveTimer.current); };
+  }, [profile, token]);
 
   const login = async (email: string, password: string, initialProfile?: Partial<UserProfile>): Promise<string> => {
     const data = await apiLogin(email, password);

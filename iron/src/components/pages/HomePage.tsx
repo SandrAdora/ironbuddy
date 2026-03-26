@@ -5,11 +5,14 @@ import React from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiRequestPasswordReset } from '../../api';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../context/themeContext';
 
 export default function Home() {
   const { login, logout, token } = useUser();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const light = theme === 'light';
 
   useEffect(() => { if (token) navigate('/user'); }, [token]);
 
@@ -84,8 +87,15 @@ export default function Home() {
     { step: '03', icon: '📈', title: t('home.how_it_works.step3_title'), desc: t('home.how_it_works.step3_desc') },
   ];
 
+  const sectionBorder = light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)';
+  const cardBg        = light ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.02)';
+  const cardBorder    = light ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.07)';
+
   return (
-    <div className="min-h-screen bg-[--color-gym-dark] text-white">
+    <div
+      className="min-h-screen"
+      style={{ background: light ? '#f0f0f3' : 'var(--color-gym-dark)', color: light ? '#111' : '#fff' }}
+    >
 
       {/* ── Hero ────────────────────────────────────────────────────────────────── */}
       <section id="hero" className="relative min-h-screen flex items-center pt-16 overflow-hidden">
@@ -119,7 +129,7 @@ export default function Home() {
             {/* Headline */}
             <div>
               <h1 className="text-6xl md:text-7xl font-black uppercase leading-[0.85] tracking-tight mb-1">
-                <span className="text-white">{t('home.headline1')}</span>{' '}
+                <span style={{ color: light ? '#111' : '#fff' }}>{t('home.headline1')}</span>{' '}
                 <span style={{
                   background: 'linear-gradient(135deg, #facc15 0%, #fb923c 60%, #facc15 100%)',
                   WebkitBackgroundClip: 'text',
@@ -128,12 +138,12 @@ export default function Home() {
                 }}>{t('home.headline2')}</span>
               </h1>
               <h1 className="text-6xl md:text-7xl font-black uppercase leading-[0.85] tracking-tight">
-                <span className="text-white">{t('home.headline3')} </span>
-                <span className="text-white animate-coach-breathe inline-block">🦾 {t('home.headline4')}</span>
+                <span style={{ color: light ? '#111' : '#fff' }}>{t('home.headline3')} </span>
+                <span style={{ color: light ? '#111' : '#fff' }} className="animate-coach-breathe inline-block">🦾 {t('home.headline4')}</span>
               </h1>
             </div>
 
-            <p className="text-gray-400 text-base leading-relaxed max-w-[420px]">
+            <p style={{ color: light ? '#555' : '#9ca3af' }} className="text-base leading-relaxed max-w-[420px]">
               {t('home.tagline')}
             </p>
 
@@ -145,7 +155,7 @@ export default function Home() {
                     style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.2)' }}>
                     {icon}
                   </span>
-                  <span className="text-sm text-gray-300 font-medium">{text}</span>
+                  <span style={{ color: light ? '#333' : '#d1d5db' }} className="text-sm font-medium">{text}</span>
                 </li>
               ))}
             </ul>
@@ -154,10 +164,10 @@ export default function Home() {
             <div className="flex items-center gap-7 pt-1">
               {STATS.map(({ value, label }, i) => (
                 <React.Fragment key={label}>
-                  {i > 0 && <div className="w-px h-9 bg-white/10" />}
+                  {i > 0 && <div className="w-px h-9" style={{ background: light ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.1)' }} />}
                   <div>
                     <div className="text-xl font-black text-[--color-iron-gold] leading-tight">{value}</div>
-                    <div className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">{label}</div>
+                    <div style={{ color: light ? '#888' : '#6b7280' }} className="text-[10px] uppercase tracking-widest mt-0.5">{label}</div>
                   </div>
                 </React.Fragment>
               ))}
@@ -171,12 +181,18 @@ export default function Home() {
             transition={{ duration: 0.7, ease: 'easeOut', delay: 0.1 }}
             className="card-gold max-w-md mx-auto w-full"
           >
-            <div className="bg-[#0d0d10] p-8 rounded-[calc(1.25rem-1px)]">
+            <div
+              className="p-8 rounded-[calc(1.25rem-1px)]"
+              style={{ background: light ? '#ffffff' : '#0d0d10' }}
+            >
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-[--color-iron-gold]" style={{ boxShadow: '0 0 8px rgba(250,204,21,0.8)' }} />
                 <span className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.3em] uppercase">{t('home.signin.portal')}</span>
               </div>
-              <h2 className="text-2xl font-black text-white italic uppercase mb-6 mt-1">{t('home.signin.title')}</h2>
+              <h2
+                className="text-2xl font-black italic uppercase mb-6 mt-1"
+                style={{ color: light ? '#111' : '#fff' }}
+              >{t('home.signin.title')}</h2>
 
               <form onSubmit={handleLogin} className="space-y-4">
                 <InputField label={t('profile.email')} value={email} onChange={setEmail} type="email" required placeholder="email@example.com" />
@@ -200,7 +216,8 @@ export default function Home() {
 
               <div className="mt-4 flex items-center justify-between">
                 <button onClick={() => setForgotOpen(true)}
-                  className="text-gray-600 hover:text-gray-400 text-xs font-semibold transition-colors bg-transparent border-none p-0 cursor-pointer">
+                  style={{ color: light ? '#888' : '#4b5563' }}
+                  className="hover:text-gray-400 text-xs font-semibold transition-colors bg-transparent border-none p-0 cursor-pointer">
                   {t('home.signin.forgot')}
                 </button>
                 {token ? (
@@ -209,7 +226,8 @@ export default function Home() {
                     {t('nav.sign_out')}
                   </button>
                 ) : (
-                  <Link to="/signup" className="text-xs text-gray-500 hover:text-gray-300 font-medium transition-colors">
+                  <Link to="/signup" className="text-xs font-medium transition-colors"
+                    style={{ color: light ? '#888' : '#6b7280' }}>
                     {t('home.signin.no_account')}{' '}
                     <span className="text-[--color-iron-gold] font-bold">{t('nav.sign_up')}</span>
                   </Link>
@@ -221,11 +239,11 @@ export default function Home() {
       </section>
 
       {/* ── How It Works ────────────────────────────────────────────────────── */}
-      <section id="how-it-works" className="relative py-24 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+      <section id="how-it-works" className="relative py-24 border-t" style={{ borderColor: sectionBorder }}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-14">
             <p className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.35em] uppercase opacity-70 mb-2">{t('home.how_it_works.label')}</p>
-            <h2 className="text-4xl md:text-5xl font-black uppercase italic">{t('home.how_it_works.title')}</h2>
+            <h2 style={{ color: light ? '#111' : '#fff' }} className="text-4xl md:text-5xl font-black uppercase italic">{t('home.how_it_works.title')}</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {HOW_STEPS.map(({ step, icon, title, desc }) => (
@@ -236,15 +254,18 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5 }}
                 className="relative p-6 rounded-2xl border"
-                style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.08)' }}
+                style={{ background: cardBg, borderColor: cardBorder }}
               >
-                <div className="absolute -top-4 left-6 text-[10px] font-black tracking-widest text-[--color-iron-gold] bg-[#0a0a0d] px-2">{step}</div>
+                <div
+                  className="absolute -top-4 left-6 text-[10px] font-black tracking-widest text-[--color-iron-gold] px-2"
+                  style={{ background: light ? '#f0f0f3' : '#0a0a0d' }}
+                >{step}</div>
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mb-4"
-                  style={{ background: 'rgba(200, 138, 13, 0.08)', border: '1px solid rgba(250,204,21,0.15)' }}>
+                  style={{ background: 'rgba(200,138,13,0.08)', border: '1px solid rgba(250,204,21,0.15)' }}>
                   {icon}
                 </div>
-                <h3 className="text-lg font-black uppercase italic mb-2">{title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
+                <h3 style={{ color: light ? '#111' : '#fff' }} className="text-lg font-black uppercase italic mb-2">{title}</h3>
+                <p style={{ color: light ? '#555' : '#9ca3af' }} className="text-sm leading-relaxed">{desc}</p>
               </motion.div>
             ))}
           </div>
@@ -252,11 +273,11 @@ export default function Home() {
       </section>
 
       {/* ── Feature Grid ────────────────────────────────────────────────────── */}
-      <section id="features" className="relative py-24 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+      <section id="features" className="relative py-24 border-t" style={{ borderColor: sectionBorder }}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-14">
             <p className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.35em] uppercase opacity-70 mb-2">{t('home.features_section.label')}</p>
-            <h2 className="text-4xl md:text-5xl font-black uppercase italic">{t('home.features_section.title')}</h2>
+            <h2 style={{ color: light ? '#111' : '#fff' }} className="text-4xl md:text-5xl font-black uppercase italic">{t('home.features_section.title')}</h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURE_CARDS.map(({ icon, title, desc }) => (
@@ -267,14 +288,14 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.4 }}
                 className="p-5 rounded-2xl border hover:border-yellow-300/20 transition-all duration-300 group"
-                style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.07)' }}
+                style={{ background: cardBg, borderColor: cardBorder }}
               >
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-3"
                   style={{ background: 'rgba(250,204,21,0.07)', border: '1px solid rgba(250,204,21,0.12)' }}>
                   {icon}
                 </div>
-                <h3 className="text-sm font-black uppercase italic mb-1.5 group-hover:text-[--color-iron-gold] transition-colors">{title}</h3>
-                <p className="text-gray-500 text-xs leading-relaxed">{desc}</p>
+                <h3 style={{ color: light ? '#111' : '#fff' }} className="text-sm font-black uppercase italic mb-1.5 group-hover:text-[--color-iron-gold] transition-colors">{title}</h3>
+                <p style={{ color: light ? '#666' : '#6b7280' }} className="text-xs leading-relaxed">{desc}</p>
               </motion.div>
             ))}
           </div>
@@ -282,26 +303,27 @@ export default function Home() {
       </section>
 
       {/* ── Final CTA ────────────────────────────────────────────────────────── */}
-      <section id="cta" className="relative py-24 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+      <section id="cta" className="relative py-24 border-t" style={{ borderColor: sectionBorder }}>
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 mx-auto w-[700px] h-[400px] top-1/2 -translate-y-1/2 rounded-full"
             style={{ background: 'radial-gradient(circle, rgba(250,204,21,0.05) 0%, transparent 70%)', filter: 'blur(60px)' }} />
         </div>
         <div className="relative max-w-2xl mx-auto px-6 text-center space-y-6">
           <span className="text-5xl">🏆</span>
-          <h2 className="text-4xl md:text-5xl font-black uppercase italic leading-tight">
+          <h2 style={{ color: light ? '#111' : '#fff' }} className="text-4xl md:text-5xl font-black uppercase italic leading-tight">
             {t('home.cta.title1')}<br />
             <span style={{ background: 'linear-gradient(135deg,#facc15,#fb923c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               {t('home.cta.title2')}
             </span>
           </h2>
-          <p className="text-gray-400 leading-relaxed">
+          <p style={{ color: light ? '#555' : '#9ca3af' }} className="leading-relaxed">
             {t('home.cta.desc')}
           </p>
           <Link
             to="/signup"
             className="inline-block px-10 py-4 font-black rounded-2xl uppercase tracking-wider text-sm transition-all duration-200
                text-black hover:brightness-110 hover:shadow-[0_0_36px_rgba(250,204,21,0.5)] hover:scale-[1.03] active:scale-95"
+            style={{ background: 'linear-gradient(135deg,#facc15,#fb923c)' }}
           >
             {t('home.cta.btn')}
           </Link>
@@ -315,7 +337,8 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4"
+            style={{ background: light ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.75)' }}
             onClick={closeForgot}
           >
             <motion.div
@@ -326,15 +349,15 @@ export default function Home() {
               className="card-gold max-w-sm w-full"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="bg-[#0d0d10] p-8 rounded-[calc(1.25rem-1px)]">
+              <div className="p-8 rounded-[calc(1.25rem-1px)]" style={{ background: light ? '#ffffff' : '#0d0d10' }}>
                 {forgotDone ? (
                   <div className="text-center space-y-4">
                     <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-3xl"
                       style={{ background: 'rgba(250,204,21,0.1)', border: '1px solid rgba(250,204,21,0.2)' }}>
                       📧
                     </div>
-                    <p className="text-white font-black uppercase tracking-wide">{t('home.forgot.check_inbox')}</p>
-                    <p className="text-gray-400 text-sm leading-relaxed">
+                    <p style={{ color: light ? '#111' : '#fff' }} className="font-black uppercase tracking-wide">{t('home.forgot.check_inbox')}</p>
+                    <p style={{ color: light ? '#555' : '#9ca3af' }} className="text-sm leading-relaxed">
                       {t('home.forgot.sent_desc', { email: forgotEmail })}
                     </p>
                     <button onClick={closeForgot}
@@ -348,13 +371,18 @@ export default function Home() {
                       <span className="text-lg">🔑</span>
                       <span className="text-[--color-iron-gold] font-black uppercase text-xs tracking-[0.2em]">{t('home.forgot.title')}</span>
                     </div>
-                    <p className="text-gray-500 text-xs mb-6">{t('home.forgot.desc')}</p>
+                    <p style={{ color: light ? '#777' : '#6b7280' }} className="text-xs mb-6">{t('home.forgot.desc')}</p>
                     <form onSubmit={handleForgotSubmit} className="space-y-4">
                       <InputField label={t('profile.email')} value={forgotEmail} onChange={setForgotEmail} type="email" required placeholder="email@example.com" />
                       {forgotError && <p className="text-red-400 text-xs">{forgotError}</p>}
                       <div className="flex gap-3">
                         <button type="button" onClick={closeForgot}
-                          className="flex-1 py-3 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white hover:bg-white/10 transition-all">
+                          style={{
+                            background: light ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                            border: `1px solid ${light ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.1)'}`,
+                            color: light ? '#555' : '#9ca3af',
+                          }}
+                          className="flex-1 py-3 font-bold rounded-xl uppercase text-xs transition-all hover:opacity-80">
                           {t('common.cancel')}
                         </button>
                         <button type="submit" disabled={forgotSending}
@@ -384,19 +412,29 @@ interface InputFieldProps {
 }
 
 function InputField({ label, value, onChange, type = 'text', placeholder, required }: InputFieldProps) {
+  const { theme } = useTheme();
+  const light = theme === 'light';
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.18em] ml-0.5">{label}</label>
+      <label style={{ color: light ? '#666' : '#6b7280' }} className="text-[10px] font-black uppercase tracking-[0.18em] ml-0.5">{label}</label>
       <input
         type={type} value={value} placeholder={placeholder} required={required}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-gray-600
-          bg-white/[0.04] border border-white/10
-          focus:border-yellow-300/50 focus:bg-white/[0.06]
-          outline-none transition-all duration-200"
-        style={{ boxShadow: undefined }}
-        onFocus={(e) => (e.currentTarget.style.boxShadow = '0 0 0 3px rgba(250,204,21,0.08)')}
-        onBlur={(e)  => (e.currentTarget.style.boxShadow = 'none')}
+        className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all duration-200"
+        style={{
+          background: light ? '#f4f4f6' : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${light ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.1)'}`,
+          color: light ? '#111' : '#fff',
+        }}
+        placeholder-style={{ color: light ? '#aaa' : '#4b5563' }}
+        onFocus={(e) => {
+          e.currentTarget.style.border = '1px solid rgba(250,204,21,0.5)';
+          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(250,204,21,0.08)';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.border = `1px solid ${light ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.1)'}`;
+          e.currentTarget.style.boxShadow = 'none';
+        }}
       />
     </div>
   );

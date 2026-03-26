@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { CustomWorkout, CustomExercise, Exercise, PublicUser } from '../api';
 import { apiGetExercises, apiGetUsers, apiStartConversation, apiSendMessage, apiGetYouTubeVideo } from '../api';
 import { savePR } from '../prStorage';
+import { useTheme } from '../context/themeContext';
 
 interface Props {
   token: string;
   onStartWorkout?: (name: string, type: 'ai' | 'custom') => void;
   autoStartName?: string;
   onAutoStartConsumed?: () => void;
+  onAchievementUnlocked?: () => void;
 }
 
 // ── localStorage helpers ───────────────────────────────────────────────────────
@@ -34,7 +36,8 @@ const emptyExercise = (): CustomExercise => ({
   name: '', sets: 3, reps: '8-12', rest: '60s', muscle: '', notes: '',
 });
 
-export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAutoStartConsumed }: Props) {
+export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAutoStartConsumed, onAchievementUnlocked }: Props) {
+  const { theme } = useTheme();
   const [workouts, setWorkouts]       = useState<CustomWorkout[]>([]);
   const [formOpen, setFormOpen]       = useState(false);
   const [editingId, setEditingId]     = useState<number | null>(null);
@@ -73,7 +76,8 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
   const [exercises, setExercises]     = useState<CustomExercise[]>([emptyExercise()]);
 
   // YouTube video cache — key: exercise name (lowercase)
-  const [videoMap, setVideoMap] = useState<Record<string, string | null>>({});
+  const [videoMap, setVideoMap]   = useState<Record<string, string | null>>({});
+  const [videoOpen, setVideoOpen] = useState<Set<string>>(new Set());
 
   // Share state
   const [shareWorkout, setShareWorkout] = useState<CustomWorkout | null>(null);
@@ -84,6 +88,12 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
 
   async function fetchVideo(name: string) {
     const key = name.toLowerCase();
+    // Toggle closed if already open
+    if (videoOpen.has(key)) {
+      setVideoOpen(prev => { const s = new Set(prev); s.delete(key); return s; });
+      return;
+    }
+    setVideoOpen(prev => new Set(prev).add(key));
     if (key in videoMap) return;
     setVideoMap(prev => ({ ...prev, [key]: null }));
     const id = await apiGetYouTubeVideo(token, name).catch(() => '');
@@ -347,6 +357,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
       return updated;
     });
     resetForm();
+    if (onAchievementUnlocked) onAchievementUnlocked();
   };
 
   const handleDelete = (id: number) => {
@@ -370,7 +381,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
           <button
             onClick={() => setFormOpen(true)}
             className="font-black uppercase text-xs sm:text-sm border-none outline-none bg-transparent active:scale-95 transition-colors"
-            style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
+            style={{ color: theme === 'light' ? '#d97706' : '#facc15', textShadow: theme === 'light' ? 'none' : '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
           >
             + Create Workout
           </button>
@@ -692,35 +703,39 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                               </div>
                             </div>
 
-                            {/* YouTube video embed */}
-                            {videoMap[ex.name.toLowerCase()] === null && (
-                              <p className="text-gray-500 text-xs">Loading video…</p>
-                            )}
-                            {ex.name.toLowerCase() in videoMap && videoMap[ex.name.toLowerCase()] === '' && (
-                              <button
-                                onClick={() => retryVideo(ex.name)}
-                                className="relative w-full rounded-xl overflow-hidden border-none outline-none cursor-pointer group"
-                                style={{ paddingTop: '56.25%', background: '#0f0f0f', display: 'block' }}
-                              >
-                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                                  <div className="w-12 h-12 rounded-full flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
-                                    style={{ background: '#ff0000', boxShadow: '0 0 20px rgba(255,0,0,0.5)' }}>
-                                    <span className="text-white text-xl ml-1">▶</span>
+                            {/* YouTube video embed (collapsible) */}
+                            {videoOpen.has(ex.name.toLowerCase()) && (
+                              <>
+                                {videoMap[ex.name.toLowerCase()] === null && (
+                                  <p className="text-gray-500 text-xs">Loading video…</p>
+                                )}
+                                {ex.name.toLowerCase() in videoMap && videoMap[ex.name.toLowerCase()] === '' && (
+                                  <button
+                                    onClick={() => retryVideo(ex.name)}
+                                    className="relative w-full rounded-xl overflow-hidden border-none outline-none cursor-pointer group"
+                                    style={{ paddingTop: '56.25%', background: '#0f0f0f', display: 'block' }}
+                                  >
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                                      <div className="w-12 h-12 rounded-full flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                                        style={{ background: '#ff0000', boxShadow: '0 0 20px rgba(255,0,0,0.5)' }}>
+                                        <span className="text-white text-xl ml-1">▶</span>
+                                      </div>
+                                      <p className="text-gray-500 text-[10px] uppercase tracking-widest">Tap to load video</p>
+                                    </div>
+                                  </button>
+                                )}
+                                {videoMap[ex.name.toLowerCase()] && (
+                                  <div className="relative w-full rounded-xl overflow-hidden" style={{ paddingTop: '56.25%' }}>
+                                    <iframe
+                                      className="absolute inset-0 w-full h-full"
+                                      src={`https://www.youtube.com/embed/${videoMap[ex.name.toLowerCase()]}?rel=0`}
+                                      title={ex.name}
+                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                      allowFullScreen
+                                    />
                                   </div>
-                                  <p className="text-gray-500 text-[10px] uppercase tracking-widest">Tap to load video</p>
-                                </div>
-                              </button>
-                            )}
-                            {videoMap[ex.name.toLowerCase()] && (
-                              <div className="relative w-full rounded-xl overflow-hidden" style={{ paddingTop: '56.25%' }}>
-                                <iframe
-                                  className="absolute inset-0 w-full h-full"
-                                  src={`https://www.youtube.com/embed/${videoMap[ex.name.toLowerCase()]}?rel=0`}
-                                  title={ex.name}
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                  allowFullScreen
-                                />
-                              </div>
+                                )}
+                              </>
                             )}
 
                             {/* Pills (static info) */}
