@@ -239,7 +239,7 @@ export default function Home() {
       </section>
 
       {/* ── How It Works ────────────────────────────────────────────────────── */}
-      <section id="how-it-works" className="relative py-24 border-t" style={{ borderColor: sectionBorder }}>
+      <section id="how-it-works" className="relative py-24 border-t scroll-mt-16" style={{ borderColor: sectionBorder }}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-14">
             <p className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.35em] uppercase opacity-70 mb-2">{t('home.how_it_works.label')}</p>
@@ -273,7 +273,7 @@ export default function Home() {
       </section>
 
       {/* ── Feature Grid ────────────────────────────────────────────────────── */}
-      <section id="features" className="relative py-24 border-t" style={{ borderColor: sectionBorder }}>
+      <section id="features" className="relative py-24 border-t scroll-mt-16" style={{ borderColor: sectionBorder }}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-14">
             <p className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.35em] uppercase opacity-70 mb-2">{t('home.features_section.label')}</p>
@@ -303,7 +303,7 @@ export default function Home() {
       </section>
 
       {/* ── Final CTA ────────────────────────────────────────────────────────── */}
-      <section id="cta" className="relative py-24 border-t" style={{ borderColor: sectionBorder }}>
+      <section id="cta" className="relative py-24 border-t scroll-mt-16" style={{ borderColor: sectionBorder }}>
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 mx-auto w-[700px] h-[400px] top-1/2 -translate-y-1/2 rounded-full"
             style={{ background: 'radial-gradient(circle, rgba(250,204,21,0.05) 0%, transparent 70%)', filter: 'blur(60px)' }} />
