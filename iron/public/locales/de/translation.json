@@ -515,21 +515,81 @@
   "achievements": {
     "title": "Erfolge",
     "toast_label": "Erfolg freigeschaltet!",
-    "first_workout": { "title": "Erster Satz", "desc": "Erstes Training abgeschlossen" },
-    "workout_10":    { "title": "10 Trainings", "desc": "10 Trainingseinheiten abgeschlossen" },
-    "workout_50":    { "title": "Eisen-Veteran", "desc": "50 Trainingseinheiten abgeschlossen" },
-    "streak_3":      { "title": "Auf Feuer", "desc": "3 Tage Trainings-Streak" },
-    "streak_7":      { "title": "Wochenkrieger", "desc": "7 Tage Trainings-Streak" },
-    "week_warrior":  { "title": "Wochenkrieger", "desc": "7 Tage in Folge" },
-    "first_weight_log":   { "title": "Waage gecheckt", "desc": "Erstes Gewicht eingetragen" },
-    "weight_log_10":      { "title": "Konsequent", "desc": "10 Mal Gewicht eingetragen" },
-    "first_measurement":  { "title": "Body-Check", "desc": "Erste Körpermaße eingetragen" },
-    "first_meal_plan":    { "title": "Energie tanken", "desc": "Erster KI-Ernährungsplan erstellt" },
-    "meal_plan_5":        { "title": "Ernährungs-Profi", "desc": "5 KI-Ernährungspläne erstellt" },
-    "first_custom_meal":  { "title": "Hobby-Koch", "desc": "Erste eigene Mahlzeit erstellt" },
-    "first_message":      { "title": "Soziale Gewinne", "desc": "Erste Community-Nachricht gesendet" },
-    "first_login":        { "title": "Willkommen!", "desc": "IronBuddy beigetreten" },
-    "profile_complete":   { "title": "Alles bereit", "desc": "Profil vervollständigt" },
-    "custom_workout_created": { "title": "Coach-Modus", "desc": "Eigenes Training erstellt" }
+    "first_workout": {
+      "title": "Erster Satz",
+      "desc": "Erstes Training abgeschlossen"
+    },
+    "workout_10": {
+      "title": "10 Trainings",
+      "desc": "10 Trainingseinheiten abgeschlossen"
+    },
+    "workout_50": {
+      "title": "Eisen-Veteran",
+      "desc": "50 Trainingseinheiten abgeschlossen"
+    },
+    "streak_3": {
+      "title": "Auf Feuer",
+      "desc": "3 Tage Trainings-Streak"
+    },
+    "streak_7": {
+      "title": "Wochenkrieger",
+      "desc": "7 Tage Trainings-Streak"
+    },
+    "week_warrior": {
+      "title": "Wochenkrieger",
+      "desc": "7 Tage in Folge"
+    },
+    "first_weight_log": {
+      "title": "Waage gecheckt",
+      "desc": "Erstes Gewicht eingetragen"
+    },
+    "weight_log_10": {
+      "title": "Konsequent",
+      "desc": "10 Mal Gewicht eingetragen"
+    },
+    "first_measurement": {
+      "title": "Body-Check",
+      "desc": "Erste Körpermaße eingetragen"
+    },
+    "first_meal_plan": {
+      "title": "Energie tanken",
+      "desc": "Erster KI-Ernährungsplan erstellt"
+    },
+    "meal_plan_5": {
+      "title": "Ernährungs-Profi",
+      "desc": "5 KI-Ernährungspläne erstellt"
+    },
+    "first_custom_meal": {
+      "title": "Hobby-Koch",
+      "desc": "Erste eigene Mahlzeit erstellt"
+    },
+    "first_message": {
+      "title": "Soziale Gewinne",
+      "desc": "Erste Community-Nachricht gesendet"
+    },
+    "first_login": {
+      "title": "Willkommen!",
+      "desc": "IronBuddy beigetreten"
+    },
+    "profile_complete": {
+      "title": "Alles bereit",
+      "desc": "Profil vervollständigt"
+    },
+    "custom_workout_created": {
+      "title": "Coach-Modus",
+      "desc": "Eigenes Training erstellt"
+    }
+  },
+  "workoutplan": {
+    "title": "Trainingsplan",
+    "days": "Tage",
+    "days_per_week": "Tage / Woche",
+    "generate": "Meinen Plan erstellen",
+    "regenerate": "Neu erstellen",
+    "generating": "Wird erstellt...",
+    "save": "In Meine Workouts speichern",
+    "saved": "In Workouts gespeichert",
+    "ready_title": "Bereit zum Training?",
+    "ready_desc": "Klicke auf {{button}} und IRON erstellt ein personalisiertes Trainingsprogramm basierend auf deinem Ziel, Level und Equipment."
   }
 }

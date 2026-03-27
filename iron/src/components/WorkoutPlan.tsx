@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { apiWorkout, apiGetYouTubeVideo, type WorkoutPlan, type WorkoutExercise, type CustomWorkout } from '../api';
 import type { UserProfile } from '../context/userContext';
 import { useTheme } from '../context/themeContext';
+import { useTranslation } from 'react-i18next';
 import { savePR } from '../prStorage';
 
 interface Props {
@@ -54,6 +55,7 @@ function parseRestSecs(rest: string): number {
 
 export default function WorkoutPlanView({ profile, token, onStartSession, onFinishSession }: Props) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -304,10 +306,10 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
         <div>
-          <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">AI Generated</p>
-          <h1 className="text-2xl md:text-3xl font-black uppercase italic mt-1">💪 Workout Plan</h1>
+          <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('workouts.ai_plan')}</p>
+          <h1 className="text-2xl md:text-3xl font-black uppercase italic mt-1">💪 {t('workoutplan.title')}</h1>
           <div className="flex items-center gap-2 mt-3">
-            <span className="text-xs text-gray-500 uppercase font-bold tracking-wide">Days:</span>
+            <span className="text-xs text-gray-500 uppercase font-bold tracking-wide">{t('workoutplan.days')}:</span>
             <select
               value={numDays}
               onChange={e => setNumDays(Number(e.target.value))}
@@ -319,7 +321,7 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
               }}
             >
               {[2, 3, 4, 5, 6].map(d => (
-                <option key={d} value={d} style={{ background: theme === 'light' ? '#ffffff' : '#060608', color: theme === 'light' ? '#111111' : '#ffffff' }}>{d} days / week</option>
+                <option key={d} value={d} style={{ background: theme === 'light' ? '#ffffff' : '#060608', color: theme === 'light' ? '#111111' : '#ffffff' }}>{d} {t('workoutplan.days_per_week')}</option>
               ))}
             </select>
           </div>
@@ -335,7 +337,7 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                 : { color: '#4ade80', textShadow: '0 0 10px rgba(74,222,128,0.7), 0 0 20px rgba(34,211,238,0.4)' }
               }
             >
-              {imported ? '✓ Saved to My Workouts' : '📥 Save to My Workouts'}
+              {imported ? `✓ ${t('workoutplan.saved')}` : `📥 ${t('workoutplan.save')}`}
             </button>
           )}
           <button
@@ -347,9 +349,9 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
             {loading ? (
               <>
                 <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>⚙️</motion.span>
-                Generating...
+                {t('workoutplan.generating')}
               </>
-            ) : plan ? '🔄 Regenerate' : '✨ Generate My Plan'}
+            ) : plan ? `🔄 ${t('workoutplan.regenerate')}` : `✨ ${t('workoutplan.generate')}`}
           </button>
         </div>
       </div>
@@ -366,10 +368,9 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
             flex flex-col items-center justify-center text-center gap-4"
         >
           <span className="text-6xl animate-coach-breathe">🏋️</span>
-          <p className="text-[--color-iron-gold] font-black uppercase text-xl">Ready to train?</p>
+          <p className="text-[--color-iron-gold] font-black uppercase text-xl">{t('workoutplan.ready_title')}</p>
           <p className="text-gray-400 text-sm max-w-sm">
-            Click <strong className="text-white">Generate My Plan</strong> and IRON will build a personalized
-            workout program based on your goal, level and equipment.
+            {t('workoutplan.ready_desc', { button: t('workoutplan.generate') })}
           </p>
         </motion.div>
       )}

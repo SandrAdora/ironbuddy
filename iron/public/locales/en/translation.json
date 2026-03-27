@@ -515,21 +515,81 @@
   "achievements": {
     "title": "Achievements",
     "toast_label": "Achievement Unlocked!",
-    "first_workout": { "title": "First Rep", "desc": "Completed your first workout" },
-    "workout_10":    { "title": "10 Workouts", "desc": "Completed 10 workouts" },
-    "workout_50":    { "title": "Iron Veteran", "desc": "Completed 50 workouts" },
-    "streak_3":      { "title": "On Fire", "desc": "3-day workout streak" },
-    "streak_7":      { "title": "Week Warrior", "desc": "7-day workout streak" },
-    "week_warrior":  { "title": "Week Warrior", "desc": "7 days in a row" },
-    "first_weight_log":   { "title": "Scale Checked", "desc": "Logged your first weight" },
-    "weight_log_10":      { "title": "Consistent Tracker", "desc": "Logged weight 10 times" },
-    "first_measurement":  { "title": "Body Check", "desc": "Logged your first measurements" },
-    "first_meal_plan":    { "title": "Fuel Up", "desc": "Generated your first AI meal plan" },
-    "meal_plan_5":        { "title": "Nutrition Pro", "desc": "Generated 5 AI meal plans" },
-    "first_custom_meal":  { "title": "Home Chef", "desc": "Created your first custom meal" },
-    "first_message":      { "title": "Social Gains", "desc": "Sent your first community message" },
-    "first_login":        { "title": "Welcome!", "desc": "Joined IronBuddy" },
-    "profile_complete":   { "title": "All Set", "desc": "Completed your profile" },
-    "custom_workout_created": { "title": "Coach Mode", "desc": "Created a custom workout" }
+    "first_workout": {
+      "title": "First Rep",
+      "desc": "Completed your first workout"
+    },
+    "workout_10": {
+      "title": "10 Workouts",
+      "desc": "Completed 10 workouts"
+    },
+    "workout_50": {
+      "title": "Iron Veteran",
+      "desc": "Completed 50 workouts"
+    },
+    "streak_3": {
+      "title": "On Fire",
+      "desc": "3-day workout streak"
+    },
+    "streak_7": {
+      "title": "Week Warrior",
+      "desc": "7-day workout streak"
+    },
+    "week_warrior": {
+      "title": "Week Warrior",
+      "desc": "7 days in a row"
+    },
+    "first_weight_log": {
+      "title": "Scale Checked",
+      "desc": "Logged your first weight"
+    },
+    "weight_log_10": {
+      "title": "Consistent Tracker",
+      "desc": "Logged weight 10 times"
+    },
+    "first_measurement": {
+      "title": "Body Check",
+      "desc": "Logged your first measurements"
+    },
+    "first_meal_plan": {
+      "title": "Fuel Up",
+      "desc": "Generated your first AI meal plan"
+    },
+    "meal_plan_5": {
+      "title": "Nutrition Pro",
+      "desc": "Generated 5 AI meal plans"
+    },
+    "first_custom_meal": {
+      "title": "Home Chef",
+      "desc": "Created your first custom meal"
+    },
+    "first_message": {
+      "title": "Social Gains",
+      "desc": "Sent your first community message"
+    },
+    "first_login": {
+      "title": "Welcome!",
+      "desc": "Joined IronBuddy"
+    },
+    "profile_complete": {
+      "title": "All Set",
+      "desc": "Completed your profile"
+    },
+    "custom_workout_created": {
+      "title": "Coach Mode",
+      "desc": "Created a custom workout"
+    }
+  },
+  "workoutplan": {
+    "title": "Workout Plan",
+    "days": "Days",
+    "days_per_week": "days / week",
+    "generate": "Generate My Plan",
+    "regenerate": "Regenerate",
+    "generating": "Generating...",
+    "save": "Save to My Workouts",
+    "saved": "Saved to My Workouts",
+    "ready_title": "Ready to train?",
+    "ready_desc": "Click {{button}} and IRON will build a personalized workout program based on your goal, level and equipment."
   }
 }

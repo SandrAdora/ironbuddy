@@ -26,6 +26,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen]               = useState(false);
   const [langOpen, setLangOpen]           = useState(false);
   const [activeSection, setActiveSection] = useState('how-it-works');
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const { token, setProfile, logout }     = useUser();
   const location                          = useLocation();
   const navigate                          = useNavigate();
@@ -64,6 +65,23 @@ export default function Navbar() {
     });
     return () => observers.forEach(o => o.disconnect());
   }, [isHome]);
+
+  // Capture the PWA install prompt
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e as BeforeInstallPromptEvent);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') setInstallPrompt(null);
+  };
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -133,6 +151,18 @@ export default function Navbar() {
             >
               {t('nav.sign_up')}
             </Link>
+          )}
+
+          {/* Install app */}
+          {installPrompt && (
+            <button
+              onClick={handleInstall}
+              aria-label="Install IronBuddy app"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-[0.1em] transition-all duration-200 hover:scale-[1.04]"
+              style={{ background: 'rgba(250,204,21,0.1)', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)' }}
+            >
+              ⬇ Install
+            </button>
           )}
 
           {/* Theme toggle */}
@@ -281,6 +311,20 @@ export default function Navbar() {
                   </Link>
                 )}
               </li>
+
+              {/* Install app */}
+              {installPrompt && (
+                <li>
+                  <button
+                    onClick={() => { handleInstall(); setIsOpen(false); }}
+                    aria-label="Install IronBuddy app"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-black uppercase tracking-wider transition-all"
+                    style={{ background: 'rgba(250,204,21,0.1)', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)' }}
+                  >
+                    ⬇ Install App
+                  </button>
+                </li>
+              )}
 
               {/* Mobile theme toggle */}
               <li>

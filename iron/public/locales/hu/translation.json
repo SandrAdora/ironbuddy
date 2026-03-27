@@ -499,21 +499,81 @@
   "achievements": {
     "title": "Eredmények",
     "toast_label": "Eredmény feloldva!",
-    "first_workout": { "title": "Első ismétlés", "desc": "Első edzés teljesítve" },
-    "workout_10":    { "title": "10 edzés", "desc": "10 edzés teljesítve" },
-    "workout_50":    { "title": "Vas-veterán", "desc": "50 edzés teljesítve" },
-    "streak_3":      { "title": "Lángban", "desc": "3 napos edzéssorozat" },
-    "streak_7":      { "title": "Hét bajnoka", "desc": "7 napos edzéssorozat" },
-    "week_warrior":  { "title": "Hét bajnoka", "desc": "7 egymást követő nap" },
-    "first_weight_log":   { "title": "Mérleg ellenőrzve", "desc": "Első súly rögzítve" },
-    "weight_log_10":      { "title": "Következetes", "desc": "Súly 10-szer rögzítve" },
-    "first_measurement":  { "title": "Testmérés", "desc": "Első testméretek rögzítve" },
-    "first_meal_plan":    { "title": "Feltöltve", "desc": "Első AI étkezési terv létrehozva" },
-    "meal_plan_5":        { "title": "Táplálkozási profi", "desc": "5 AI étkezési terv létrehozva" },
-    "first_custom_meal":  { "title": "Házi séf", "desc": "Első egyéni étel létrehozva" },
-    "first_message":      { "title": "Közösségi gyümölcs", "desc": "Első üzenet elküldve" },
-    "first_login":        { "title": "Üdvözöllek!", "desc": "Csatlakoztál az IronBuddyhoz" },
-    "profile_complete":   { "title": "Minden kész", "desc": "Profil kitöltve" },
-    "custom_workout_created": { "title": "Edző mód", "desc": "Egyéni edzés létrehozva" }
+    "first_workout": {
+      "title": "Első ismétlés",
+      "desc": "Első edzés teljesítve"
+    },
+    "workout_10": {
+      "title": "10 edzés",
+      "desc": "10 edzés teljesítve"
+    },
+    "workout_50": {
+      "title": "Vas-veterán",
+      "desc": "50 edzés teljesítve"
+    },
+    "streak_3": {
+      "title": "Lángban",
+      "desc": "3 napos edzéssorozat"
+    },
+    "streak_7": {
+      "title": "Hét bajnoka",
+      "desc": "7 napos edzéssorozat"
+    },
+    "week_warrior": {
+      "title": "Hét bajnoka",
+      "desc": "7 egymást követő nap"
+    },
+    "first_weight_log": {
+      "title": "Mérleg ellenőrzve",
+      "desc": "Első súly rögzítve"
+    },
+    "weight_log_10": {
+      "title": "Következetes",
+      "desc": "Súly 10-szer rögzítve"
+    },
+    "first_measurement": {
+      "title": "Testmérés",
+      "desc": "Első testméretek rögzítve"
+    },
+    "first_meal_plan": {
+      "title": "Feltöltve",
+      "desc": "Első AI étkezési terv létrehozva"
+    },
+    "meal_plan_5": {
+      "title": "Táplálkozási profi",
+      "desc": "5 AI étkezési terv létrehozva"
+    },
+    "first_custom_meal": {
+      "title": "Házi séf",
+      "desc": "Első egyéni étel létrehozva"
+    },
+    "first_message": {
+      "title": "Közösségi gyümölcs",
+      "desc": "Első üzenet elküldve"
+    },
+    "first_login": {
+      "title": "Üdvözöllek!",
+      "desc": "Csatlakoztál az IronBuddyhoz"
+    },
+    "profile_complete": {
+      "title": "Minden kész",
+      "desc": "Profil kitöltve"
+    },
+    "custom_workout_created": {
+      "title": "Edző mód",
+      "desc": "Egyéni edzés létrehozva"
+    }
+  },
+  "workoutplan": {
+    "title": "Edzésterv",
+    "days": "Napok",
+    "days_per_week": "nap / hét",
+    "generate": "Tervem létrehozása",
+    "regenerate": "Újragenerálás",
+    "generating": "Létrehozás...",
+    "save": "Mentés az Edzéseimbe",
+    "saved": "Mentve az Edzéseimbe",
+    "ready_title": "Készen állsz?",
+    "ready_desc": "Kattints a {{button}} gombra, és IRON személyre szabott edzésprogramot készít a célod, szinted és felszerelésed alapján."
   }
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiGetCustomMeals, apiCreateCustomMeal, apiUpdateCustomMeal, apiDeleteCustomMeal, type CustomMeal } from '../api';
+import { useTheme } from '../context/themeContext';
 
 interface Props {
   token: string;
@@ -9,6 +10,7 @@ interface Props {
 const EMOJI_OPTIONS = ['🍽️','🥗','🍳','🥩','🍝','🥣','🥑','🌯','🍌','🐟','🍗','🥦','🧆','🥚','🍜','🫙','🥛','🍱'];
 
 export default function MyMeals({ token }: Props) {
+  const { theme } = useTheme();
   const [meals, setMeals] = useState<CustomMeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
@@ -100,10 +102,15 @@ export default function MyMeals({ token }: Props) {
           <button
             onClick={() => setFormOpen(true)}
             aria-label="Add new meal"
-            className="w-7 h-7 rounded-lg text-base font-black active:scale-95 transition-all duration-200 flex items-center justify-center"
-            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wide active:scale-95 transition-all duration-200"
+            style={{
+              background: theme === 'light' ? '#ffffff' : '#060608',
+              color: '#facc15',
+              border: '1px solid rgba(250,204,21,0.4)',
+              boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 20px rgba(250,204,21,0.1)',
+            }}
           >
-            +
+            + Add Meal
           </button>
         )}
       </div>
@@ -247,7 +254,12 @@ export default function MyMeals({ token }: Props) {
               </div>
               <div className="flex items-center justify-between mt-auto">
                 {m.kcal ? (
-                  <span className="text-xs bg-yellow-300/10 text-yellow-300 font-bold px-3 py-1 rounded-full">{m.kcal}</span>
+                  <span className="text-xs font-bold px-3 py-1 rounded-full"
+                    style={{
+                      background: theme === 'light' ? 'rgba(180,120,0,0.1)' : 'rgba(250,204,21,0.1)',
+                      color: theme === 'light' ? '#92640a' : '#fde047',
+                    }}
+                  >{m.kcal}</span>
                 ) : <span />}
               </div>
             </motion.div>

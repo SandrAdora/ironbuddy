@@ -575,8 +575,8 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                 className="w-full flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 text-left"
               >
                 <div>
-                  <p className="text-white font-black uppercase tracking-wide">{w.name}</p>
-                  <p className="text-gray-500 text-xs mt-0.5">
+                  <p className="font-black uppercase tracking-wide" style={{ color: theme === 'light' ? '#111' : '#fff' }}>{w.name}</p>
+                  <p className="text-xs mt-0.5" style={{ color: theme === 'light' ? '#888' : 'rgb(107,114,128)' }}>
                     {w.exercises.length} exercise{w.exercises.length !== 1 ? 's' : ''}
                     {w.description ? ` · ${w.description}` : ''}
                     {' · '}{new Date(w.created_at).toLocaleDateString()}
@@ -639,7 +639,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                       ⚙
                     </button>
                   </div>
-                  <span className={`text-gray-400 transition-transform duration-200 ${expandedId === w.id ? 'rotate-180' : ''}`}>▾</span>
+                  <span className={`text-gray-400 text-xl transition-transform duration-200 ${expandedId === w.id ? 'rotate-180' : ''}`}>▾</span>
                 </div>
               </button>
 

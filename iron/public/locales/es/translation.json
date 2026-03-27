@@ -515,21 +515,81 @@
   "achievements": {
     "title": "Logros",
     "toast_label": "¡Logro desbloqueado!",
-    "first_workout": { "title": "Primera rep", "desc": "Primer entrenamiento completado" },
-    "workout_10":    { "title": "10 Entrenamientos", "desc": "10 entrenamientos completados" },
-    "workout_50":    { "title": "Veterano de hierro", "desc": "50 entrenamientos completados" },
-    "streak_3":      { "title": "En llamas", "desc": "Racha de 3 días" },
-    "streak_7":      { "title": "Guerrero semanal", "desc": "Racha de 7 días" },
-    "week_warrior":  { "title": "Guerrero semanal", "desc": "7 días seguidos" },
-    "first_weight_log":   { "title": "Peso registrado", "desc": "Primer peso registrado" },
-    "weight_log_10":      { "title": "Seguimiento constante", "desc": "Peso registrado 10 veces" },
-    "first_measurement":  { "title": "Control corporal", "desc": "Primeras medidas registradas" },
-    "first_meal_plan":    { "title": "Energía lista", "desc": "Primer plan IA generado" },
-    "meal_plan_5":        { "title": "Pro nutrición", "desc": "5 planes IA generados" },
-    "first_custom_meal":  { "title": "Chef casero", "desc": "Primera comida personalizada creada" },
-    "first_message":      { "title": "Ganancias sociales", "desc": "Primer mensaje enviado" },
-    "first_login":        { "title": "¡Bienvenido!", "desc": "Unido a IronBuddy" },
-    "profile_complete":   { "title": "Todo listo", "desc": "Perfil completado" },
-    "custom_workout_created": { "title": "Modo entrenador", "desc": "Entrenamiento personalizado creado" }
+    "first_workout": {
+      "title": "Primera rep",
+      "desc": "Primer entrenamiento completado"
+    },
+    "workout_10": {
+      "title": "10 Entrenamientos",
+      "desc": "10 entrenamientos completados"
+    },
+    "workout_50": {
+      "title": "Veterano de hierro",
+      "desc": "50 entrenamientos completados"
+    },
+    "streak_3": {
+      "title": "En llamas",
+      "desc": "Racha de 3 días"
+    },
+    "streak_7": {
+      "title": "Guerrero semanal",
+      "desc": "Racha de 7 días"
+    },
+    "week_warrior": {
+      "title": "Guerrero semanal",
+      "desc": "7 días seguidos"
+    },
+    "first_weight_log": {
+      "title": "Peso registrado",
+      "desc": "Primer peso registrado"
+    },
+    "weight_log_10": {
+      "title": "Seguimiento constante",
+      "desc": "Peso registrado 10 veces"
+    },
+    "first_measurement": {
+      "title": "Control corporal",
+      "desc": "Primeras medidas registradas"
+    },
+    "first_meal_plan": {
+      "title": "Energía lista",
+      "desc": "Primer plan IA generado"
+    },
+    "meal_plan_5": {
+      "title": "Pro nutrición",
+      "desc": "5 planes IA generados"
+    },
+    "first_custom_meal": {
+      "title": "Chef casero",
+      "desc": "Primera comida personalizada creada"
+    },
+    "first_message": {
+      "title": "Ganancias sociales",
+      "desc": "Primer mensaje enviado"
+    },
+    "first_login": {
+      "title": "¡Bienvenido!",
+      "desc": "Unido a IronBuddy"
+    },
+    "profile_complete": {
+      "title": "Todo listo",
+      "desc": "Perfil completado"
+    },
+    "custom_workout_created": {
+      "title": "Modo entrenador",
+      "desc": "Entrenamiento personalizado creado"
+    }
+  },
+  "workoutplan": {
+    "title": "Plan de Entrenamiento",
+    "days": "Días",
+    "days_per_week": "días / semana",
+    "generate": "Generar mi plan",
+    "regenerate": "Regenerar",
+    "generating": "Generando...",
+    "save": "Guardar en Mis Entrenamientos",
+    "saved": "Guardado en Mis Entrenamientos",
+    "ready_title": "¿Listo para entrenar?",
+    "ready_desc": "Haz clic en {{button}} e IRON creará un programa personalizado según tu objetivo, nivel y equipamiento."
   }
 }
