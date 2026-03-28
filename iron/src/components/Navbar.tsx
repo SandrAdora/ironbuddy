@@ -17,7 +17,7 @@ const NAV_LINK = 'relative text-xs font-bold uppercase tracking-[0.14em] font-sa
 const NAV_UNDERLINE = 'absolute bottom-0 left-0 h-px bg-[--color-iron-gold] transition-all duration-300';
 
 const HOME_SECTIONS = [
-  { id: 'how-it-works', key: 'home.section_nav.how_it_works' },
+  { id: 'how-it-works', key: 'home.how_it_works' },
   { id: 'features',     key: 'home.section_nav.features' },
   { id: 'cta',          key: 'home.section_nav.join' },
 ];
