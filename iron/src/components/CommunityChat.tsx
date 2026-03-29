@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { io, Socket } from 'socket.io-client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComments } from '@fortawesome/free-solid-svg-icons';
+import { faComments, faFilePdf, faPaperclip, faDumbbell, faCircleExclamation, faMagnifyingGlass, faBell, faVolumeXmark, faTrash } from '@fortawesome/free-solid-svg-icons';
 import {
   apiGetUsers, apiGetConversations, apiStartConversation, apiCreateGroup,
   apiGetMessages, apiSendMessage, apiUploadFile, apiToggleReaction,
@@ -337,7 +337,7 @@ function FilePreview({ pending, onRemove }: { pending: PendingFile; onRemove: ()
       {pending.type === 'image' ? (
         <img src={pending.previewUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
       ) : (
-        <span className="text-2xl">{pending.type === 'pdf' ? '📄' : '📎'}</span>
+        <FontAwesomeIcon icon={pending.type === 'pdf' ? faFilePdf : faPaperclip} className="w-6 h-6 text-[--color-iron-gold]" />
       )}
       <span className="text-xs text-white/80 max-w-[120px] truncate">{pending.file.name}</span>
       <button
@@ -1161,7 +1161,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                 </div>
               ) : filteredUsers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
-                  <span className="text-4xl">🏋️</span>
+                  <FontAwesomeIcon icon={faDumbbell} className="w-8 h-8 text-gray-600" />
                   <p className="text-gray-500 text-sm">
                     {userSearch ? 'No athletes match your search.' : 'No other athletes yet.'}
                   </p>
@@ -1170,7 +1170,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                 <>
                   {startChatError && (
                     <div className="mx-3 mt-3 px-4 py-3 bg-red-500/10 border border-red-400/20 rounded-xl text-xs text-red-300">
-                      🫥 {startChatError}
+                      <FontAwesomeIcon icon={faCircleExclamation} className="mr-1.5" /> {startChatError}
                     </div>
                   )}
                 {filteredUsers.map((u) => {
@@ -1272,21 +1272,21 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                   title="Search messages"
                   className={`text-sm px-2 py-1.5 rounded-lg transition-all ${showMsgSearch ? 'text-yellow-300 bg-yellow-300/10' : 'text-gray-600 hover:text-gray-300 hover:bg-white/10'}`}
                 >
-                  🔍
+                  <FontAwesomeIcon icon={faMagnifyingGlass} className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => toggleMute(activeConvo.id)}
                   title={mutedConvos.has(activeConvo.id) ? 'Unmute' : 'Mute'}
                   className="text-gray-600 hover:text-gray-300 text-xs px-2 py-1.5 rounded-lg hover:bg-white/10 transition-all font-bold uppercase tracking-wide"
                 >
-                  {mutedConvos.has(activeConvo.id) ? '🔔' : '🔇'}
+                  <FontAwesomeIcon icon={mutedConvos.has(activeConvo.id) ? faBell : faVolumeXmark} className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => handleDeleteConversation(activeConvo)}
                   title={activeConvo.is_group ? 'Leave group' : 'Delete conversation'}
                   className="text-gray-600 hover:text-red-400 text-xs px-2 py-1.5 rounded-lg hover:bg-red-400/10 transition-all font-bold uppercase tracking-wide"
                 >
-                  🗑 {activeConvo.is_group ? 'Leave' : 'Delete'}
+                  <FontAwesomeIcon icon={faTrash} className="w-3.5 h-3.5 mr-1" />{activeConvo.is_group ? 'Leave' : 'Delete'}
                 </button>
               </div>
 
