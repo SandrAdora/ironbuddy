@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { io, Socket } from 'socket.io-client';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faComments, faFilePdf, faPaperclip } from '@fortawesome/free-solid-svg-icons';
 import {
   apiGetUsers, apiGetConversations, apiStartConversation, apiCreateGroup,
   apiGetMessages, apiSendMessage, apiUploadFile, apiToggleReaction,
@@ -335,7 +337,7 @@ function FilePreview({ pending, onRemove }: { pending: PendingFile; onRemove: ()
       {pending.type === 'image' ? (
         <img src={pending.previewUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
       ) : (
-        <span className="text-2xl">{pending.type === 'pdf' ? '📄' : '📎'}</span>
+        <FontAwesomeIcon icon={pending.type === 'pdf' ? faFilePdf : faPaperclip} className="w-6 h-6 text-[--color-iron-gold]" />
       )}
       <span className="text-xs text-white/80 max-w-[120px] truncate">{pending.file.name}</span>
       <button
@@ -868,7 +870,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
         <div>
           <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Social</p>
           <h2 className="text-2xl font-black uppercase italic mt-1 flex items-center gap-2">
-            💬 Community
+            <FontAwesomeIcon icon={faComments} /> Community
             {totalUnread > 0 && (
               <span className="text-sm bg-yellow-300 text-black font-black px-2 py-0.5 rounded-full">{totalUnread}</span>
             )}
