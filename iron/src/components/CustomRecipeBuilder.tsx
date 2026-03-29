@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/themeContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faUtensils, faBowlFood, faEgg, faDrumstickBite, faBowlRice,
+  faLeaf, faBreadSlice, faFish, faSeedling, faMortarPestle,
+  faJar, faGlassWater, faBox, faCarrot, faBacon, faCheese,
+  faAppleWhole, faLemon, faCakeCandles, faPizzaSlice, faHotdog,
+  faKitchenSet, faMugHot, faBlender,
+} from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface CustomRecipe {
@@ -38,7 +47,41 @@ function persist(token: string, recipes: CustomRecipe[]) {
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const EMOJI_OPTIONS = ['🍽️','🥗','🍳','🥩','🍝','🥣','🥑','🌯','🍌','🐟','🍗','🥦','🧆','🥚','🍜','🫙','🥛','🍱','🧁','🍕','🌮','🥘','🫕','🍲'];
+const ICON_OPTIONS: { id: string; icon: IconDefinition }[] = [
+  { id: 'faUtensils',     icon: faUtensils },      // 🍽️
+  { id: 'faBowlFood',     icon: faBowlFood },       // 🥗
+  { id: 'faEgg',          icon: faEgg },            // 🍳
+  { id: 'faDrumstickBite',icon: faDrumstickBite },  // 🥩 / 🍗
+  { id: 'faBowlRice',     icon: faBowlRice },       // 🍝
+  { id: 'faLeaf',         icon: faLeaf },           // 🥣 / 🥑
+  { id: 'faBreadSlice',   icon: faBreadSlice },     // 🌯
+  { id: 'faFish',         icon: faFish },           // 🐟
+  { id: 'faSeedling',     icon: faSeedling },       // 🥦
+  { id: 'faMortarPestle', icon: faMortarPestle },   // 🧆
+  { id: 'faJar',          icon: faJar },            // 🫙
+  { id: 'faGlassWater',   icon: faGlassWater },     // 🥛
+  { id: 'faBox',          icon: faBox },            // 🍱
+  { id: 'faCarrot',       icon: faCarrot },
+  { id: 'faBacon',        icon: faBacon },
+  { id: 'faCheese',       icon: faCheese },
+  { id: 'faAppleWhole',   icon: faAppleWhole },
+  { id: 'faLemon',        icon: faLemon },
+  { id: 'faCakeCandles',  icon: faCakeCandles },    // 🧁
+  { id: 'faPizzaSlice',   icon: faPizzaSlice },     // 🍕
+  { id: 'faHotdog',       icon: faHotdog },         // 🌮
+  { id: 'faKitchenSet',   icon: faKitchenSet },     // 🥘 / 🫕 / 🍲
+  { id: 'faMugHot',       icon: faMugHot },
+  { id: 'faBlender',      icon: faBlender },
+];
+
+const DEFAULT_ICON = 'faUtensils';
+
+/** Renders a FA icon or falls back to legacy emoji string */
+function RecipeIcon({ value, className }: { value: string; className?: string }) {
+  const match = ICON_OPTIONS.find((o) => o.id === value);
+  if (match) return <FontAwesomeIcon icon={match.icon} className={className} />;
+  return <span>{value}</span>;
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function CustomRecipeBuilder({ token }: Props) {
@@ -52,7 +95,7 @@ export default function CustomRecipeBuilder({ token }: Props) {
   // Form fields
   const [name, setName]           = useState('');
   const [description, setDesc]    = useState('');
-  const [icon, setIcon]           = useState('🍽️');
+  const [icon, setIcon]           = useState(DEFAULT_ICON);
   const [prepTime, setPrepTime]   = useState('');
   const [cookTime, setCookTime]   = useState('');
   const [servings, setServings]   = useState('');
@@ -63,7 +106,7 @@ export default function CustomRecipeBuilder({ token }: Props) {
   useEffect(() => { setRecipes(load(token)); }, [token]);
 
   const resetForm = () => {
-    setName(''); setDesc(''); setIcon('🍽️'); setPrepTime(''); setCookTime('');
+    setName(''); setDesc(''); setIcon(DEFAULT_ICON); setPrepTime(''); setCookTime('');
     setServings(''); setKcal(''); setIngredients(['']); setSteps(['']);
     setFormOpen(false); setEditingId(null); setError('');
   };
@@ -137,7 +180,7 @@ export default function CustomRecipeBuilder({ token }: Props) {
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
         <div>
           <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Custom</p>
-          <h2 className="text-2xl font-black uppercase italic mt-1">👨‍🍳 Recipe Builder</h2>
+          <h2 className="text-2xl font-black uppercase italic mt-1">Recipe Builder</h2>
         </div>
         {!formOpen && (
           <button
@@ -164,19 +207,25 @@ export default function CustomRecipeBuilder({ token }: Props) {
             className="bg-white/5 backdrop-blur-md border border-yellow-300/20 rounded-2xl p-5 space-y-5"
           >
             <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">
-              {editingId !== null ? <><span style={{ color: '#facc15' }}>✎</span> Edit Recipe</> : '👨‍🍳 New Recipe'}
+              {editingId !== null ? <><span style={{ color: '#facc15' }}>✎</span> Edit Recipe</> : 'New Recipe'}
             </p>
 
             {/* Icon picker */}
             <div className="space-y-2">
               <label className="text-xs text-gray-500 uppercase font-bold">Icon</label>
               <div className="flex flex-wrap gap-2">
-                {EMOJI_OPTIONS.map((e) => (
-                  <button key={e} onClick={() => setIcon(e)}
-                    className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all duration-150 ${
-                      icon === e ? 'bg-yellow-300/20 border-2 border-yellow-300 scale-110' : 'bg-white/5 border border-white/10 hover:border-white/30'
+                {ICON_OPTIONS.map((o) => (
+                  <button key={o.id} onClick={() => setIcon(o.id)}
+                    aria-label={`Select icon ${o.id}`}
+                    aria-pressed={icon === o.id}
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
+                      icon === o.id
+                        ? 'bg-yellow-300/20 border-2 border-yellow-300 scale-110 text-yellow-300'
+                        : 'bg-white/5 border border-white/10 hover:border-white/30 text-gray-400 hover:text-white'
                     }`}
-                  >{e}</button>
+                  >
+                    <FontAwesomeIcon icon={o.icon} className="w-4 h-4" />
+                  </button>
                 ))}
               </div>
             </div>
@@ -274,7 +323,7 @@ export default function CustomRecipeBuilder({ token }: Props) {
       {recipes.length === 0 && !formOpen ? (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-10 flex flex-col items-center justify-center text-center gap-4">
-          <span className="text-5xl">👨‍🍳</span>
+          <FontAwesomeIcon icon={faKitchenSet} className="w-12 h-12 text-[--color-iron-gold] opacity-40" />
           <p className="text-[--color-iron-gold] font-black uppercase text-lg">No recipes yet</p>
           <p className="text-gray-400 text-sm">Click <strong className="text-white">New Recipe</strong> to build your first custom recipe.</p>
         </motion.div>
@@ -289,7 +338,7 @@ export default function CustomRecipeBuilder({ token }: Props) {
                 onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}
                 className="w-full flex items-center gap-4 px-5 py-4 text-left"
               >
-                <span className="text-3xl shrink-0">{r.icon}</span>
+                <RecipeIcon value={r.icon || DEFAULT_ICON} className="w-7 h-7 text-[--color-iron-gold] shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-black uppercase tracking-wide truncate">{r.name}</p>
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
