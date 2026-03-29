@@ -8,6 +8,7 @@ import {
   faJar, faGlassWater, faBox, faCarrot, faBacon, faCheese,
   faAppleWhole, faLemon, faCakeCandles, faPizzaSlice, faHotdog,
   faKitchenSet, faMugHot, faBlender,
+  faFire, faClock,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
@@ -344,9 +345,9 @@ export default function CustomRecipeBuilder({ token }: Props) {
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
                     {r.description && <p className="text-gray-500 text-xs truncate">{r.description}</p>}
                     <div className="flex gap-3">
-                      {r.prepTime  && <span className="text-gray-600 text-xs">⏱ {r.prepTime}</span>}
-                      {r.cookTime  && <span className="text-gray-600 text-xs">🔥 {r.cookTime}</span>}
-                      {r.servings  && <span className="text-gray-600 text-xs">🍽 {r.servings}</span>}
+                      {r.prepTime  && <span className="text-gray-600 text-xs flex items-center gap-1"><FontAwesomeIcon icon={faClock} className="w-3 h-3" /> {r.prepTime}</span>}
+                      {r.cookTime  && <span className="text-gray-600 text-xs flex items-center gap-1"><FontAwesomeIcon icon={faFire} className="w-3 h-3" /> {r.cookTime}</span>}
+                      {r.servings  && <span className="text-gray-600 text-xs flex items-center gap-1"><FontAwesomeIcon icon={faUtensils} className="w-3 h-3" /> {r.servings}</span>}
                       {r.kcal      && <span className="text-yellow-400/70 text-xs font-bold">{r.kcal}</span>}
                     </div>
                   </div>
