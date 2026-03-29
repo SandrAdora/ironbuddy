@@ -164,7 +164,7 @@ export default function AddUserModal({ token, currentUserId, currentUserName, on
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 12 }}
         transition={{ duration: 0.2 }}
-        className="w-full max-w-md bg-[#111] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+        className="w-full max-w-md add-user-modal border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -192,7 +192,7 @@ export default function AddUserModal({ token, currentUserId, currentUserName, on
         </div>
 
         {/* Tab content */}
-        <div className="p-5 min-h-[260px]">
+        <div className="p-4 sm:p-5 overflow-y-auto flex-1">
 
           {/* ── Email search ── */}
           {tab === 'email' && (
@@ -253,10 +253,10 @@ export default function AddUserModal({ token, currentUserId, currentUserName, on
               <p className="text-gray-500 text-sm text-center">
                 Show this to other athletes so they can scan and add you instantly.
               </p>
-              <div className="bg-white p-4 rounded-2xl shadow-lg">
+              <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-lg">
                 <QRCodeSVG
                   value={encodeUserQR(currentUserId)}
-                  size={200}
+                  size={160}
                   bgColor="#ffffff"
                   fgColor="#000000"
                   level="M"

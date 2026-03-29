@@ -2408,7 +2408,7 @@ export default function UserProfile() {
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               className="card-gold max-w-sm w-full"
             >
-              <div className="bg-[#0d0d10] p-6 rounded-[calc(1.25rem-1px)] space-y-4">
+              <div className="workout-complete-card p-6 rounded-[calc(1.25rem-1px)] space-y-4">
                 <div>
                   <p className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.3em] uppercase flex items-center gap-1.5">Workout Complete <FontAwesomeIcon icon={faTrophy} /></p>
                   <h3 className="text-lg font-black uppercase italic mt-0.5">How did it go?</h3>
@@ -2430,8 +2430,7 @@ export default function UserProfile() {
                   </button>
                   <button
                     onClick={() => finishWorkout(notesInput.trim() || undefined)}
-                    className="flex-1 py-2 sm:py-3 font-black rounded-xl uppercase text-xs active:scale-95 transition-all"
-                    style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
+                    className="btn-gold-send flex-1 py-2 sm:py-3 font-black rounded-xl uppercase text-xs active:scale-95 transition-all"
                   >
                     Save & Finish ✓
                   </button>

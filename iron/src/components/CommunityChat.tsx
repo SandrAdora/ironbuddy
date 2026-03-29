@@ -863,13 +863,13 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Social</p>
-          <h2 className="text-2xl font-black uppercase italic mt-1 flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-black uppercase italic mt-1 flex items-center gap-2">
             <FontAwesomeIcon icon={faComments} /> Community
             {totalUnread > 0 && (
               <span className="text-sm bg-yellow-300 text-black font-black px-2 py-0.5 rounded-full">{totalUnread}</span>
@@ -1025,7 +1025,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
       </AnimatePresence>
 
       {/* Chat layout */}
-      <div className="flex gap-4 h-[calc(100svh-18rem)] md:h-[calc(100vh-14rem)] min-h-[400px]">
+      <div className="flex gap-4 h-[calc(100dvh-18rem)] md:h-[calc(100vh-14rem)] min-h-0">
 
         {/* Left panel — Messages / Athletes */}
         <div className={`${mobileView === 'chat' ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-72 shrink-0
@@ -1234,7 +1234,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
           ) : (
             <>
               {/* Thread header */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10">
+              <div className="flex items-center gap-2 px-3 py-3 border-b border-white/10">
                 <button
                   onClick={() => setMobileView('list')}
                   className="md:hidden text-gray-400 hover:text-white mr-1"
@@ -1286,7 +1286,8 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                   title={activeConvo.is_group ? 'Leave group' : 'Delete conversation'}
                   className="text-gray-600 hover:text-red-400 text-xs px-2 py-1.5 rounded-lg hover:bg-red-400/10 transition-all font-bold uppercase tracking-wide"
                 >
-                  <FontAwesomeIcon icon={faTrash} className="w-3.5 h-3.5 mr-1" />{activeConvo.is_group ? 'Leave' : 'Delete'}
+                  <FontAwesomeIcon icon={faTrash} className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline ml-1">{activeConvo.is_group ? 'Leave' : 'Delete'}</span>
                 </button>
               </div>
 
@@ -1320,7 +1321,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
               })()}
 
               {/* Messages */}
-              <div ref={messagesScrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 relative">
+              <div ref={messagesScrollRef} className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4 space-y-3 relative">
                 {messages.length === 0 && (
                   <div className="flex flex-col items-center justify-center h-full gap-3 text-center mt-8">
                     <span className="text-4xl">👋</span>
@@ -1356,7 +1357,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                           <div className={`px-3 py-2.5 rounded-2xl text-sm leading-relaxed space-y-1.5 ${
                             isMe
                               ? 'bg-yellow-300 text-black font-semibold rounded-br-sm'
-                              : 'bg-white/10 text-white rounded-bl-sm'
+                              : 'chat-bubble-received text-white rounded-bl-sm'
                           }`}>
                             <MessageContent msg={msg} />
                           </div>
@@ -1499,7 +1500,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
               )}
 
               {/* Input bar */}
-              <div className="px-4 py-3 border-t border-white/10 flex gap-2 items-end relative">
+              <div className="px-2 sm:px-4 py-2 sm:py-3 border-t border-white/10 flex gap-1 sm:gap-2 items-end relative">
                 {/* Hidden file input */}
                 <input
                   ref={fileInputRef}
@@ -1514,13 +1515,13 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                   onClick={() => fileInputRef.current?.click()}
                   disabled={!!pendingFile || uploading}
                   title="Attach image or file"
-                  className="p-2.5 text-gray-400 hover:text-yellow-300 hover:bg-white/10 rounded-xl transition-all disabled:opacity-40 shrink-0"
+                  className="p-2 sm:p-2.5 text-gray-400 hover:text-yellow-300 hover:bg-white/10 rounded-xl transition-all disabled:opacity-40 shrink-0"
                 >
                   📎
                 </button>
 
                 {/* Emoji picker for input */}
-                <div className="relative shrink-0">
+                <div className="relative shrink-0 hidden sm:block">
                   <button
                     ref={emojiButtonRef}
                     onClick={(ev) => { ev.stopPropagation(); setShowInputEmoji((v) => !v); setReactionPickerFor(null); }}

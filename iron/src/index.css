@@ -228,3 +228,47 @@ button:focus-visible {
   background: #ffffff;
   border: 1px solid rgba(161,98,7,0.2);
 }
+
+/* ── Community chat received bubble ──────────────────────────────────────── */
+.chat-bubble-received {
+  background: rgba(255,255,255,0.10);
+}
+[data-theme="light"] .chat-bubble-received {
+  background: rgba(0,0,0,0.12);
+  color: #111111;
+}
+
+/* ── AI Coach chat bubble & markdown ──────────────────────────────────────── */
+.coach-bubble-ai {
+  background: rgba(255,255,255,0.10);
+  color: #f3f4f6; /* gray-100 */
+}
+[data-theme="light"] .coach-bubble-ai {
+  background: rgba(0,0,0,0.06);
+  color: #111111;
+  border-color: rgba(0,0,0,0.10);
+}
+.coach-md-accent {
+  color: #fef08a; /* yellow-200 */
+}
+[data-theme="light"] .coach-md-accent {
+  color: #b45309; /* amber-700 */
+}
+
+/* ── Add Athlete modal ────────────────────────────────────────────────────── */
+.add-user-modal {
+  background: #111111;
+}
+[data-theme="light"] .add-user-modal {
+  background: #ffffff;
+  color: #0a0a0a;
+}
+
+/* ── Workout complete modal card ──────────────────────────────────────────── */
+.workout-complete-card {
+  background: #0d0d10;
+}
+[data-theme="light"] .workout-complete-card {
+  background: #ffffff;
+  color: #0a0a0a;
+}

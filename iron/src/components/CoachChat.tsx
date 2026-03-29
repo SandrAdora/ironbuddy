@@ -155,12 +155,11 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
               onChange={(e) => setNewIngredient(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addIngredient(); } }}
               placeholder="Add ingredient…"
-              className="flex-1 bg-black/30 border border-white/15 rounded-lg px-2.5 py-1 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-green-400/50"
+              className="flex-1 bg-white/5 border border-white/15 rounded-lg px-2.5 py-1 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-green-400/50"
             />
             <button
               onClick={addIngredient}
-              className="px-2.5 py-1 rounded-lg text-[11px] transition-all font-bold"
-              style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.35)', boxShadow: '0 0 8px rgba(250,204,21,0.15)' }}
+              className="btn-gold-send px-2.5 py-1 rounded-lg text-[11px] transition-all font-bold"
             >
               +
             </button>
@@ -177,8 +176,7 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
           <button
             disabled={state === 'saving'}
             onClick={handleSave}
-            className="px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-50"
-            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }}
+            className="btn-gold-send px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-50"
           >
             {state === 'saving' ? 'Saving…' : `💾 Save to ${meta.tab}`}
           </button>
@@ -186,16 +184,14 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
             <button
               disabled={savedAsRecipe}
               onClick={handleSaveAsRecipe}
-              className="px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-40"
-              style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }}
+              className="btn-gold-send px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-40"
             >
               {savedAsRecipe ? '✓ Added to Recipes' : '👨‍🍳 Add to My Recipes'}
             </button>
           )}
           <button
             onClick={() => setState('declined')}
-            className="px-4 py-1.5 font-bold rounded-lg uppercase text-[10px] tracking-wide transition-all"
-            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)', boxShadow: '0 0 8px rgba(250,204,21,0.12)' }}
+            className="btn-gold-send px-4 py-1.5 font-bold rounded-lg uppercase text-[10px] tracking-wide transition-all opacity-60"
           >
             Not Now
           </button>
@@ -268,7 +264,7 @@ export default function CoachChat({ profile, token }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100svh-9rem)] md:h-[calc(100vh-9rem)]">
+    <div className="flex flex-col h-[calc(100dvh-9rem)] md:h-[calc(100vh-9rem)]">
       {/* Header */}
       <div className="mb-4 flex items-start justify-between">
         <div>
@@ -308,7 +304,7 @@ export default function CoachChat({ profile, token }: Props) {
                   className={`max-w-[88%] md:max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
                     msg.role === 'user'
                       ? 'bg-yellow-300 text-black font-semibold rounded-br-sm whitespace-pre-wrap'
-                      : 'bg-white/10 backdrop-blur-sm text-gray-100 border border-white/10 rounded-bl-sm prose prose-invert prose-sm max-w-none'
+                      : 'coach-bubble-ai backdrop-blur-sm border border-white/10 rounded-bl-sm prose prose-invert prose-sm max-w-none'
                   }`}
                 >
                   {msg.role === 'user' ? msg.content : (
@@ -318,10 +314,10 @@ export default function CoachChat({ profile, token }: Props) {
                         ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-0.5">{children}</ul>,
                         ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5">{children}</ol>,
                         li: ({ children }) => <li className="text-gray-100">{children}</li>,
-                        strong: ({ children }) => <strong className="text-yellow-200 font-black">{children}</strong>,
-                        h1: ({ children }) => <p className="font-black text-yellow-200 text-base mb-1">{children}</p>,
-                        h2: ({ children }) => <p className="font-black text-yellow-200 mb-1">{children}</p>,
-                        h3: ({ children }) => <p className="font-bold text-yellow-100 mb-1">{children}</p>,
+                        strong: ({ children }) => <strong className="coach-md-accent font-black">{children}</strong>,
+                        h1: ({ children }) => <p className="font-black coach-md-accent text-base mb-1">{children}</p>,
+                        h2: ({ children }) => <p className="font-black coach-md-accent mb-1">{children}</p>,
+                        h3: ({ children }) => <p className="font-bold coach-md-accent mb-1">{children}</p>,
                       }}
                     >
                       {msg.content}

@@ -657,20 +657,20 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                     <div className="px-5 pb-5 space-y-3 border-t border-white/10 pt-4">
                       {/* Rest timer banner */}
                       {activeWorkoutId === w.id && restActive && (
-                        <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-400/30 rounded-xl px-3 py-2">
-                          <span className="text-blue-300 text-xs font-black uppercase tracking-widest shrink-0">Rest</span>
+                        <div className={`flex items-center gap-2 border rounded-xl px-3 py-2 ${theme === 'light' ? 'bg-blue-100/60 border-blue-500/40' : 'bg-blue-500/10 border-blue-400/30'}`}>
+                          <span className={`text-xs font-black uppercase tracking-widest shrink-0 ${theme === 'light' ? 'text-blue-700' : 'text-blue-300'}`}>Rest</span>
                           <button
                             onClick={() => setRestLeft(t => Math.max(0, t - 10))}
-                            className="text-[10px] font-black px-2 py-1 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 transition-colors shrink-0"
+                            className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors shrink-0 ${theme === 'light' ? 'bg-blue-200/80 text-blue-800 hover:bg-blue-300/80' : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/40'}`}
                           >−10s</button>
-                          <span className="text-blue-300 font-black text-xl tabular-nums mx-auto">
+                          <span className={`font-black text-xl tabular-nums mx-auto ${theme === 'light' ? 'text-blue-700' : 'text-blue-300'}`}>
                             {String(Math.floor(restLeft / 60)).padStart(2,'0')}:{String(restLeft % 60).padStart(2,'0')}
                           </span>
                           <button
                             onClick={() => setRestLeft(t => t + 10)}
-                            className="text-[10px] font-black px-2 py-1 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 transition-colors shrink-0"
+                            className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors shrink-0 ${theme === 'light' ? 'bg-blue-200/80 text-blue-800 hover:bg-blue-300/80' : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/40'}`}
                           >+10s</button>
-                          <button onClick={() => setRestActive(false)} className="text-xs text-blue-400 hover:text-white font-bold transition-colors shrink-0">Skip</button>
+                          <button onClick={() => setRestActive(false)} className={`text-xs font-bold transition-colors shrink-0 ${theme === 'light' ? 'text-blue-600 hover:text-blue-900' : 'text-blue-400 hover:text-white'}`}>Skip</button>
                         </div>
                       )}
 
@@ -698,7 +698,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                                 <button
                                   onClick={() => fetchVideo(ex.name)}
                                   className="text-xs font-black border-none outline-none bg-transparent transition-colors"
-                                  style={{ color: '#facc15', textShadow: '0 0 8px rgba(250,204,21,0.5)' }}
+                                  style={{ color: theme === 'light' ? '#b45309' : '#facc15', textShadow: theme === 'light' ? 'none' : '0 0 8px rgba(250,204,21,0.5)' }}
                                 >
                                   ▶ Tutorial
                                 </button>
@@ -763,14 +763,14 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                                         <div key={pi} className="rounded-[2px] transition-all duration-300 shrink-0" style={{
                                           width: 6,
                                           height: filled ? 22 : 10,
-                                          background: filled ? (allDone ? '#4ade80' : '#facc15') : 'rgba(255,255,255,0.12)',
+                                          background: filled ? (allDone ? '#4ade80' : '#facc15') : (theme === 'light' ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.12)'),
                                           boxShadow: filled ? `0 0 6px ${allDone ? 'rgba(74,222,128,0.8)' : 'rgba(250,204,21,0.8)'}` : 'none',
                                         }} />
                                       );
                                     })}
                                   </div>
                                   <div className="flex-1 h-[3px] rounded-full transition-all duration-500" style={{
-                                    background: doneCount > 0 ? (doneCount === totalSets ? '#4ade80' : '#facc15') : 'rgba(255,255,255,0.1)',
+                                    background: doneCount > 0 ? (doneCount === totalSets ? '#4ade80' : '#facc15') : (theme === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.1)'),
                                     boxShadow: doneCount > 0 ? `0 0 8px ${doneCount === totalSets ? 'rgba(74,222,128,0.6)' : 'rgba(250,204,21,0.6)'}` : 'none',
                                   }} />
                                   <div className="flex items-center gap-[2px]">
@@ -781,7 +781,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                                         <div key={pi} className="rounded-[2px] transition-all duration-300 shrink-0" style={{
                                           width: 6,
                                           height: filled ? 22 : 10,
-                                          background: filled ? (allDone ? '#4ade80' : '#facc15') : 'rgba(255,255,255,0.12)',
+                                          background: filled ? (allDone ? '#4ade80' : '#facc15') : (theme === 'light' ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.12)'),
                                           boxShadow: filled ? `0 0 6px ${allDone ? 'rgba(74,222,128,0.8)' : 'rgba(250,204,21,0.8)'}` : 'none',
                                         }} />
                                       );
