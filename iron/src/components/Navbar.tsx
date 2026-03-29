@@ -84,15 +84,17 @@ export default function Navbar() {
   };
 
   const scrollTo = (id: string) => {
+    const wasOpen = isOpen;
     setIsOpen(false);
-    requestAnimationFrame(() => {
+    const delay = wasOpen ? 250 : 0;
+    setTimeout(() => {
       const el = document.getElementById(id);
       if (el) {
         const navHeight = 64;
         const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
         window.scrollTo({ top, behavior: 'smooth' });
       }
-    });
+    }, delay);
   };
 
   return (
