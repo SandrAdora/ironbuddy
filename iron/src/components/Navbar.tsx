@@ -289,7 +289,10 @@ export default function Navbar() {
                   </button>
                 ) : (
                   <Link to="/signup" onClick={() => setIsOpen(false)}
-                    className="block px-3 py-2.5 bg-yellow-300 text-black rounded-xl text-sm font-black uppercase tracking-wider text-center hover:bg-yellow-200 transition-all">
+                    className="block px-3 py-2.5 rounded-xl text-sm font-black uppercase tracking-wider text-center transition-all"
+                    style={theme === 'dark'
+                      ? { background: '#facc15', color: '#000', boxShadow: '0 0 18px rgba(250,204,21,0.5)' }
+                      : { background: '#facc15', color: '#000' }}>
                     {t('nav.sign_up')}
                   </Link>
                 )}

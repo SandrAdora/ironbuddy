@@ -7,7 +7,7 @@ import { useTheme } from '../context/themeContext';
 import { useTranslation } from 'react-i18next';
 import { savePR } from '../prStorage';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSave, faArrowsRotate, faDumbbell, faCalendarDays, faBullseye, faLightbulb } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faArrowsRotate, faDumbbell, faCalendarDays, faBullseye, faLightbulb, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 
 interface Props {
   profile: UserProfile;
@@ -353,7 +353,7 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                 <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>⚙️</motion.span>
                 {t('workoutplan.generating')}
               </>
-            ) : plan ? <FontAwesomeIcon icon={faArrowsRotate} />+` ${t('workoutplan.regenerate')}` : `✨ ${t('workoutplan.generate')}`}
+            ) : plan ? <><FontAwesomeIcon icon={faArrowsRotate} /> {t('workoutplan.regenerate')}</> : <><FontAwesomeIcon icon={faWandMagicSparkles} /> {t('workoutplan.generate')}</>}
           </button>
         </div>
       </div>
@@ -839,10 +839,13 @@ function ExerciseCard({ exercise, index, videoId, onFetchVideo, onRetryVideo, is
 }
 
 function Pill({ label, value }: { label: string; value: string }) {
+  const { theme } = useTheme();
   return (
-    <div className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-center">
-      <p className="text-gray-500 text-xs uppercase font-bold">{label}</p>
-      <p className="text-white text-xs font-black">{value}</p>
+    <div className="rounded-lg px-2.5 py-1.5 text-center" style={theme === 'light'
+      ? { background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.1)' }
+      : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+      <p className="text-xs uppercase font-bold" style={{ color: theme === 'light' ? '#999' : '#6b7280' }}>{label}</p>
+      <p className="text-xs font-black" style={{ color: theme === 'light' ? '#111' : '#fff' }}>{value}</p>
     </div>
   );
 }

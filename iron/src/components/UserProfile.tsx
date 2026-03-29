@@ -1621,20 +1621,23 @@ export default function UserProfile() {
                               animate={{ y: 0, opacity: 1 }}
                               exit={{ y: 40, opacity: 0 }}
                               transition={{ duration: 0.22 }}
-                              className="w-full max-w-md rounded-2xl border border-white/15 overflow-hidden"
-                              style={{ background: '#0d0d10' }}
+                              className="w-full max-w-md rounded-2xl overflow-hidden"
+                              style={theme === 'light'
+                                ? { background: '#ffffff', border: '1px solid rgba(0,0,0,0.12)' }
+                                : { background: '#0d0d10', border: '1px solid rgba(255,255,255,0.15)' }}
                               onClick={e => e.stopPropagation()}
                             >
                               {/* Header */}
-                              <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+                              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
                                 <div>
-                                  <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">AI Meal Plan</p>
-                                  <h3 className="text-base font-black text-white flex items-center gap-1.5"><FontAwesomeIcon icon={faCartShopping} /> Shopping List</h3>
+                                  <p className="text-[10px] uppercase font-black tracking-widest" style={{ color: theme === 'light' ? '#999' : '#6b7280' }}>AI Meal Plan</p>
+                                  <h3 className="text-base font-black flex items-center gap-1.5" style={{ color: theme === 'light' ? '#111' : '#fff' }}><FontAwesomeIcon icon={faCartShopping} /> Shopping List</h3>
                                 </div>
                                 <button
                                   onClick={() => setShoppingListOpen(false)}
                                   aria-label="Close shopping list"
-                                  className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all text-lg"
+                                  className="w-8 h-8 rounded-xl flex items-center justify-center transition-all text-lg"
+                                  style={{ color: theme === 'light' ? '#666' : '#9ca3af' }}
                                 >×</button>
                               </div>
 
@@ -1647,12 +1650,14 @@ export default function UserProfile() {
                                   const unique = [...new Set(allIngs)];
                                   return (
                                     <div key={sec.key}>
-                                      <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 flex items-center gap-1.5">
+                                      <p className="text-[10px] uppercase font-black tracking-widest mb-2 flex items-center gap-1.5" style={{ color: theme === 'light' ? '#999' : '#6b7280' }}>
                                         <FontAwesomeIcon icon={sec.icon} />{sec.label}
                                       </p>
                                       <div className="flex flex-wrap gap-1.5">
                                         {unique.map((ing, i) => (
-                                          <span key={i} className="bg-white/8 border border-white/10 rounded-full px-2.5 py-1 text-xs text-gray-200">
+                                          <span key={i} className="rounded-full px-2.5 py-1 text-xs" style={theme === 'light'
+                                            ? { background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.1)', color: '#333' }
+                                            : { background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: '#e5e7eb' }}>
                                             {ing}
                                           </span>
                                         ))}
@@ -1663,7 +1668,7 @@ export default function UserProfile() {
                               </div>
 
                               {/* Footer */}
-                              <div className="px-5 py-4 border-t border-white/10 flex gap-3">
+                              <div className="px-5 py-4 flex gap-3" style={{ borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
                                 <button
                                   onClick={() => {
                                     navigator.clipboard.writeText(copyText).then(() => {
@@ -1673,15 +1678,20 @@ export default function UserProfile() {
                                   }}
                                   className="flex-1 py-2.5 rounded-xl font-black uppercase tracking-wide text-sm transition-all duration-200 active:scale-95"
                                   style={shoppingListCopied
-                                    ? { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }
-                                    : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }
+                                    ? { background: 'rgba(34,197,94,0.12)', color: '#16a34a', border: '1px solid rgba(34,197,94,0.3)' }
+                                    : theme === 'light'
+                                      ? { background: 'rgba(250,204,21,0.15)', color: '#92600a', border: '1px solid rgba(180,120,0,0.3)' }
+                                      : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }
                                   }
                                 >
                                   {shoppingListCopied ? '✓ Copied!' : 'Copy List'}
                                 </button>
                                 <button
                                   onClick={() => setShoppingListOpen(false)}
-                                  className="px-4 py-2.5 rounded-xl font-black uppercase tracking-wide text-sm text-gray-400 hover:text-white border border-white/10 hover:border-white/20 transition-all"
+                                  className="px-4 py-2.5 rounded-xl font-black uppercase tracking-wide text-sm transition-all"
+                                  style={theme === 'light'
+                                    ? { color: '#555', border: '1px solid rgba(0,0,0,0.12)' }
+                                    : { color: '#9ca3af', border: '1px solid rgba(255,255,255,0.1)' }}
                                 >
                                   Close
                                 </button>
@@ -1792,30 +1802,23 @@ export default function UserProfile() {
           {active === 'workouts' && (
             <motion.div key="workouts" {...fadeUp(0)} className="space-y-3 md:space-y-6">
               {/* Sub-tabs */}
-              <div className="flex border-b border-white/10">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
                 {([
-                  { id: 'ai', key: 'workouts.ai_tab' },
-                  { id: 'my', key: 'workouts.my_tab' },
-                  { id: 'library', key: 'workouts.library_tab' },
+                  { id: 'ai',      icon: faRobot,    key: 'workouts.ai_tab' },
+                  { id: 'my',      icon: faPen,      key: 'workouts.my_tab' },
+                  { id: 'library', icon: faBook,     key: 'workouts.library_tab' },
                 ] as const).map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setWorkoutTab(tab.id)}
-                    style={{ fontSize: '0.75rem' }}
-                    className={`flex-1 py-1.5 sm:py-2.5 text-xs font-black uppercase tracking-wide transition-all duration-200 border-b-2 -mb-px ${
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-black uppercase tracking-wide whitespace-nowrap shrink-0 transition-all duration-200 active:scale-95 ${
                       workoutTab === tab.id
-                        ? 'border-[--color-iron-gold] text-[--color-iron-gold]'
-                        : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'
+                        ? 'bg-[--color-iron-gold] text-black shadow-[0_0_14px_rgba(250,204,21,0.35)]'
+                        : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    {tab.id === 'ai'
-                      ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}>🤖</span> {t(tab.key)}</>
-                      : tab.id === 'my'
-                        ? <><span style={{ color: '#facc15' }}>✎</span> {t(tab.key)}</>
-                        : tab.id === 'library'
-                          ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}>📚</span> {t(tab.key)}</>
-                          : t((tab as {key: string}).key)
-                    }
+                    <FontAwesomeIcon icon={tab.icon} className="w-3.5 h-3.5" />
+                    <span>{t(tab.key)}</span>
                   </button>
                 ))}
               </div>

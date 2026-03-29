@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { apiImportRecipe, type UserRecipe } from '../api';
+import { useTheme } from '../context/themeContext';
 
 interface Props {
   token: string;
@@ -52,6 +53,7 @@ function parseUrl(url: string): ParsedUrl {
 // ── Component ──────────────────────────────────────────────────────────────────
 export default function Recipes({ token }: Props) {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [recipes, setRecipes]       = useState<UserRecipe[]>([]);
   const [formOpen, setFormOpen]     = useState(false);
   const [editingId, setEditingId]   = useState<number | null>(null);
@@ -124,33 +126,35 @@ export default function Recipes({ token }: Props) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="space-y-3">
         <div>
           <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Video</p>
-          <h2 className="text-2xl font-black uppercase italic mt-1">🎬 Video Recipes</h2>
+          <h2 className="text-2xl font-black uppercase italic mt-1" style={{ color: theme === 'light' ? '#111' : '#fff' }}>🎬 Video Recipes</h2>
         </div>
-        <div className="flex items-center gap-2">
-          {!formOpen && !importOpen && (
+        {!formOpen && !importOpen && (
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setImportOpen(v => !v)}
               className="px-3 py-1.5 rounded-lg text-xs font-black active:scale-95 transition-all duration-200"
-              style={{ background: 'rgba(250,204,21,0.08)', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)' }}
+              style={theme === 'light'
+                ? { background: 'rgba(250,204,21,0.15)', color: '#92600a', border: '1px solid rgba(180,120,0,0.3)' }
+                : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
               title="Import from URL"
             >
               🔗 {t('recipes.import_btn')}
             </button>
-          )}
-          {!formOpen && !importOpen && (
             <button
               onClick={() => setFormOpen(true)}
               aria-label="Add new recipe"
-              className="w-7 h-7 rounded-lg text-base font-black active:scale-95 transition-all duration-200 flex items-center justify-center"
-              style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
+              className="px-3 py-1.5 rounded-lg text-xs font-black active:scale-95 transition-all duration-200 flex items-center gap-1"
+              style={theme === 'light'
+                ? { background: 'rgba(250,204,21,0.15)', color: '#92600a', border: '1px solid rgba(180,120,0,0.3)' }
+                : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
             >
-              🔗 Add Video
+              + Add Video
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Import form */}
@@ -316,7 +320,7 @@ export default function Recipes({ token }: Props) {
                         title="Open link"
                       >↗</a>
                     )}
-                    <button onClick={() => openEdit(r)} className="text-yellow-300 text-sm p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors" title="Edit">✎</button>
+                    <button onClick={() => openEdit(r)} className="text-sm p-1.5 rounded-lg transition-colors" style={theme === 'light' ? { color: '#92600a' } : { color: '#fde047' }} title="Edit">✎</button>
                     <button onClick={() => handleDelete(r.id)} className="text-gray-600 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-400/10 transition-colors" title="Delete">🗑</button>
                   </div>
                 </div>
