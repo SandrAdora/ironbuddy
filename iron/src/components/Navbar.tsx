@@ -83,19 +83,6 @@ export default function Navbar() {
     if (outcome === 'accepted') setInstallPrompt(null);
   };
 
-  const scrollTo = (id: string) => {
-    const wasOpen = isOpen;
-    setIsOpen(false);
-    const delay = wasOpen ? 250 : 0;
-    setTimeout(() => {
-      const el = document.getElementById(id);
-      if (el) {
-        const navHeight = 64;
-        const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
-        window.scrollTo({ top, behavior: 'smooth' });
-      }
-    }, delay);
-  };
 
   return (
     <nav
@@ -124,15 +111,15 @@ export default function Navbar() {
 
           {/* Section scroll links — always visible on homepage */}
           {isHome && HOME_SECTIONS.map(({ id, key }) => (
-            <button
+            <a
               key={id}
-              onClick={() => scrollTo(id)}
+              href={`#${id}`}
               style={{ fontSize: '0.75rem' }}
-              className={`${NAV_LINK} ${activeSection === id ?  ' text-xs text-[--color-iron-gold]' : ' text-yellow-400 hover:text-white'}`}
+              className={`${NAV_LINK} ${activeSection === id ? ' text-xs text-[--color-iron-gold]' : ' text-yellow-400 hover:text-white'}`}
             >
               {t(key)}
               <span className={`${NAV_UNDERLINE} ${activeSection === id ? 'w-full' : 'w-0 group-hover:w-full'}`} />
-            </button>
+            </a>
           ))}
 
           {/* Always-visible page links */}
@@ -278,15 +265,16 @@ export default function Navbar() {
               {/* Section scroll links — always visible on homepage */}
               {isHome && HOME_SECTIONS.map(({ id, key }) => (
                 <li key={id}>
-                  <button
-                    onClick={() => scrollTo(id)}
-                    className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider transition-all
+                  <a
+                    href={`#${id}`}
+                    onClick={() => setIsOpen(false)}
+                    className={`block px-4 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider transition-all
                       ${activeSection === id
                         ? 'bg-yellow-300/10 text-[--color-iron-gold] border border-yellow-300/20'
                         : theme === 'light' ? 'text-gray-600 hover:text-black hover:bg-black/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                   >
                     {t(key)}
-                  </button>
+                  </a>
                 </li>
               ))}
 
