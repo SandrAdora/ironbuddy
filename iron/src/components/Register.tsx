@@ -3,7 +3,6 @@ import { useUser } from '../context/userContext';
 import type { UserProfile } from '../context/userContext';
 import { useTheme } from '../context/themeContext';
 import React from "react";
-import Footer from './Footer';
 import { apiRegister } from '../api';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -266,7 +265,6 @@ export default function OnboardingForm() {
           </AnimatePresence>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }
