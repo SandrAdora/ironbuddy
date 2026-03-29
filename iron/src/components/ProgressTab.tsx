@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../context/themeContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowUpFromBracket, faDownload, faDumbbell, faClock, faFire, faTrophy } from '@fortawesome/free-solid-svg-icons';
 import {
   LineChart, Line, ReferenceLine,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -607,12 +609,12 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
           onClick={() => {
             const text = [
               '🦾 My IronBuddy Progress',
-              `🏋️ Workouts completed: ${finished.length}`,
-              totalMins >= 60 ? `⏱️ Total time: ${Math.floor(totalMins/60)}h ${totalMins%60}m` : `⏱️ Total time: ${totalMins}m`,
-              `🔥 Current streak: ${curStreak} day${curStreak !== 1 ? 's' : ''}`,
-              `🏆 Best streak: ${bestStreak} day${bestStreak !== 1 ? 's' : ''}`,
-              latestWeight ? `⚖️ Current weight: ${latestWeight} kg` : '',
-              weightDelta !== null ? `📉 Change: ${weightDelta > 0 ? '+' : ''}${weightDelta} kg` : '',
+              `Workouts completed: ${finished.length}`,
+              totalMins >= 60 ? `⏱ Total time: ${Math.floor(totalMins/60)}h ${totalMins%60}m` : `⏱ Total time: ${totalMins}m`,
+              `Current streak: ${curStreak} day${curStreak !== 1 ? 's' : ''}`,
+              ` Best streak: ${bestStreak} day${bestStreak !== 1 ? 's' : ''}`,
+              latestWeight ? `Current weight: ${latestWeight} kg` : '',
+              weightDelta !== null ? ` Change: ${weightDelta > 0 ? '+' : ''}${weightDelta} kg` : '',
             ].filter(Boolean).join('\n');
             if (navigator.share) {
               navigator.share({ title: 'My IronBuddy Progress', text }).catch(() => {});
@@ -625,7 +627,7 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
           onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 10px rgba(250,204,21,0.7),0 0 20px rgba(250,204,21,0.4)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
         >
-          📤 Share Progress
+          <FontAwesomeIcon icon={faArrowUpFromBracket} /> Share Progress
         </button>
         <button
           onClick={handleDownloadPdf}
@@ -635,17 +637,17 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
           onMouseEnter={e => { if (!pdfLoading) (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 10px rgba(250,204,21,0.7),0 0 20px rgba(250,204,21,0.4)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
         >
-          {pdfLoading ? '⏳ Generating...' : '📄 Download Progress'}
+          {pdfLoading ? ' Generating...' : <FontAwesomeIcon icon={faDownload} />+'Download Progress'}
         </button>
       </div>
 
       {/* ── Stat chips ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { icon: '🏋️', label: 'Workouts', value: String(finished.length) },
-          { icon: '⏱️', label: 'Total Time', value: totalMins >= 60 ? `${Math.floor(totalMins / 60)}h ${totalMins % 60}m` : `${totalMins}m` },
-          { icon: '🔥', label: 'Current Streak', value: `${curStreak} day${curStreak !== 1 ? 's' : ''}` },
-          { icon: '🏆', label: 'Best Streak', value: `${bestStreak} day${bestStreak !== 1 ? 's' : ''}` },
+          { icon: <FontAwesomeIcon icon={faDumbbell} />, label: 'Workouts', value: String(finished.length) },
+          { icon: <FontAwesomeIcon icon={faClock} />, label: 'Total Time', value: totalMins >= 60 ? `${Math.floor(totalMins / 60)}h ${totalMins % 60}m` : `${totalMins}m` },
+          { icon: <FontAwesomeIcon icon={faFire} />, label: 'Current Streak', value: `${curStreak} day${curStreak !== 1 ? 's' : ''}` },
+          { icon: <FontAwesomeIcon icon={faTrophy} />, label: 'Best Streak', value: `${bestStreak} day${bestStreak !== 1 ? 's' : ''}` },
         ].map((s) => (
           <motion.div
             key={s.label}

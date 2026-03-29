@@ -9,7 +9,9 @@ import BadgeToast from './BadgeToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRobot, faBowlFood, faBook, faVideo, faSliders } from '@fortawesome/free-solid-svg-icons';
+import { faRobot, faBowlFood, faBook, faVideo, faSliders, faCircleUser, faKey, faGavel, faGlobe, faCircleHalfStroke, faUsersGear, faCamera,
+  faEye, faEyeSlash
+} from '@fortawesome/free-solid-svg-icons';
 import CoachChat from './CoachChat';
 import WorkoutPlanView from './WorkoutPlan';
 import MyWorkouts from './MyWorkouts';
@@ -34,7 +36,7 @@ const NAV_IDS = [
   { id: 'dashboard', icon: '📊', key: 'nav.dashboard' },
   { id: 'coach',     icon: '🦾', key: 'nav.coach' },
   { id: 'goals',     icon: '🎯', key: 'nav.goals' },
-  { id: 'meals',     icon: '🥗', key: 'nav.meals' },
+  { id: 'meals',     icon: 'faBowlFood', key: 'nav.meals' },
   { id: 'workouts',  icon: '💪', key: 'nav.workouts' },
   { id: 'community', icon: '💬', key: 'nav.community' },
   { id: 'progress',  icon: '📈', key: 'nav.progress' },
@@ -1032,7 +1034,7 @@ export default function UserProfile() {
                       const empty = log.length === 0;
                       return (
                         <div className={`border rounded-2xl px-4 py-3 flex items-center gap-4 flex-wrap transition-colors ${empty ? 'bg-white/3 border-white/8' : 'bg-teal-500/5 border-teal-500/20'}`}>
-                          <span className={`text-sm font-black uppercase tracking-wide ${empty ? 'text-gray-500' : 'text-teal-300'}`}>📊 Today's Log</span>
+                          <span className={`text-sm font-black uppercase tracking-wide ${empty ? 'text-gray-500' : 'text-teal-300'}`}> Today's Log</span>
                           {empty ? (
                             <span className="text-xs text-gray-600 italic">No meals logged yet — tap <strong className="text-gray-400 not-italic">Log</strong> on any meal below</span>
                           ) : (
@@ -1059,7 +1061,7 @@ export default function UserProfile() {
                     <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 space-y-3">
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className="text-[--color-iron-gold] font-black text-xs uppercase tracking-widest">📷 {t('meals.photo_title')}</p>
+                          <p className="text-[--color-iron-gold] font-black text-xs uppercase tracking-widest"> {t('meals.photo_title')}</p>
                           <p className="text-gray-400 text-xs mt-0.5">{t('meals.photo_desc')}</p>
                         </div>
                         <button
@@ -1068,7 +1070,7 @@ export default function UserProfile() {
                           className="font-black text-xs uppercase tracking-wide active:scale-95 transition-all disabled:opacity-50 bg-transparent border-none p-0 cursor-pointer"
                           style={{ color: theme === 'light' ? '#d97706' : '#facc15', textShadow: theme === 'light' ? 'none' : '0 0 10px rgba(250,204,21,0.9), 0 0 24px rgba(250,204,21,0.5)' }}
                         >
-                          {photoAnalyzing ? t('common.processing') : `📷 ${t('meals.photo_btn')}`}
+                          {photoAnalyzing ? t('common.processing') : ` ${t('meals.photo_btn')}`}
                         </button>
                         <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {
                           const file = e.target.files?.[0]; if (!file || !token) return;
@@ -1111,7 +1113,7 @@ export default function UserProfile() {
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div>
                         <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('meals.weekly_plan')} · {profile.fitnessGoals || '—'}</p>
-                        <h2 className="text-2xl font-black uppercase italic mt-1">🥗 {t('meals.title')}</h2>
+                        <h2 className="text-2xl font-black uppercase italic mt-1"> {t('meals.title')}</h2>
                         {getMealCacheAge(userId ?? 0) !== null && (
                           <p className="text-gray-500 text-xs mt-1">
                             {getMealCacheAge(userId ?? 0) === 1 ? t('meals.day_ago', { count: 1 }) : t('meals.days_ago', { count: getMealCacheAge(userId ?? 0) ?? 0 })}
@@ -1435,7 +1437,7 @@ export default function UserProfile() {
                                           style={{ color: theme === 'light' ? '#d97706' : '#facc15' }}
                                           onMouseEnter={e => { e.currentTarget.style.textShadow = theme === 'light' ? 'none' : '0 0 8px rgba(250,204,21,0.8), 0 0 20px rgba(250,204,21,0.5)'; e.currentTarget.style.color = theme === 'light' ? '#b45309' : '#facc15'; }}
                                           onMouseLeave={e => { e.currentTarget.style.textShadow = 'none'; e.currentTarget.style.color = theme === 'light' ? '#d97706' : '#facc15'; }}
-                                        ><span style={{ filter: theme === 'light' ? 'none' : 'sepia(1) saturate(8) brightness(1.2)' }}>📊</span> Log to Today</button>
+                                        ><span style={{ filter: theme === 'light' ? 'none' : 'sepia(1) saturate(8) brightness(1.2)' }}></span> Log to Today</button>
                                       )}
                                       {/* Save */}
                                       {savedMeals[m.meal] ? (
@@ -1673,7 +1675,7 @@ export default function UserProfile() {
                                     : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }
                                   }
                                 >
-                                  {shoppingListCopied ? '✓ Copied!' : '📋 Copy List'}
+                                  {shoppingListCopied ? '✓ Copied!' : 'Copy List'}
                                 </button>
                                 <button
                                   onClick={() => setShoppingListOpen(false)}
@@ -1690,7 +1692,7 @@ export default function UserProfile() {
 
                     {!aiMealLoading && !aiMealPlan && !aiMealError && (
                       <div className="bg-white/5 border border-white/10 rounded-2xl p-4 md:p-12 flex flex-col items-center gap-4 text-center">
-                        <span className="text-5xl">🥗</span>
+                        <span className="text-5xl"></span>
                         <p className="text-[--color-iron-gold] font-black uppercase">{t('meals.no_plan')}</p>
                         <p className="text-gray-400 text-sm">{t('meals.no_plan_desc')}</p>
                       </div>
@@ -1884,12 +1886,12 @@ export default function UserProfile() {
                 {/* ── Settings sidebar nav ── */}
                 <div className="flex lg:flex-col gap-2 flex-wrap lg:w-52 shrink-0">
                   {([
-                    { id: 'account',        icon: '👤', label: t('settings.tabs.account'),  desc: t('settings.tabs.account_desc') },
-                    { id: 'password',       icon: '🔑', label: t('settings.tabs.password'), desc: t('settings.tabs.password_desc') },
-                    { id: 'legal',          icon: '📜', label: t('settings.tabs.legal'),    desc: t('settings.tabs.legal_desc') },
-                    { id: 'languages',      icon: '🌍', label: t('settings.tabs.languages'),desc: t('settings.tabs.languages_desc') },
-                    { id: 'appearance',     icon: '🎨', label: t('settings.tabs.appearance'), desc: t('settings.tabs.appearance_desc') },
-                    { id: 'delete_account', icon: '⚠️', label: t('settings.tabs.danger'),   desc: t('settings.tabs.danger_desc') },
+                    { id: 'account',        icon: faCircleUser, label: t('settings.tabs.account'),  desc: t('settings.tabs.account_desc') },
+                    { id: 'password',       icon: faKey, label: t('settings.tabs.password'), desc: t('settings.tabs.password_desc') },
+                    { id: 'legal',          icon: faGavel, label: t('settings.tabs.legal'),    desc: t('settings.tabs.legal_desc') },
+                    { id: 'languages',      icon: faGlobe, label: t('settings.tabs.languages'),desc: t('settings.tabs.languages_desc') },
+                    { id: 'appearance',     icon: faCircleHalfStroke, label: t('settings.tabs.appearance'), desc: t('settings.tabs.appearance_desc') },
+                    { id: 'delete_account', icon: faUsersGear, label: t('settings.tabs.danger'),   desc: t('settings.tabs.danger_desc') },
                   ] as const).map((tab) => (
                     <button
                       key={tab.id}
@@ -1904,7 +1906,7 @@ export default function UserProfile() {
                             : 'bg-white/3 border border-white/8 text-gray-400 hover:bg-white/8 hover:text-white hover:border-white/15'
                       }`}
                     >
-                      <span className="text-xl shrink-0">{tab.icon}</span>
+                      <span className="text-xl shrink-0"><FontAwesomeIcon icon={tab.icon} /></span>
                       <div className="min-w-0">
                         <p className="font-black uppercase text-xs tracking-wide leading-none">{tab.label}</p>
                         <p className="text-[10px] opacity-60 mt-0.5 font-medium leading-none">{tab.desc}</p>
@@ -1941,7 +1943,7 @@ export default function UserProfile() {
                             <span className="text-white text-xs font-bold">{t('common.uploading')}</span>
                           ) : (
                             <>
-                              <span className="text-base">📷</span>
+                              <span className="text-base"><FontAwesomeIcon icon={faCamera} /></span>
                               <span className="text-white text-[10px] font-bold uppercase tracking-wide">
                                 {profile.profilePicture && !avatarError ? t('common.view') : t('common.upload')}
                               </span>
@@ -2082,7 +2084,7 @@ export default function UserProfile() {
                         : 'bg-white/5 border-white/10'
                     }`}>
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">{profile.communityVisible ? '👁️' : '🫥'}</span>
+                        <span className="text-2xl">{profile.communityVisible ? <FontAwesomeIcon icon={faEye} /> : <FontAwesomeIcon icon={faEyeSlash} />}</span>
                         <div>
                           <p className="text-sm font-black text-white uppercase tracking-wide">{t('profile.community_visible')}</p>
                           <p className="text-xs text-gray-400 mt-0.5">
@@ -2351,7 +2353,7 @@ export default function UserProfile() {
                 {settingsTab === 'appearance' && (
                   <motion.div key="appearance" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
                     <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6 space-y-5">
-                      <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">🎨 {t('settings.tabs.appearance')}</p>
+                      <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest"> {t('settings.tabs.appearance')}</p>
 
                       {/* Dark / Light toggle */}
                       <div className="flex items-center justify-between gap-4">
@@ -2467,7 +2469,7 @@ export default function UserProfile() {
                   className="flex-1 py-2 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl uppercase text-xs
                     hover:bg-yellow-200 hover:scale-[1.02] active:scale-95 transition-all duration-200"
                 >
-                  📷 {t('profile.upload_photo')}
+                  <FontAwesomeIcon icon={faCamera} /> {t('profile.upload_photo')}
                 </button>
                 <button
                   onClick={() => setViewingAvatar(false)}
@@ -2606,7 +2608,7 @@ function PwField({ label, value, onChange, placeholder }: { label: string; value
           onClick={() => setShow((s) => !s)}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors text-sm"
         >
-          {show ? '🙈' : '👁️'}
+          {show ? <FontAwesomeIcon icon={faEye} /> : <FontAwesomeIcon icon={faEyeSlash} />}
         </button>
       </div>
     </div>

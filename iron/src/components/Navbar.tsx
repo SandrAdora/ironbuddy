@@ -316,7 +316,7 @@ export default function Navbar() {
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all ${theme === 'light' ? 'text-gray-600 hover:text-black hover:bg-black/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                   >
                     {theme === 'dark' ? '☀️' : '🌙'}
-                    <span className="text-xs uppercase tracking-wider">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+                    <span className="text-xs uppercase tracking-wider">{theme === 'dark' ? '☀️' : '🌙'}</span>
                   </button>
                   <div className="flex gap-1.5">
                     {LANGS.map(({ code, flag }) => (

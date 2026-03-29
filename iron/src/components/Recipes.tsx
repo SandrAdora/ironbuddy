@@ -147,7 +147,7 @@ export default function Recipes({ token }: Props) {
               className="w-7 h-7 rounded-lg text-base font-black active:scale-95 transition-all duration-200 flex items-center justify-center"
               style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
             >
-              +
+              🔗 Add Video
             </button>
           )}
         </div>

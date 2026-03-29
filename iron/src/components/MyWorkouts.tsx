@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGear, faShareFromSquare, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import type { CustomWorkout, CustomExercise, Exercise, PublicUser } from '../api';
 import { apiGetExercises, apiGetUsers, apiStartConversation, apiSendMessage, apiGetYouTubeVideo } from '../api';
 import { savePR } from '../prStorage';
@@ -483,7 +485,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                   onClick={() => { setLibOpen((v) => !v); setLibSearch(''); }}
                   className={`flex-1 py-1.5 border border-dashed rounded-xl text-xs font-bold uppercase transition-all duration-200 hover:border-yellow-300/60 ${theme === 'light' ? 'border-yellow-600/50 text-gray-800 hover:text-gray-900' : 'border-yellow-300/30 text-yellow-400/70 hover:text-yellow-300'}`}
                 >
-                  📚 From Library
+                  From Library
                 </button>
               </div>
 
@@ -636,7 +638,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                       className="text-gray-400 hover:text-yellow-300 text-base px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
                       title="Options"
                     >
-                      ⚙
+                      <FontAwesomeIcon icon={faGear} />
                     </button>
                   </div>
                   <span className={`text-gray-400 text-xl transition-transform duration-200 ${expandedId === w.id ? 'rotate-180' : ''}`}>▾</span>
@@ -961,13 +963,13 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
             return (
               <>
                 <button onClick={() => { setMenuId(null); openShare(w); }} className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-colors hover:bg-white/5 hover:text-blue-400 ${theme === 'light' ? 'text-gray-800' : 'text-gray-300'}`}>
-                  📤 Share
+                  <FontAwesomeIcon icon={faShareFromSquare} /> Share
                 </button>
                 <button onClick={() => { setMenuId(null); openEdit(w); }} className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-colors hover:bg-white/5 hover:text-yellow-600 ${theme === 'light' ? 'text-gray-800' : 'text-gray-300'}`}>
-                  ✎ Edit
+                  <FontAwesomeIcon icon={faEdit} /> Edit
                 </button>
                 <button onClick={() => { setMenuId(null); handleDelete(w.id); }} className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-colors hover:bg-white/5 hover:text-red-400 ${theme === 'light' ? 'text-gray-800' : 'text-gray-300'}`}>
-                  🗑 Delete
+                  <FontAwesomeIcon icon={faTrash} /> Delete
                 </button>
               </>
             );

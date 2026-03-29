@@ -6,6 +6,8 @@ import React from "react";
 import { apiRegister } from '../api';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {  faCircleUser, faHeartPulse, faLock } from '@fortawesome/free-solid-svg-icons';
 
 interface InputFieldProps {
   label: string;
@@ -17,9 +19,9 @@ interface InputFieldProps {
 }
 
 const STEP_INFO = [
-  { num: 1, label: 'Basics',  icon: '👤' },
-  { num: 2, label: 'Vitals',  icon: '🎯' },
-  { num: 3, label: 'Finalize', icon: '🔐' },
+  { num: 1, label: 'Basics',  icon: <FontAwesomeIcon icon={faCircleUser} /> },
+  { num: 2, label: 'Vitals',  icon: <FontAwesomeIcon icon={faHeartPulse} /> },
+  { num: 3, label: 'Finalize', icon: <FontAwesomeIcon icon={faLock} /> },
 ];
 
 export default function OnboardingForm() {

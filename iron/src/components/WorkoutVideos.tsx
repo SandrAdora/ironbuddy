@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiGetWorkoutVideos, apiCreateWorkoutVideo, apiDeleteWorkoutVideo, type WorkoutVideo } from '../api';
 import { useTheme } from '../context/themeContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 
 interface Props {
   token: string;
@@ -205,7 +207,7 @@ export default function WorkoutVideos({ token }: Props) {
                     onClick={() => handleDelete(v.id)}
                     className="text-gray-700 hover:text-red-400 text-sm transition-colors opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-400/10 ml-3 shrink-0"
                   >
-                    🗑
+                    <FontAwesomeIcon icon={faTrashCan} />
                   </button>
                 </div>
               </motion.div>

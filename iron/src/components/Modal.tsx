@@ -107,7 +107,7 @@ export default function Modal({ onClose }: ModalProps): JSX.Element {
               hover:brightness-110 hover:shadow-[0_0_28px_rgba(250,204,21,0.45)] hover:scale-[1.02]
               active:scale-95 transition-all duration-200"
           >
-            I Agree — Let's Go 🚀
+            I Agree
           </button>
         </div>
       </motion.div>
