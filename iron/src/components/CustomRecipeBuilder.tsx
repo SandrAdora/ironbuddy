@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../context/themeContext';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface CustomRecipe {
@@ -41,6 +42,7 @@ const EMOJI_OPTIONS = ['🍽️','🥗','🍳','🥩','🍝','🥣','🥑','🌯
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function CustomRecipeBuilder({ token }: Props) {
+  const { theme } = useTheme();
   const [recipes, setRecipes]     = useState<CustomRecipe[]>([]);
   const [formOpen, setFormOpen]   = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -141,7 +143,7 @@ export default function CustomRecipeBuilder({ token }: Props) {
           <button
             onClick={() => setFormOpen(true)}
             className="font-black text-xs sm:text-sm no-underline border-none outline-none bg-transparent transition-colors active:scale-95"
-            style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
+            style={{ color: theme === 'light' ? '#1a1a1a' : '#facc15', textShadow: theme === 'light' ? 'none' : '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
           >
             + New Recipe
           </button>

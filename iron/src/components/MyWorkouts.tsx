@@ -481,7 +481,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                 </button>
                 <button
                   onClick={() => { setLibOpen((v) => !v); setLibSearch(''); }}
-                  className="flex-1 py-1.5 border border-dashed border-yellow-300/30 rounded-xl text-yellow-400/70 hover:text-yellow-300 hover:border-yellow-300/60 text-xs font-bold uppercase transition-all duration-200"
+                  className={`flex-1 py-1.5 border border-dashed rounded-xl text-xs font-bold uppercase transition-all duration-200 hover:border-yellow-300/60 ${theme === 'light' ? 'border-yellow-600/50 text-gray-800 hover:text-gray-900' : 'border-yellow-300/30 text-yellow-400/70 hover:text-yellow-300'}`}
                 >
                   📚 From Library
                 </button>
@@ -961,13 +961,13 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
             if (!w) return null;
             return (
               <>
-                <button onClick={() => { setMenuId(null); openShare(w); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-blue-400 flex items-center gap-2 transition-colors">
+                <button onClick={() => { setMenuId(null); openShare(w); }} className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-colors hover:bg-white/5 hover:text-blue-400 ${theme === 'light' ? 'text-gray-800' : 'text-gray-300'}`}>
                   📤 Share
                 </button>
-                <button onClick={() => { setMenuId(null); openEdit(w); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-yellow-300 flex items-center gap-2 transition-colors">
+                <button onClick={() => { setMenuId(null); openEdit(w); }} className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-colors hover:bg-white/5 hover:text-yellow-600 ${theme === 'light' ? 'text-gray-800' : 'text-gray-300'}`}>
                   ✎ Edit
                 </button>
-                <button onClick={() => { setMenuId(null); handleDelete(w.id); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-red-400 flex items-center gap-2 transition-colors">
+                <button onClick={() => { setMenuId(null); handleDelete(w.id); }} className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-colors hover:bg-white/5 hover:text-red-400 ${theme === 'light' ? 'text-gray-800' : 'text-gray-300'}`}>
                   🗑 Delete
                 </button>
               </>

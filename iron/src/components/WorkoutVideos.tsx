@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiGetWorkoutVideos, apiCreateWorkoutVideo, apiDeleteWorkoutVideo, type WorkoutVideo } from '../api';
+import { useTheme } from '../context/themeContext';
 
 interface Props {
   token: string;
@@ -17,6 +18,7 @@ function getEmbedUrl(url: string): string | null {
 }
 
 export default function WorkoutVideos({ token }: Props) {
+  const { theme } = useTheme();
   const [videos, setVideos] = useState<WorkoutVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -71,7 +73,7 @@ export default function WorkoutVideos({ token }: Props) {
           <button
             onClick={() => setAdding(true)}
             className="font-black text-xs sm:text-sm border-none outline-none bg-transparent active:scale-95 transition-colors"
-            style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
+            style={{ color: theme === 'light' ? '#1a1a1a' : '#facc15', textShadow: theme === 'light' ? 'none' : '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
           >
             + Add Video
           </button>

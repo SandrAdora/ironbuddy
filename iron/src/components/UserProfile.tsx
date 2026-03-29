@@ -1763,7 +1763,7 @@ export default function UserProfile() {
                             setProfile((p) => ({ ...p, preferredIngredients: [...(p.preferredIngredients ?? []).filter((x) => x !== val && x !== `!${val}`), val] }));
                             setPrefIngNew('');
                           }}
-                          className="px-4 py-2 bg-green-500/20 border border-green-400/30 text-green-300 font-black rounded-xl text-xs hover:bg-green-500/30 transition-all"
+                          className={`px-4 py-2 font-black rounded-xl text-xs transition-all ${theme === 'light' ? 'bg-green-600/20 border border-green-700/50 text-green-800 hover:bg-green-600/30' : 'bg-green-500/20 border border-green-400/30 text-green-300 hover:bg-green-500/30'}`}
                         >{t('meals.like_btn')}</button>
                         <button
                           onClick={() => {
