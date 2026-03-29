@@ -1196,7 +1196,7 @@ export default function UserProfile() {
                                       {isLogged && <span className="text-[9px] text-teal-400 font-black uppercase tracking-wide">✓ logged</span>}
                                     </div>
                                     <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-0.5">{slot.label}</div>
-                                    <div className="text-xs font-black text-white truncate">{meal.icon} {meal.meal}</div>
+                                    <div className="text-xs font-black text-white truncate">{meal.meal}</div>
                                     <div className="text-[10px] font-bold mt-0.5" style={{ color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,0.7)' }}>{k} kcal</div>
                                   </button>
                                 );
@@ -1253,7 +1253,7 @@ export default function UserProfile() {
                               if (!m) return null;
                               if (closedMealCards.has(mealTimeTab)) return (
                                 <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl px-4 py-3">
-                                  <span className="text-xs text-gray-400 font-bold">{m.icon} {m.meal}</span>
+                                  <span className="text-xs text-gray-400 font-bold">{m.meal}</span>
                                   <button
                                     onClick={() => setClosedMealCards(s => { const n = new Set(s); n.delete(mealTimeTab); return n; })}
                                     className="text-xs text-gray-500 hover:text-yellow-300 font-black uppercase tracking-wide transition-colors"
@@ -1268,7 +1268,6 @@ export default function UserProfile() {
 
                                   {/* Card header: icon + name/desc + suggestion picker + close */}
                                   <div className="flex items-start gap-3">
-                                    <span className="text-4xl shrink-0">{m.icon}</span>
                                     <div className="min-w-0 flex-1">
                                       <p className="font-black text-[--color-iron-gold] uppercase text-sm">{m.meal}</p>
                                       <p className="text-gray-400 text-xs mt-0.5">{m.desc}</p>
@@ -1290,7 +1289,7 @@ export default function UserProfile() {
                                           >
                                             {meals.map((opt, i) => (
                                               <option key={i} value={i} style={{ background: theme === 'light' ? '#ffffff' : '#0d0d10', color: theme === 'light' ? '#111111' : '#ffffff' }}>
-                                                {opt.icon} {opt.meal}
+                                                {opt.meal}
                                               </option>
                                             ))}
                                           </select>
