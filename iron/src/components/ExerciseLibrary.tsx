@@ -7,6 +7,12 @@ import {
 import type { Exercise, ExerciseMeta, CustomWorkout } from '../api';
 import MuscleMap from './MuscleMap';
 import { useTheme } from '../context/themeContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faLungs, faShieldHalved, faDumbbell, faHandFist, faPersonRunning,
+  faBolt, faHeartPulse, faBrain, faHand,
+} from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
 // ── Custom dropdown (fully dark, no browser flash) ──────────────────────────
 interface SelectOption { value: string; label: string }
@@ -112,25 +118,25 @@ const MUSCLE_TO_BODYPART: Record<string, string> = {
   cardio: 'cardio',
 };
 
-const BODY_PART_STYLE: Record<string, { gradient: string; icon: string }> = {
-  chest:        { gradient: 'from-red-900/60 to-red-700/30',       icon: '🫁' },
-  back:         { gradient: 'from-blue-900/60 to-blue-700/30',     icon: '🦾' },
-  shoulders:    { gradient: 'from-purple-900/60 to-purple-700/30', icon: '💪' },
-  'upper arms': { gradient: 'from-orange-900/60 to-orange-700/30', icon: '💪' },
-  'lower arms': { gradient: 'from-amber-900/60 to-amber-700/30',   icon: '🤜' },
-  'upper legs': { gradient: 'from-green-900/60 to-green-700/30',   icon: '🦵' },
-  'lower legs': { gradient: 'from-teal-900/60 to-teal-700/30',    icon: '🦶' },
-  waist:        { gradient: 'from-yellow-900/60 to-yellow-700/30', icon: '⚡' },
-  cardio:       { gradient: 'from-pink-900/60 to-pink-700/30',     icon: '❤️' },
-  neck:         { gradient: 'from-indigo-900/60 to-indigo-700/30', icon: '🧠' },
+const BODY_PART_STYLE: Record<string, { gradient: string; icon: IconDefinition }> = {
+  chest:        { gradient: 'from-red-900/60 to-red-700/30',       icon: faLungs },
+  back:         { gradient: 'from-blue-900/60 to-blue-700/30',     icon: faShieldHalved },
+  shoulders:    { gradient: 'from-purple-900/60 to-purple-700/30', icon: faDumbbell },
+  'upper arms': { gradient: 'from-orange-900/60 to-orange-700/30', icon: faDumbbell },
+  'lower arms': { gradient: 'from-amber-900/60 to-amber-700/30',   icon: faHandFist },
+  'upper legs': { gradient: 'from-green-900/60 to-green-700/30',   icon: faPersonRunning },
+  'lower legs': { gradient: 'from-teal-900/60 to-teal-700/30',     icon: faPersonRunning },
+  waist:        { gradient: 'from-yellow-900/60 to-yellow-700/30', icon: faBolt },
+  cardio:       { gradient: 'from-pink-900/60 to-pink-700/30',     icon: faHeartPulse },
+  neck:         { gradient: 'from-indigo-900/60 to-indigo-700/30', icon: faBrain },
 };
-const DEFAULT_STYLE = { gradient: 'from-gray-800/60 to-gray-700/30', icon: '🏋️' };
+const DEFAULT_STYLE = { gradient: 'from-gray-800/60 to-gray-700/30', icon: faHand };
 
 function ExerciseCardVisual({ bodyPart, target }: { bodyPart: string; target: string }) {
   const style = BODY_PART_STYLE[bodyPart.toLowerCase()] ?? DEFAULT_STYLE;
   return (
     <div className={`w-full h-full bg-gradient-to-br ${style.gradient} flex flex-col items-center justify-center gap-1 p-2`}>
-      <span className="text-4xl">{style.icon}</span>
+      <FontAwesomeIcon icon={style.icon} className="w-8 h-8 text-yellow-300/80" />
       <span className="text-yellow-300 text-[10px] font-bold uppercase tracking-wider text-center leading-tight">
         {capitalize(target)}
       </span>

@@ -2,12 +2,48 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiGetCustomMeals, apiCreateCustomMeal, apiUpdateCustomMeal, apiDeleteCustomMeal, type CustomMeal } from '../api';
 import { useTheme } from '../context/themeContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faUtensils, faBowlFood, faEgg, faDrumstickBite, faBowlRice,
+  faLeaf, faBreadSlice, faFish, faSeedling, faMortarPestle,
+  faJar, faGlassWater, faBox, faCarrot, faBacon, faCheese,
+  faAppleWhole, faLemon,
+} from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
 interface Props {
   token: string;
 }
 
-const EMOJI_OPTIONS = ['🍽️','🥗','🍳','🥩','🍝','🥣','🥑','🌯','🍌','🐟','🍗','🥦','🧆','🥚','🍜','🫙','🥛','🍱'];
+const ICON_OPTIONS: { id: string; icon: IconDefinition }[] = [
+  { id: 'faUtensils',     icon: faUtensils },      // 🍽️
+  { id: 'faBowlFood',     icon: faBowlFood },       // 🥗
+  { id: 'faEgg',          icon: faEgg },            // 🍳 / 🥚
+  { id: 'faDrumstickBite',icon: faDrumstickBite },  // 🥩 / 🍗
+  { id: 'faBowlRice',     icon: faBowlRice },       // 🍝 / 🍜
+  { id: 'faLeaf',         icon: faLeaf },           // 🥣 / 🥑
+  { id: 'faBreadSlice',   icon: faBreadSlice },     // 🌯
+  { id: 'faFish',         icon: faFish },           // 🐟
+  { id: 'faSeedling',     icon: faSeedling },       // 🥦
+  { id: 'faMortarPestle', icon: faMortarPestle },   // 🧆
+  { id: 'faJar',          icon: faJar },            // 🫙
+  { id: 'faGlassWater',   icon: faGlassWater },     // 🥛
+  { id: 'faBox',          icon: faBox },            // 🍱
+  { id: 'faCarrot',       icon: faCarrot },
+  { id: 'faBacon',        icon: faBacon },
+  { id: 'faCheese',       icon: faCheese },
+  { id: 'faAppleWhole',   icon: faAppleWhole },
+  { id: 'faLemon',        icon: faLemon },
+];
+
+const DEFAULT_ICON = 'faUtensils';
+
+/** Renders either a FA icon (new) or a legacy emoji string */
+function MealIcon({ value, className }: { value: string; className?: string }) {
+  const match = ICON_OPTIONS.find((o) => o.id === value);
+  if (match) return <FontAwesomeIcon icon={match.icon} className={className} />;
+  return <span>{value}</span>; // legacy emoji fallback
+}
 
 export default function MyMeals({ token }: Props) {
   const { theme } = useTheme();
@@ -22,7 +58,7 @@ export default function MyMeals({ token }: Props) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [kcal, setKcal] = useState('');
-  const [icon, setIcon] = useState('🍽️');
+  const [icon, setIcon] = useState(DEFAULT_ICON);
 
   useEffect(() => {
     apiGetCustomMeals(token)
@@ -32,7 +68,7 @@ export default function MyMeals({ token }: Props) {
   }, [token]);
 
   const resetForm = () => {
-    setName(''); setDescription(''); setKcal(''); setIcon('🍽️');
+    setName(''); setDescription(''); setKcal(''); setIcon(DEFAULT_ICON);
     setFormOpen(false); setEditingId(null); setError('');
   };
 
@@ -40,7 +76,7 @@ export default function MyMeals({ token }: Props) {
     setName(m.name);
     setDescription(m.description);
     setKcal(m.kcal);
-    setIcon(m.icon || '🍽️');
+    setIcon(m.icon || DEFAULT_ICON);
     setEditingId(m.id);
     setFormOpen(true);
   };
@@ -96,7 +132,7 @@ export default function MyMeals({ token }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Custom</p>
-          <h2 className="text-2xl font-black uppercase italic mt-1">🍽️ My Meals</h2>
+          <h2 className="text-2xl font-black uppercase italic mt-1">My Meals</h2>
         </div>
         {!formOpen && (
           <button
@@ -132,23 +168,23 @@ export default function MyMeals({ token }: Props) {
               {editingId !== null ? <><span style={{ color: '#facc15' }}>✎</span> Edit Meal</> : 'New Meal'}
             </p>
 
-            {/* Emoji picker */}
+            {/* Icon picker */}
             <div className="space-y-2">
               <label className="text-xs text-gray-500 uppercase font-bold">Icon</label>
               <div className="flex flex-wrap gap-2">
-                {EMOJI_OPTIONS.map((e) => (
+                {ICON_OPTIONS.map((o) => (
                   <button
-                    key={e}
-                    onClick={() => setIcon(e)}
-                    aria-label={`Select icon ${e}`}
-                    aria-pressed={icon === e}
-                    className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all duration-150 ${
-                      icon === e
-                        ? 'bg-yellow-300/20 border-2 border-yellow-300 scale-110'
-                        : 'bg-white/5 border border-white/10 hover:border-white/30'
+                    key={o.id}
+                    onClick={() => setIcon(o.id)}
+                    aria-label={`Select icon ${o.id}`}
+                    aria-pressed={icon === o.id}
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
+                      icon === o.id
+                        ? 'bg-yellow-300/20 border-2 border-yellow-300 scale-110 text-yellow-300'
+                        : 'bg-white/5 border border-white/10 hover:border-white/30 text-gray-400 hover:text-white'
                     }`}
                   >
-                    {e}
+                    <FontAwesomeIcon icon={o.icon} className="w-4 h-4" />
                   </button>
                 ))}
               </div>
@@ -212,7 +248,7 @@ export default function MyMeals({ token }: Props) {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-10 flex flex-col items-center justify-center text-center gap-4"
         >
-          <span className="text-5xl">🍽️</span>
+          <FontAwesomeIcon icon={faUtensils} className="w-12 h-12 text-[--color-iron-gold] opacity-40" />
           <p className="text-[--color-iron-gold] font-black uppercase text-lg">No meals yet</p>
           <p className="text-gray-400 text-sm">Click <strong className="text-white">Add Meal</strong> to save your favourite meals and recipes.</p>
         </motion.div>
@@ -228,7 +264,7 @@ export default function MyMeals({ token }: Props) {
                 hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.08)] transition-all duration-300 group"
             >
               <div className="flex items-start justify-between">
-                <span className="text-4xl">{m.icon}</span>
+                <MealIcon value={m.icon || DEFAULT_ICON} className="w-8 h-8 text-[--color-iron-gold]" />
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => openEdit(m)}

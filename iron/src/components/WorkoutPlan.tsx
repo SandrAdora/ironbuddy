@@ -6,6 +6,8 @@ import type { UserProfile } from '../context/userContext';
 import { useTheme } from '../context/themeContext';
 import { useTranslation } from 'react-i18next';
 import { savePR } from '../prStorage';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSave, faArrowsRotate, faDumbbell, faCalendarDays, faBullseye, faLightbulb } from '@fortawesome/free-solid-svg-icons';
 
 interface Props {
   profile: UserProfile;
@@ -286,7 +288,7 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                     className="w-full py-3 font-black rounded-xl uppercase text-sm hover:scale-[1.02] active:scale-95 transition-all duration-200"
                     style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 12px rgba(250,204,21,0.3), 0 0 28px rgba(250,204,21,0.12)' }}
                   >
-                    📥 Save Workouts
+                    <FontAwesomeIcon icon={faSave} /> Save Workouts
                   </button>
                   <button
                     onClick={() => setShowSaveModal(false)}
@@ -337,7 +339,7 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                 : { color: '#4ade80', textShadow: '0 0 10px rgba(74,222,128,0.7), 0 0 20px rgba(34,211,238,0.4)' }
               }
             >
-              {imported ? `✓ ${t('workoutplan.saved')}` : `📥 ${t('workoutplan.save')}`}
+              {imported ? `✓ ${t('workoutplan.saved')}` : <FontAwesomeIcon icon={faSave} /> + ` ${t('workoutplan.save')}`}
             </button>
           )}
           <button
@@ -351,7 +353,7 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                 <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>⚙️</motion.span>
                 {t('workoutplan.generating')}
               </>
-            ) : plan ? `🔄 ${t('workoutplan.regenerate')}` : `✨ ${t('workoutplan.generate')}`}
+            ) : plan ? <FontAwesomeIcon icon={faArrowsRotate} />+` ${t('workoutplan.regenerate')}` : `✨ ${t('workoutplan.generate')}`}
           </button>
         </div>
       </div>
@@ -430,9 +432,9 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
 
             {/* Plan summary */}
             <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <PlanStat icon="📋" label="Plan" value={plan.plan_name} />
-              <PlanStat icon="📅" label="Frequency" value={plan.frequency} />
-              <PlanStat icon="🎯" label="Goal" value={plan.goal} />
+              <PlanStat icon={<FontAwesomeIcon icon={faDumbbell} />} label="Plan" value={plan.plan_name} />
+              <PlanStat icon={<FontAwesomeIcon icon={faCalendarDays} />} label="Frequency" value={plan.frequency} />
+              <PlanStat icon={<FontAwesomeIcon icon={faBullseye} />}  label="Goal" value={plan.goal} />
             </div>
 
             {/* Day tabs */}
@@ -592,7 +594,7 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
   );
 }
 
-function PlanStat({ icon, label, value }: { icon: string; label: string; value: string }) {
+function PlanStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="flex items-center gap-3">
       <span className="text-2xl">{icon}</span>
@@ -828,7 +830,7 @@ function ExerciseCard({ exercise, index, videoId, onFetchVideo, onRetryVideo, is
         {/* Tip */}
         {exercise.tip && (
           <p className="text-gray-400 text-xs leading-relaxed border-t border-white/5 pt-2">
-            💡 {exercise.tip}
+            <FontAwesomeIcon icon={faLightbulb} /> {exercise.tip}
           </p>
         )}
       </div>
