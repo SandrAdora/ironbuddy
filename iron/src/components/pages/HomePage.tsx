@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { apiRequestPasswordReset } from '../../api';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../context/themeContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRobot, faUtensils, faChartLine, faUsers, faDumbbell, faWeightScale, faComments, faGlobe, faClipboardList, faTrophy, faEnvelope, faKey } from '@fortawesome/free-solid-svg-icons';
 
 export default function Home() {
   const { login, logout, token } = useUser();
@@ -60,10 +62,10 @@ export default function Home() {
   };
 
   const FEATURES = [
-    { icon: '🤖', text: t('home.features.ai_coach') },
-    { icon: '🥗', text: t('home.features.nutrition') },
-    { icon: '📈', text: t('home.features.analytics') },
-    { icon: '👥', text: t('home.features.community') },
+    { icon: faRobot,     text: t('home.features.ai_coach') },
+    { icon: faUtensils,  text: t('home.features.nutrition') },
+    { icon: faChartLine, text: t('home.features.analytics') },
+    { icon: faUsers,     text: t('home.features.community') },
   ];
 
   const STATS = [
@@ -73,18 +75,18 @@ export default function Home() {
   ];
 
   const FEATURE_CARDS = [
-    { icon: '🦾', title: t('home.features_section.ai_coach_title'),  desc: t('home.features_section.ai_coach_desc') },
-    { icon: '🥗', title: t('home.features_section.meals_title'),      desc: t('home.features_section.meals_desc') },
-    { icon: '💪', title: t('home.features_section.workouts_title'),   desc: t('home.features_section.workouts_desc') },
-    { icon: '📏', title: t('home.features_section.tracker_title'),    desc: t('home.features_section.tracker_desc') },
-    { icon: '💬', title: t('home.features_section.community_title'),  desc: t('home.features_section.community_desc') },
-    { icon: '🌍', title: t('home.features_section.languages_title'),  desc: t('home.features_section.languages_desc') },
+    { icon: faRobot,       title: t('home.features_section.ai_coach_title'),  desc: t('home.features_section.ai_coach_desc') },
+    { icon: faUtensils,    title: t('home.features_section.meals_title'),      desc: t('home.features_section.meals_desc') },
+    { icon: faDumbbell,    title: t('home.features_section.workouts_title'),   desc: t('home.features_section.workouts_desc') },
+    { icon: faWeightScale, title: t('home.features_section.tracker_title'),    desc: t('home.features_section.tracker_desc') },
+    { icon: faComments,    title: t('home.features_section.community_title'),  desc: t('home.features_section.community_desc') },
+    { icon: faGlobe,       title: t('home.features_section.languages_title'),  desc: t('home.features_section.languages_desc') },
   ];
 
   const HOW_STEPS = [
-    { step: '01', icon: '📋', title: t('home.how_it_works.step1_title'), desc: t('home.how_it_works.step1_desc') },
-    { step: '02', icon: '🤖', title: t('home.how_it_works.step2_title'), desc: t('home.how_it_works.step2_desc') },
-    { step: '03', icon: '📈', title: t('home.how_it_works.step3_title'), desc: t('home.how_it_works.step3_desc') },
+    { step: '01', icon: faClipboardList, title: t('home.how_it_works.step1_title'), desc: t('home.how_it_works.step1_desc') },
+    { step: '02', icon: faRobot,         title: t('home.how_it_works.step2_title'), desc: t('home.how_it_works.step2_desc') },
+    { step: '03', icon: faChartLine,     title: t('home.how_it_works.step3_title'), desc: t('home.how_it_works.step3_desc') },
   ];
 
   const sectionBorder = light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)';
@@ -139,7 +141,10 @@ export default function Home() {
               </h1>
               <h1 className="text-6xl md:text-7xl font-black uppercase leading-[0.85] tracking-tight">
                 <span style={{ color: light ? '#111' : '#fff' }}>{t('home.headline3')} </span>
-                <span style={{ color: light ? '#111' : '#fff' }} className="animate-coach-breathe inline-block">🦾 {t('home.headline4')}</span>
+                <span style={{ color: light ? '#111' : '#fff' }} className="animate-coach-breathe inline-flex items-center gap-2">
+                  <FontAwesomeIcon icon={faDumbbell} className="w-12 h-12 md:w-14 md:h-14 text-[--color-iron-gold]" />
+                  {t('home.headline4')}
+                </span>
               </h1>
             </div>
 
@@ -151,9 +156,9 @@ export default function Home() {
             <ul className="space-y-2">
               {FEATURES.map(({ icon, text }) => (
                 <li key={text} className="flex items-center gap-3">
-                  <span className="w-8 h-8 flex items-center justify-center rounded-xl shrink-0 text-sm"
+                  <span className="w-8 h-8 flex items-center justify-center rounded-xl shrink-0"
                     style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.2)' }}>
-                    {icon}
+                    <FontAwesomeIcon icon={icon} className="w-3.5 h-3.5 text-[--color-iron-gold]" />
                   </span>
                   <span style={{ color: light ? '#333' : '#d1d5db' }} className="text-sm font-medium">{text}</span>
                 </li>
@@ -260,9 +265,9 @@ export default function Home() {
                   className="absolute -top-4 left-6 text-[10px] font-black tracking-widest text-[--color-iron-gold] px-2"
                   style={{ background: light ? '#f0f0f3' : '#0a0a0d' }}
                 >{step}</div>
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mb-4"
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
                   style={{ background: 'rgba(200,138,13,0.08)', border: '1px solid rgba(250,204,21,0.15)' }}>
-                  {icon}
+                  <FontAwesomeIcon icon={icon} className="w-5 h-5 text-[--color-iron-gold]" />
                 </div>
                 <h3 style={{ color: light ? '#111' : '#fff' }} className="text-lg font-black uppercase italic mb-2">{title}</h3>
                 <p style={{ color: light ? '#555' : '#9ca3af' }} className="text-sm leading-relaxed">{desc}</p>
@@ -290,9 +295,9 @@ export default function Home() {
                 className="p-5 rounded-2xl border hover:border-yellow-300/20 transition-all duration-300 group"
                 style={{ background: cardBg, borderColor: cardBorder }}
               >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-3"
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
                   style={{ background: 'rgba(250,204,21,0.07)', border: '1px solid rgba(250,204,21,0.12)' }}>
-                  {icon}
+                  <FontAwesomeIcon icon={icon} className="w-4 h-4 text-[--color-iron-gold]" />
                 </div>
                 <h3 style={{ color: light ? '#111' : '#fff' }} className="text-sm font-black uppercase italic mb-1.5 group-hover:text-[--color-iron-gold] transition-colors">{title}</h3>
                 <p style={{ color: light ? '#666' : '#6b7280' }} className="text-xs leading-relaxed">{desc}</p>
@@ -309,7 +314,10 @@ export default function Home() {
             style={{ background: 'radial-gradient(circle, rgba(250,204,21,0.05) 0%, transparent 70%)', filter: 'blur(60px)' }} />
         </div>
         <div className="relative max-w-2xl mx-auto px-6 text-center space-y-6">
-          <span className="text-5xl">🏆</span>
+          <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center"
+            style={{ background: 'rgba(250,204,21,0.1)', border: '1px solid rgba(250,204,21,0.2)' }}>
+            <FontAwesomeIcon icon={faTrophy} className="w-7 h-7 text-[--color-iron-gold]" />
+          </div>
           <h2 style={{ color: light ? '#111' : '#fff' }} className="text-4xl md:text-5xl font-black uppercase italic leading-tight">
             {t('home.cta.title1')}<br />
             <span style={{ background: 'linear-gradient(135deg,#facc15,#fb923c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
@@ -352,9 +360,9 @@ export default function Home() {
               <div className="p-8 rounded-[calc(1.25rem-1px)]" style={{ background: light ? '#ffffff' : '#0d0d10' }}>
                 {forgotDone ? (
                   <div className="text-center space-y-4">
-                    <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-3xl"
+                    <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center"
                       style={{ background: 'rgba(250,204,21,0.1)', border: '1px solid rgba(250,204,21,0.2)' }}>
-                      📧
+                      <FontAwesomeIcon icon={faEnvelope} className="w-7 h-7 text-[--color-iron-gold]" />
                     </div>
                     <p style={{ color: light ? '#111' : '#fff' }} className="font-black uppercase tracking-wide">{t('home.forgot.check_inbox')}</p>
                     <p style={{ color: light ? '#555' : '#9ca3af' }} className="text-sm leading-relaxed">
@@ -368,7 +376,7 @@ export default function Home() {
                 ) : (
                   <>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-lg">🔑</span>
+                      <FontAwesomeIcon icon={faKey} className="w-4 h-4 text-[--color-iron-gold]" />
                       <span className="text-[--color-iron-gold] font-black uppercase text-xs tracking-[0.2em]">{t('home.forgot.title')}</span>
                     </div>
                     <p style={{ color: light ? '#777' : '#6b7280' }} className="text-xs mb-6">{t('home.forgot.desc')}</p>

@@ -896,8 +896,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.93, y: 16 }}
               transition={{ duration: 0.18 }}
-              className="w-full max-w-sm rounded-2xl p-5 space-y-4"
-              style={{ background: '#0d0d10', border: '1px solid rgba(250,204,21,0.2)' }}
+              className="share-modal-card w-full max-w-sm rounded-2xl p-5 space-y-4"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start justify-between">
@@ -932,10 +931,10 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                       <button
                         onClick={() => sendShare(user)}
                         disabled={shareSending || shareSent === user.id}
-                        className="text-xs font-black px-3 py-1.5 rounded-lg transition-all disabled:opacity-60"
+                        className={`text-xs font-black px-3 py-1.5 rounded-lg transition-all disabled:opacity-60 ${shareSent === user.id ? '' : 'btn-gold-send'}`}
                         style={shareSent === user.id
                           ? { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }
-                          : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.2)' }
+                          : undefined
                         }
                       >
                         {shareSent === user.id ? '✓ Sent' : shareSending ? '…' : 'Send'}

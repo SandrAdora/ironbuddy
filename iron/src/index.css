@@ -79,6 +79,9 @@
 ::-webkit-scrollbar-thumb { background: rgba(250, 204, 21, 0.25); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(250, 204, 21, 0.55); }
 
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
 a {
   font-weight: 500;
   color: #facc15;
@@ -174,4 +177,54 @@ button:focus-visible {
     background: rgba(240,240,243,0.96) !important;
     border-bottom-color: rgba(0,0,0,0.09) !important;
   }
+}
+
+/* ── Gold chip buttons (CoachChat suggestions & quick prompts) ────────────── */
+.btn-gold-chip {
+  background: #060608;
+  color: rgba(253,224,71,0.8);
+  border: 1px solid rgba(250,204,21,0.25);
+  box-shadow: 0 0 8px rgba(250,204,21,0.1);
+}
+.btn-gold-chip:hover {
+  background: #060608;
+  color: #fde047;
+  border: 1px solid rgba(250,204,21,0.5);
+  box-shadow: 0 0 12px rgba(250,204,21,0.3);
+}
+[data-theme="light"] .btn-gold-chip {
+  background: rgba(250,204,21,0.15);
+  color: #92400e;
+  border: 1px solid rgba(161,98,7,0.3);
+  box-shadow: none;
+}
+[data-theme="light"] .btn-gold-chip:hover {
+  background: rgba(250,204,21,0.28);
+  color: #78350f;
+  border: 1px solid rgba(161,98,7,0.5);
+  box-shadow: none;
+}
+
+/* ── Gold send/action buttons ─────────────────────────────────────────────── */
+.btn-gold-send {
+  background: #060608;
+  color: #facc15;
+  border: 1px solid rgba(250,204,21,0.4);
+  box-shadow: 0 0 12px rgba(250,204,21,0.3), 0 0 28px rgba(250,204,21,0.12);
+}
+[data-theme="light"] .btn-gold-send {
+  background: rgba(250,204,21,0.18);
+  color: #92400e;
+  border: 1px solid rgba(161,98,7,0.4);
+  box-shadow: none;
+}
+
+/* ── Share modal card ─────────────────────────────────────────────────────── */
+.share-modal-card {
+  background: #0d0d10;
+  border: 1px solid rgba(250,204,21,0.2);
+}
+[data-theme="light"] .share-modal-card {
+  background: #ffffff;
+  border: 1px solid rgba(161,98,7,0.2);
 }

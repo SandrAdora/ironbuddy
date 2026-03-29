@@ -355,10 +355,7 @@ export default function CoachChat({ profile, token }: Props) {
                     <button
                       key={fu}
                       onClick={() => setInput(fu)}
-                      className="text-[11px] px-3 py-1.5 rounded-full transition-all duration-200 active:scale-95 text-left"
-                      style={{ background: '#060608', color: 'rgba(253,224,71,0.8)', border: '1px solid rgba(250,204,21,0.25)', boxShadow: '0 0 8px rgba(250,204,21,0.1)' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = "background:#060608;color:#fde047;border:1px solid rgba(250,204,21,0.5);box-shadow:0 0 12px rgba(250,204,21,0.3)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = "background:#060608;color:rgba(253,224,71,0.8);border:1px solid rgba(250,204,21,0.25);box-shadow:0 0 8px rgba(250,204,21,0.1)"; }}
+                      className="btn-gold-chip text-[11px] px-3 py-1.5 rounded-full transition-all duration-200 active:scale-95 text-left"
                     >
                       {fu}
                     </button>
@@ -410,8 +407,7 @@ export default function CoachChat({ profile, token }: Props) {
         <button
           onClick={send}
           disabled={loading || !input.trim()}
-          className="px-3 py-2 sm:px-5 sm:py-3 font-black rounded-xl uppercase text-xs sm:text-sm hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 12px rgba(250,204,21,0.3), 0 0 28px rgba(250,204,21,0.12)' }}
+          className="btn-gold-send px-3 py-2 sm:px-5 sm:py-3 font-black rounded-xl uppercase text-xs sm:text-sm hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {t('coach.send')}
         </button>
@@ -428,8 +424,7 @@ export default function CoachChat({ profile, token }: Props) {
           <button
             key={prompt}
             onClick={() => { setInput(prompt); }}
-            className="text-xs px-3 py-1.5 rounded-full transition-all duration-200 hover:scale-[1.02] shrink-0 whitespace-nowrap"
-            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.3)', boxShadow: '0 0 8px rgba(250,204,21,0.15)' }}
+            className="btn-gold-chip text-xs px-3 py-1.5 rounded-full transition-all duration-200 hover:scale-[1.02] shrink-0 whitespace-nowrap"
           >
             {prompt}
           </button>

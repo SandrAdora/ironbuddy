@@ -13,7 +13,7 @@ const LANGS = [
   { code: 'hu', label: 'HU', flag: '🇭🇺' },
 ];
 
-const NAV_LINK = 'relative text-xs font-bold uppercase tracking-[0.14em] font-sans leading-none transition-colors duration-200 group pb-0.5 bg-transparent border-none p-0 m-0 cursor-pointer';
+const NAV_LINK = 'relative text-[11px] font-bold uppercase tracking-[0.12em] font-sans leading-none transition-colors duration-200 group pb-0.5 bg-transparent border-none p-0 m-0 cursor-pointer';
 const NAV_UNDERLINE = 'absolute bottom-0 left-0 h-px bg-[--color-iron-gold] transition-all duration-300';
 
 const HOME_SECTIONS = [
@@ -40,7 +40,6 @@ export default function Navbar() {
 
   const currentLang = LANGS.find(l => l.code === i18n.language) ?? LANGS[0];
 
-  // Close language dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false);
@@ -49,7 +48,6 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Track active section via IntersectionObserver (only on homepage)
   useEffect(() => {
     if (!isHome) return;
     const observers: IntersectionObserver[] = [];
@@ -66,7 +64,6 @@ export default function Navbar() {
     return () => observers.forEach(o => o.disconnect());
   }, [isHome]);
 
-  // Capture the PWA install prompt
   useEffect(() => {
     const handler = (e: Event) => {
       e.preventDefault();
@@ -95,34 +92,34 @@ export default function Navbar() {
         boxShadow: theme === 'light' ? '0 2px 16px rgba(0,0,0,0.08)' : '0 1px 0 rgba(250,204,21,0.07), 0 8px 40px rgba(0,0,0,0.6)',
       }}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 h-16">
+      {/* ── Desktop bar ───────────────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 h-14">
 
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-          <span className="text-[22px] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 inline-block" style={{ filter: 'grayscale(1) brightness(0.85) contrast(1.2)' }}>🦾</span>
-          <span className="font-black text-[1.1rem] tracking-[0.18em] uppercase select-none">
-            <span className="text-[--color-iron-gold]" style={{ textShadow: '0 0 24px rgba(250,204,21,0.5)' }}>IRON</span>
+        <Link to="/" className="flex items-center gap-2 group shrink-0">
+          <span className="text-[20px] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 inline-block" style={{ filter: 'grayscale(1) brightness(0.85) contrast(1.2)' }}>🦾</span>
+          <span className="font-black text-[1rem] tracking-[0.16em] uppercase select-none">
+            <span className="text-[--color-iron-gold]" style={{ textShadow: '0 0 20px rgba(250,204,21,0.5)' }}>IRON</span>
             <span style={{ color: theme === 'light' ? '#111111' : 'rgba(255,255,255,0.9)' }}>BUDDY</span>
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-5 ml-auto">
+        {/* Desktop nav items */}
+        <div className="hidden md:flex items-center gap-4 ml-auto">
 
-          {/* Section scroll links — always visible on homepage */}
+          {/* Section scroll links */}
           {isHome && HOME_SECTIONS.map(({ id, key }) => (
             <a
               key={id}
               href={`#${id}`}
-              style={{ fontSize: '0.75rem' }}
-              className={`${NAV_LINK} ${activeSection === id ? ' text-xs text-[--color-iron-gold]' : ' text-yellow-400 hover:text-white'}`}
+              className={`${NAV_LINK} ${activeSection === id ? 'text-[--color-iron-gold]' : 'text-gray-400 hover:text-white'}`}
             >
               {t(key)}
               <span className={`${NAV_UNDERLINE} ${activeSection === id ? 'w-full' : 'w-0 group-hover:w-full'}`} />
             </a>
           ))}
 
-          {/* Always-visible page links */}
+          {/* Page links */}
           {[{ to: '/about', label: t('nav.about') }, { to: '/contact', label: t('nav.contact') }].map(({ to, label }) => (
             <Link
               key={to} to={to}
@@ -133,16 +130,16 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {/* Divider */}
-          {!token && <div className="w-px h-5 bg-white/10" />}
+          {/* Thin divider before utility controls */}
+          <div className="w-px h-4 bg-white/10 mx-1" />
 
-          {/* Sign Up (only when logged out) */}
+          {/* Sign Up — pill style, compact */}
           {!token && (
             <Link
               to="/signup"
-              className="px-5 py-2.5 text-xs font-black uppercase tracking-[0.12em] text-black
-                bg-[--color-iron-gold] rounded-xl
-                hover:brightness-110 hover:shadow-[0_0_22px_rgba(250,204,21,0.45)] hover:scale-[1.04]
+              className="px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-black
+                bg-[--color-iron-gold] rounded-full
+                hover:brightness-110 hover:shadow-[0_0_18px_rgba(250,204,21,0.4)] hover:scale-[1.04]
                 transition-all duration-200 inline-block"
             >
               {t('nav.sign_up')}
@@ -154,39 +151,31 @@ export default function Navbar() {
             <button
               onClick={handleInstall}
               aria-label="Install IronBuddy app"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-[0.1em] transition-all duration-200 hover:scale-[1.04]"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-[0.08em] transition-all duration-200 hover:scale-[1.04]"
               style={{ background: 'rgba(250,204,21,0.1)', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)' }}
             >
               ⬇ Install
             </button>
           )}
 
-          {/* Theme toggle */}
+          {/* Theme toggle — icon only */}
           <button
             onClick={toggleTheme}
-            className={`${NAV_LINK} text-gray-400 hover:text-white`}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-base transition-all duration-200 hover:scale-110"
+            style={{ color: theme === 'light' ? '#555' : 'rgba(255,255,255,0.55)' }}
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
-            <span className="absolute bottom-0 left-0 h-px bg-[--color-iron-gold] w-0 group-hover:w-full transition-all duration-300" />
+            {theme === 'dark' ? '☀️' : '🌙'}
           </button>
 
-          {/* Language switcher */}
+          {/* Language — flag only, compact */}
           <div ref={langRef} className="relative">
             <button
               onClick={() => setLangOpen(v => !v)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-[0.1em] transition-all duration-200"
-              style={{
-                color: theme === 'light' ? '#555' : 'rgba(255,255,255,0.55)',
-                border: theme === 'light' ? '1px solid rgba(0,0,0,0.15)' : '1px solid rgba(255,255,255,0.1)',
-              }}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-base transition-all duration-200 hover:scale-110"
               aria-label="Language"
             >
-              <span className="text-sm leading-none">{currentLang.flag}</span>
-              <span>{currentLang.label}</span>
-              <svg className={`w-3 h-3 transition-transform duration-200 ${langOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+              {currentLang.flag}
             </button>
 
             <AnimatePresence>
@@ -231,7 +220,7 @@ export default function Navbar() {
 
         {/* Hamburger */}
         <button
-          className="md:hidden flex flex-col items-center justify-center w-10 h-10 gap-[5px] rounded-xl transition-all"
+          className="md:hidden flex flex-col items-center justify-center w-9 h-9 gap-[5px] rounded-xl transition-all"
           style={{
             background: theme === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
             border: theme === 'light' ? '1px solid rgba(0,0,0,0.12)' : '1px solid rgba(255,255,255,0.1)',
@@ -239,13 +228,13 @@ export default function Navbar() {
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Toggle menu"
         >
-          <span className={`block w-5 h-[2px] rounded-full transition-all duration-300 origin-center ${isOpen ? 'rotate-45 translate-y-[7px]' : ''}`} style={{ background: theme === 'light' ? '#111' : '#fff' }} />
-          <span className={`block w-5 h-[2px] rounded-full transition-all duration-300 ${isOpen ? 'opacity-0 scale-x-0' : ''}`} style={{ background: theme === 'light' ? '#111' : '#fff' }} />
-          <span className={`block w-5 h-[2px] rounded-full transition-all duration-300 origin-center ${isOpen ? '-rotate-45 -translate-y-[7px]' : ''}`} style={{ background: theme === 'light' ? '#111' : '#fff' }} />
+          <span className={`block w-4.5 h-[2px] rounded-full transition-all duration-300 origin-center ${isOpen ? 'rotate-45 translate-y-[7px]' : ''}`} style={{ background: theme === 'light' ? '#111' : '#fff' }} />
+          <span className={`block w-4.5 h-[2px] rounded-full transition-all duration-300 ${isOpen ? 'opacity-0 scale-x-0' : ''}`} style={{ background: theme === 'light' ? '#111' : '#fff' }} />
+          <span className={`block w-4.5 h-[2px] rounded-full transition-all duration-300 origin-center ${isOpen ? '-rotate-45 -translate-y-[7px]' : ''}`} style={{ background: theme === 'light' ? '#111' : '#fff' }} />
         </button>
       </div>
 
-      {/* Mobile menu */}
+      {/* ── Mobile menu ───────────────────────────────────────────────────── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -260,15 +249,14 @@ export default function Navbar() {
               background: theme === 'light' ? 'rgba(240,240,243,0.98)' : 'rgba(6,6,8,0.97)',
             }}
           >
-            <ul className="flex flex-col gap-1 px-4 py-3">
+            <ul className="flex flex-col gap-0.5 px-4 py-3">
 
-              {/* Section scroll links — always visible on homepage */}
               {isHome && HOME_SECTIONS.map(({ id, key }) => (
                 <li key={id}>
                   <a
                     href={`#${id}`}
                     onClick={() => setIsOpen(false)}
-                    className={`block px-4 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider transition-all
+                    className={`block px-3 py-2.5 rounded-xl text-sm font-semibold uppercase tracking-wider transition-all
                       ${activeSection === id
                         ? 'bg-yellow-300/10 text-[--color-iron-gold] border border-yellow-300/20'
                         : theme === 'light' ? 'text-gray-600 hover:text-black hover:bg-black/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
@@ -278,12 +266,11 @@ export default function Navbar() {
                 </li>
               ))}
 
-              {/* Always-visible page links */}
               {[{ to: '/about', label: t('nav.about') }, { to: '/contact', label: t('nav.contact') }].map(({ to, label }) => (
                 <li key={to}>
                   <Link
                     to={to} onClick={() => setIsOpen(false)}
-                    className={`block px-4 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider transition-all
+                    className={`block px-3 py-2.5 rounded-xl text-sm font-semibold uppercase tracking-wider transition-all
                       ${active(to) ? 'bg-yellow-300/10 text-[--color-iron-gold] border border-yellow-300/20' : theme === 'light' ? 'text-gray-600 hover:text-black hover:bg-black/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                   >
                     {label}
@@ -291,31 +278,29 @@ export default function Navbar() {
                 </li>
               ))}
 
-              {/* Sign up (logged out) / Sign out (logged in) */}
               <li className="pt-2 mt-1" style={{ borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.06)' }}>
                 {token ? (
                   <button
                     onClick={() => { logout(); setIsOpen(false); navigate('/'); }}
-                    className="w-full block px-4 py-3 rounded-xl text-sm font-black uppercase tracking-wider text-center transition-all"
+                    className="w-full block px-3 py-2.5 rounded-xl text-sm font-black uppercase tracking-wider text-center transition-all"
                     style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}
                   >
                     {t('nav.sign_out')}
                   </button>
                 ) : (
                   <Link to="/signup" onClick={() => setIsOpen(false)}
-                    className="block px-4 py-3 bg-yellow-300 text-black rounded-xl text-sm font-black uppercase tracking-wider text-center hover:bg-yellow-200 transition-all">
+                    className="block px-3 py-2.5 bg-yellow-300 text-black rounded-xl text-sm font-black uppercase tracking-wider text-center hover:bg-yellow-200 transition-all">
                     {t('nav.sign_up')}
                   </Link>
                 )}
               </li>
 
-              {/* Install app */}
               {installPrompt && (
                 <li>
                   <button
                     onClick={() => { handleInstall(); setIsOpen(false); }}
                     aria-label="Install IronBuddy app"
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-black uppercase tracking-wider transition-all"
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-black uppercase tracking-wider transition-all"
                     style={{ background: 'rgba(250,204,21,0.1)', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)' }}
                   >
                     ⬇ Install App
@@ -323,35 +308,32 @@ export default function Navbar() {
                 </li>
               )}
 
-              {/* Mobile theme toggle */}
-              <li>
-                <button
-                  onClick={toggleTheme}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider transition-all ${theme === 'light' ? 'text-gray-600 hover:text-black hover:bg-black/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                >
-                  {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
-                </button>
-              </li>
-
-              {/* Mobile language switcher */}
+              {/* Mobile theme + language in one row */}
               <li className="pt-2" style={{ borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.06)' }}>
-                <p className={`px-4 pb-1 text-[10px] font-black uppercase tracking-widest ${theme === 'light' ? 'text-gray-400' : 'text-gray-600'}`}>{t('language.title')}</p>
-                <div className="flex flex-wrap gap-2 px-4 py-2">
-                  {LANGS.map(({ code, label, flag }) => (
-                    <button
-                      key={code}
-                      onClick={() => { i18n.changeLanguage(code); setProfile(p => ({ ...p, language: code })); setIsOpen(false); }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
-                      style={{
-                        color: i18n.language === code ? '#facc15' : theme === 'light' ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.5)',
-                        background: i18n.language === code ? 'rgba(250,204,21,0.1)' : theme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)',
-                        border: i18n.language === code ? '1px solid rgba(250,204,21,0.25)' : theme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.08)',
-                      }}
-                    >
-                      <span>{flag}</span>
-                      <span>{label}</span>
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between px-1">
+                  <button
+                    onClick={toggleTheme}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all ${theme === 'light' ? 'text-gray-600 hover:text-black hover:bg-black/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                  >
+                    {theme === 'dark' ? '☀️' : '🌙'}
+                    <span className="text-xs uppercase tracking-wider">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+                  </button>
+                  <div className="flex gap-1.5">
+                    {LANGS.map(({ code, flag }) => (
+                      <button
+                        key={code}
+                        onClick={() => { i18n.changeLanguage(code); setProfile(p => ({ ...p, language: code })); setIsOpen(false); }}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-base transition-all"
+                        style={{
+                          background: i18n.language === code ? 'rgba(250,204,21,0.15)' : theme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)',
+                          border: i18n.language === code ? '1px solid rgba(250,204,21,0.35)' : theme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.08)',
+                        }}
+                        aria-label={code}
+                      >
+                        {flag}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </li>
             </ul>

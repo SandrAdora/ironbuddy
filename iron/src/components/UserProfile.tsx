@@ -8,6 +8,8 @@ import { apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMeal
 import BadgeToast from './BadgeToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRobot, faBowlFood, faBook, faVideo, faSliders } from '@fortawesome/free-solid-svg-icons';
 import CoachChat from './CoachChat';
 import WorkoutPlanView from './WorkoutPlan';
 import MyWorkouts from './MyWorkouts';
@@ -992,26 +994,26 @@ export default function UserProfile() {
           {/* ── MEALS ── */}
           {active === 'meals' && (
             <motion.div key="meals" {...fadeUp(0)} className="space-y-3 md:space-y-6">
-              {/* Sub-tabs */}
-              <div className="flex border-b border-white/10">
+              {/* Sub-tabs — scrollable pills */}
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
                 {([
-                  { id: 'ai', label: t('meals.ai_tab') },
-                  { id: 'my', label: t('meals.my_tab') },
-                  { id: 'custom', label: t('meals.recipes_tab') },
-                  { id: 'recipes', label: t('meals.videos_tab') },
-                  { id: 'ingredients', label: t('meals.prefs_tab') },
+                  { id: 'ai',          icon: faRobot,    label: t('meals.ai_tab') },
+                  { id: 'my',          icon: faBowlFood, label: t('meals.my_tab') },
+                  { id: 'custom',      icon: faBook,     label: t('meals.recipes_tab') },
+                  { id: 'recipes',     icon: faVideo,    label: t('meals.videos_tab') },
+                  { id: 'ingredients', icon: faSliders,  label: t('meals.prefs_tab') },
                 ] as const).map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setMealTab(tab.id)}
-                    style={{ fontSize: '0.65rem' }}
-                    className={`flex-1 py-1.5 sm:py-2.5 text-center font-black uppercase tracking-wide transition-all duration-200 border-b-2 -mb-px truncate px-1 ${
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-black uppercase tracking-wide whitespace-nowrap shrink-0 transition-all duration-200 active:scale-95 ${
                       mealTab === tab.id
-                        ? 'border-[--color-iron-gold] text-[--color-iron-gold]'
-                        : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'
+                        ? 'bg-[--color-iron-gold] text-black shadow-[0_0_14px_rgba(250,204,21,0.35)]'
+                        : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    {tab.label}
+                    <FontAwesomeIcon icon={tab.icon} className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
                   </button>
                 ))}
               </div>
