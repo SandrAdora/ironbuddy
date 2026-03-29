@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEnvelope, faQrcode, faCamera } from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import {
   apiSearchUserByEmail, apiGetUserById, apiStartConversation,
   type PublicUser, type ChatConversation,
@@ -148,10 +151,10 @@ export default function AddUserModal({ token, currentUserId, currentUserName, on
   }, [tab, token]);
 
   // ── Render ────────────────────────────────────────────────────────────────
-  const tabs: { id: Tab; label: string; icon: string }[] = [
-    { id: 'email', label: 'By Email',   icon: '✉️' },
-    { id: 'myqr',  label: 'My QR Code', icon: '🔲' },
-    { id: 'scan',  label: 'Scan QR',    icon: '📷' },
+  const tabs: { id: Tab; label: string; icon: IconDefinition }[] = [
+    { id: 'email', label: 'By Email',   icon: faEnvelope },
+    { id: 'myqr',  label: 'My QR Code', icon: faQrcode },
+    { id: 'scan',  label: 'Scan QR',    icon: faCamera },
   ];
 
   return (
@@ -182,7 +185,7 @@ export default function AddUserModal({ token, currentUserId, currentUserName, on
               className={`flex-1 py-2 text-xs font-black uppercase tracking-wider transition-colors flex flex-col items-center gap-0.5
                 ${tab === t.id ? 'text-yellow-300 border-b-2 border-yellow-300' : 'text-gray-500 hover:text-gray-300'}`}
             >
-              <span className="text-sm">{t.icon}</span>
+              <FontAwesomeIcon icon={t.icon} className="w-3.5 h-3.5" />
               {t.label}
             </button>
           ))}
