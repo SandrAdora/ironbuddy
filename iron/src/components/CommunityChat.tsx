@@ -1041,7 +1041,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                 key={tab}
                 onClick={() => setLeftTab(tab)}
                 className={`flex-1 py-1.5 sm:py-2.5 text-xs font-black uppercase tracking-wider transition-colors
-                  ${leftTab === tab ? 'text-yellow-300 border-b-2 border-yellow-300' : light ? 'text-gray-600 hover:text-gray-800' : 'text-gray-500 hover:text-gray-300'}`}
+                  ${leftTab === tab ? 'text-orange-500 border-b-2 border-orange-500' : light ? 'text-gray-600 hover:text-gray-800' : 'text-gray-500 hover:text-gray-300'}`}
               >
                 {tab === 'messages' ? `💬 Messages${totalUnread > 0 ? ` (${totalUnread})` : ''}` : '🏋️ Athletes'}
               </button>

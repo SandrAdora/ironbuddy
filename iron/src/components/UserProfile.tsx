@@ -592,7 +592,7 @@ export default function UserProfile() {
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wide transition-all duration-200
                 ${active === item.id
                   ? 'bg-yellow-300/15 text-[--color-iron-gold] shadow-[0_0_12px_rgba(250,204,21,0.2)]'
-                  : theme === 'light' ? 'text-gray-500 hover:text-gray-900 hover:bg-black/5' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                  : theme === 'light' ? 'text-gray-500 hover:text-gray-900 hover:bg-orange-500/15' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
             >
               <FontAwesomeIcon icon={item.icon} className="text-lg w-4" />
               {t(item.key)}
@@ -1920,8 +1920,8 @@ export default function UserProfile() {
                             ? 'bg-red-500/20 border border-red-400/40 text-red-300 shadow-[0_0_16px_rgba(239,68,68,0.15)]'
                             : 'bg-yellow-300/15 border border-yellow-300/40 text-yellow-300 shadow-[0_0_16px_rgba(253,224,71,0.15)]'
                           : tab.id === 'delete_account'
-                            ? 'bg-white/3 border border-red-500/10 text-gray-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-400/20'
-                            : 'bg-white/3 border border-white/8 text-gray-400 hover:bg-white/8 hover:text-white hover:border-white/15'
+                            ? `border ${theme === 'light' ? 'bg-red-50 border-red-200 text-red-400 hover:bg-red-100 hover:text-red-600' : 'bg-white/3 border-red-500/10 text-gray-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-400/20'}`
+                            : `border ${theme === 'light' ? 'bg-gray-100 border-gray-200 text-gray-600 hover:bg-orange-500/10 hover:text-orange-700 hover:border-orange-300' : 'bg-white/3 border-white/8 text-gray-400 hover:bg-white/8 hover:text-white hover:border-white/15'}`
                       }`}
                     >
                       <span className="text-xl shrink-0"><FontAwesomeIcon icon={tab.icon} /></span>

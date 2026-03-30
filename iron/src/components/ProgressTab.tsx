@@ -637,7 +637,7 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
           onMouseEnter={e => { if (!pdfLoading) (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 10px rgba(250,204,21,0.7),0 0 20px rgba(250,204,21,0.4)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
         >
-          {pdfLoading ? ' Generating...' : <FontAwesomeIcon icon={faDownload} />+'Download Progress'}
+          {pdfLoading ? 'Generating...' : <><FontAwesomeIcon icon={faDownload} /> Download Progress</>}
         </button>
       </div>
 
