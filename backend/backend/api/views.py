@@ -1412,13 +1412,93 @@ BODY_PARTS = [
     'neck', 'shoulders', 'upper arms', 'upper legs', 'waist',
 ]
 
+def _seed_from_wger():
+    """Fetch exercises from wger (free, no API key required) and save to local DB."""
+    import re
+    from .models import Exercise
+
+    def strip_html(text):
+        return re.sub(r'<[^>]+>', '', text or '').strip()
+
+    all_data = []
+    url = 'https://wger.de/api/v2/exerciseinfo/'
+    params = {'format': 'json', 'language': 2, 'limit': 100, 'offset': 0}
+    max_pages = 5  # cap at 500 exercises for a fast initial seed
+
+    while url and max_pages > 0:
+        try:
+            resp = _http.get(url, params=params, timeout=15)
+            if not resp.ok:
+                break
+            payload = resp.json()
+            all_data.extend(payload.get('results', []))
+            url = payload.get('next')
+            params = None  # next URL already includes query params
+            max_pages -= 1
+        except Exception:
+            break
+
+    if not all_data:
+        return False, 'No exercises returned from wger API'
+
+    to_create = []
+    for ex in all_data:
+        # Name from English translation
+        name = ''
+        instructions = []
+        for t in ex.get('translations', []):
+            if t.get('language') == 2:
+                name = t.get('name', '').strip()
+                desc = strip_html(t.get('description', ''))
+                if desc:
+                    instructions = [desc]
+                break
+        if not name:
+            name = ex.get('name', '').strip()
+        if not name:
+            continue
+
+        category = ex.get('category', {})
+        body_part = category.get('name', '').lower()
+
+        muscles = ex.get('muscles', [])
+        target = muscles[0].get('name_en', '') if muscles else ''
+        secondary = [m.get('name_en', '') for m in muscles[1:]]
+        secondary += [m.get('name_en', '') for m in ex.get('muscles_secondary', [])]
+
+        equipment_list = ex.get('equipment', [])
+        equipment = equipment_list[0].get('name', 'bodyweight') if equipment_list else 'bodyweight'
+
+        images = ex.get('images', [])
+        main = next((img for img in images if img.get('is_main')), images[0] if images else None)
+        wger_image_url = main.get('image', '') if main else ''
+
+        to_create.append(Exercise(
+            exercise_id=f'wger_{ex.get("id", "")}',
+            name=name,
+            body_part=body_part,
+            target=target,
+            secondary_muscles=secondary,
+            equipment=equipment,
+            gif_url='',
+            instructions=instructions,
+            wger_image_url=wger_image_url,
+        ))
+
+    if not to_create:
+        return False, 'No exercises could be mapped from wger API'
+
+    Exercise.objects.bulk_create(to_create, ignore_conflicts=True)
+    return True, len(to_create)
+
+
 def _fetch_all_exercises_from_api():
-    """Fetch exercises from ExerciseDB per body part and save to local DB."""
+    """Fetch exercises from ExerciseDB (if API key set) or wger (free fallback)."""
     from .models import Exercise
 
     api_key = os.environ.get('EXERCISE_DB', '')
     if not api_key:
-        return False, 'EXERCISE_DB API key not set'
+        return _seed_from_wger()
 
     headers = {
         'X-RapidAPI-Key': api_key,
@@ -1440,7 +1520,7 @@ def _fetch_all_exercises_from_api():
             continue
 
     if not all_exercises:
-        return False, 'No exercises returned from ExerciseDB API'
+        return _seed_from_wger()
 
     to_create = []
     for ex in all_exercises:
@@ -1524,11 +1604,6 @@ class ExerciseMetaView(APIView):
     def get(self, request):
         from .models import Exercise
         from django.db.models import functions
-
-        if not Exercise.objects.exists():
-            ok, result = _fetch_all_exercises_from_api()
-            if not ok:
-                return Response({'error': result}, status=502)
 
         body_parts = sorted(set(Exercise.objects.values_list('body_part', flat=True)))
         targets    = sorted(set(Exercise.objects.values_list('target', flat=True)))

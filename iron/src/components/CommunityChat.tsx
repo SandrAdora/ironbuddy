@@ -11,6 +11,7 @@ import {
   type PublicUser, type ChatConversation, type DirectMessage, type MessageReaction,
 } from '../api';
 import AddUserModal from './AddUserModal';
+import { useTheme } from '../context/themeContext';
 import { saveMessages, getMessages as dbGetMessages, addMessage as dbAddMessage, type CachedMessage } from '../services/chatDB';
 
 // In dev: Vite proxies /socket.io → socket server :3001 via window.location.origin
@@ -354,6 +355,8 @@ function FilePreview({ pending, onRemove }: { pending: PendingFile; onRemove: ()
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function CommunityChat({ token, currentUserId, currentUserName = 'Athlete', onUnreadChange, onAchievementUnlocked }: Props) {
+  const { theme } = useTheme();
+  const light = theme === 'light';
   const [conversations, setConversations]   = useState<ChatConversation[]>([]);
   const [activeConvo, setActiveConvo]       = useState<ChatConversation | null>(null);
   const [messages, setMessages]             = useState<DirectMessage[]>([]);
@@ -1038,7 +1041,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                 key={tab}
                 onClick={() => setLeftTab(tab)}
                 className={`flex-1 py-1.5 sm:py-2.5 text-xs font-black uppercase tracking-wider transition-colors
-                  ${leftTab === tab ? 'text-yellow-300 border-b-2 border-yellow-300' : 'text-gray-500 hover:text-gray-300'}`}
+                  ${leftTab === tab ? 'text-yellow-300 border-b-2 border-yellow-300' : light ? 'text-gray-600 hover:text-gray-800' : 'text-gray-500 hover:text-gray-300'}`}
               >
                 {tab === 'messages' ? `💬 Messages${totalUnread > 0 ? ` (${totalUnread})` : ''}` : '🏋️ Athletes'}
               </button>

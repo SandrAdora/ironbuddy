@@ -17,13 +17,14 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load from backend/backend.env, fall back to organised .env/backend.env, then local .env
-_env_file = BASE_DIR.parent / 'backend.env'
-if not _env_file.exists():
-    _env_file = BASE_DIR.parent.parent / '.env' / 'backend.env'
-if _env_file.exists():
-    load_dotenv(_env_file)
-else:
+# Load base config, then layer secrets on top
+_base_env   = BASE_DIR.parent / 'backend.env'
+_secret_env = BASE_DIR.parent.parent / '.env' / 'backend.env'
+if _base_env.exists():
+    load_dotenv(_base_env)
+if _secret_env.exists():
+    load_dotenv(_secret_env, override=True)
+elif not _base_env.exists():
     load_dotenv()
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
