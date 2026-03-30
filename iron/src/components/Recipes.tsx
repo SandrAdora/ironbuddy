@@ -167,25 +167,27 @@ export default function Recipes({ token }: Props) {
             className="bg-white/5 backdrop-blur-md border border-yellow-300/20 rounded-2xl p-5 space-y-3"
           >
             <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">🔗 {t('recipes.import_title')}</p>
+            <input
+              value={importUrl}
+              onChange={e => setImportUrl(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleImport(); if (e.key === 'Escape') setImportOpen(false); }}
+              placeholder={t('recipes.import_placeholder')}
+              type="url"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-yellow-300/60 focus:outline-none placeholder:text-gray-600"
+              autoFocus
+            />
             <div className="flex gap-2">
-              <input
-                value={importUrl}
-                onChange={e => setImportUrl(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleImport(); if (e.key === 'Escape') setImportOpen(false); }}
-                placeholder={t('recipes.import_placeholder')}
-                type="url"
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-yellow-300/60 focus:outline-none placeholder:text-gray-600"
-                autoFocus
-              />
               <button
                 onClick={handleImport}
                 disabled={importLoading || !importUrl.trim()}
-                className="px-4 py-2 rounded-xl font-black text-xs uppercase active:scale-95 transition-all disabled:opacity-50"
-                style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 8px rgba(250,204,21,0.3)' }}
+                className="flex-1 px-4 py-2 rounded-xl font-black text-xs uppercase active:scale-95 transition-all disabled:opacity-50"
+                style={theme === 'light'
+                  ? { background: 'rgba(250,204,21,0.15)', color: '#92600a', border: '1px solid rgba(180,120,0,0.3)' }
+                  : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 8px rgba(250,204,21,0.3)' }}
               >
                 {importLoading ? '…' : t('recipes.import_go')}
               </button>
-              <button onClick={() => { setImportOpen(false); setImportError(''); }} aria-label="Close import dialog" className="px-3 py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl text-xs hover:text-white transition-all">✕</button>
+              <button onClick={() => { setImportOpen(false); setImportError(''); }} className="flex-1 py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl text-xs hover:text-white transition-all">Cancel</button>
             </div>
             {importError && <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded-xl px-3 py-2">{importError}</p>}
             <p className="text-gray-600 text-xs">{t('recipes.import_hint')}</p>

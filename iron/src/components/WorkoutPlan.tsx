@@ -263,7 +263,7 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                 exit={{ opacity: 0, scale: 0.85, y: 20 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 28 }}
                 className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[9999] max-w-sm mx-auto
-                  bg-[#12121f] border border-yellow-300/30 rounded-3xl p-8 shadow-[0_0_60px_rgba(253,224,71,0.15)]
+                  bg-white border border-orange-200 rounded-3xl p-8 shadow-xl
                   flex flex-col items-center gap-6 text-center"
               >
                 <motion.span
@@ -275,25 +275,25 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                   💪
                 </motion.span>
                 <div className="space-y-2">
-                  <p className="text-[--color-iron-gold] font-black uppercase text-xs tracking-[0.3em]">Plan Ready</p>
-                  <h2 className="text-white font-black text-xl uppercase italic">{plan.plan_name}</h2>
-                  <p className="text-gray-400 text-sm leading-relaxed">
-                    Save all <strong className="text-white">{plan.days.length} workout days</strong> to your
+                  <p className="text-orange-600 font-black uppercase text-xs tracking-[0.3em]">Plan Ready</p>
+                  <h2 className="text-gray-900 font-black text-xl uppercase italic">{plan.plan_name}</h2>
+                  <p className="text-gray-500 text-sm leading-relaxed">
+                    Save all <strong className="text-gray-800">{plan.days.length} workout days</strong> to your
                     My Workouts so you can access them anytime, even offline.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 w-full">
                   <button
                     onClick={() => { importToMyWorkouts(plan); setShowSaveModal(false); }}
-                    className="w-full py-3 font-black rounded-xl uppercase text-sm hover:scale-[1.02] active:scale-95 transition-all duration-200"
-                    style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 12px rgba(250,204,21,0.3), 0 0 28px rgba(250,204,21,0.12)' }}
+                    className="w-full py-3 font-black rounded-xl uppercase text-sm hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+                    style={{ background: '#ea580c', color: '#fff', border: '1px solid #c2410c' }}
                   >
-                    <FontAwesomeIcon icon={faSave} /> Save Workouts
+                    <FontAwesomeIcon icon={faSave} /> Save to my workouts
                   </button>
                   <button
                     onClick={() => setShowSaveModal(false)}
                     className="w-full py-3 font-bold rounded-xl uppercase text-sm hover:scale-[1.02] active:scale-95 transition-all duration-200"
-                    style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)', boxShadow: '0 0 8px rgba(250,204,21,0.15)' }}
+                    style={{ background: '#f5f5f5', color: '#6b7280', border: '1px solid #e5e7eb' }}
                   >
                     Not Now
                   </button>
@@ -339,7 +339,7 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                 : { color: '#4ade80', textShadow: '0 0 10px rgba(74,222,128,0.7), 0 0 20px rgba(34,211,238,0.4)' }
               }
             >
-              {imported ? `✓ ${t('workoutplan.saved')}` : <FontAwesomeIcon icon={faSave} /> + ` ${t('workoutplan.save')}`}
+              {imported ? `✓ ${t('workoutplan.saved')}` : <><FontAwesomeIcon icon={faSave} /> {t('workoutplan.save')}</>}
             </button>
           )}
           <button

@@ -931,42 +931,42 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.93, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="w-full max-w-md bg-[#0e0e12] border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+              className={`w-full max-w-md rounded-2xl overflow-hidden shadow-2xl ${light ? 'bg-white border border-gray-200' : 'bg-[#0e0e12] border border-white/10'}`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <div className={`flex items-center justify-between px-4 py-3 border-b ${light ? 'border-gray-200' : 'border-white/10'}`}>
                 <div>
                   <p className="text-[--color-iron-gold] text-[10px] font-black tracking-widest uppercase">Community</p>
-                  <h3 className="text-white font-black uppercase text-base">👥 Create Group</h3>
+                  <h3 className={`font-black uppercase text-base ${light ? 'text-gray-900' : 'text-white'}`}>👥 Create Group</h3>
                 </div>
-                <button onClick={() => setShowCreateGroup(false)} aria-label="Close create group dialog" className="text-gray-500 hover:text-white transition-colors text-xl leading-none">×</button>
+                <button onClick={() => setShowCreateGroup(false)} aria-label="Close create group dialog" className={`text-xl leading-none transition-colors ${light ? 'text-gray-400 hover:text-gray-700' : 'text-gray-500 hover:text-white'}`}>×</button>
               </div>
 
               <div className="p-5 space-y-4">
                 {/* Group name */}
                 <div>
-                  <label className="text-xs text-gray-400 font-black uppercase tracking-wide block mb-1.5">Group Name</label>
+                  <label className={`text-xs font-black uppercase tracking-wide block mb-1.5 ${light ? 'text-gray-600' : 'text-gray-400'}`}>Group Name</label>
                   <input
                     type="text"
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
                     placeholder="e.g. Morning Crew"
-                    className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-yellow-300/50"
+                    className={`w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none ${light ? 'bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-orange-300' : 'bg-white/5 border border-white/15 text-white placeholder:text-gray-600 focus:border-yellow-300/50'}`}
                   />
                 </div>
 
                 {/* Member search */}
                 <div>
-                  <label className="text-xs text-gray-400 font-black uppercase tracking-wide block mb-1.5">
-                    Add Members {groupMembers.length > 0 && <span className="text-yellow-300">({groupMembers.length} selected)</span>}
+                  <label className={`text-xs font-black uppercase tracking-wide block mb-1.5 ${light ? 'text-gray-600' : 'text-gray-400'}`}>
+                    Add Members {groupMembers.length > 0 && <span className={light ? 'text-orange-600' : 'text-yellow-300'}>({groupMembers.length} selected)</span>}
                   </label>
                   <input
                     type="text"
                     value={groupSearch}
                     onChange={(e) => setGroupSearch(e.target.value)}
                     placeholder="Search athletes…"
-                    className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-yellow-300/50 mb-2"
+                    className={`w-full rounded-xl px-4 py-2 text-sm focus:outline-none mb-2 ${light ? 'bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-orange-300' : 'bg-white/5 border border-white/15 text-white placeholder:text-gray-600 focus:border-yellow-300/50'}`}
                   />
                   <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
                     {groupUsers
@@ -981,16 +981,20 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                             key={u.id}
                             onClick={() => toggleGroupMember(u)}
                             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
-                              selected ? 'bg-yellow-300/15 border border-yellow-300/30' : 'bg-white/5 border border-transparent hover:bg-white/10'
+                              selected
+                                ? light ? 'bg-orange-50 border border-orange-200' : 'bg-yellow-300/15 border border-yellow-300/30'
+                                : light ? 'bg-gray-50 border border-transparent hover:bg-gray-100' : 'bg-white/5 border border-transparent hover:bg-white/10'
                             }`}
                           >
                             <Avatar name={u.name} src={u.profile_picture ?? undefined} size="sm" />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-black uppercase truncate text-gray-200">{u.name}</p>
-                              <p className="text-xs text-gray-600">@{u.username}</p>
+                              <p className={`text-sm font-black uppercase truncate ${light ? 'text-gray-800' : 'text-gray-200'}`}>{u.name}</p>
+                              <p className={`text-xs ${light ? 'text-gray-400' : 'text-gray-600'}`}>@{u.username}</p>
                             </div>
                             <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 text-xs font-black transition-all ${
-                              selected ? 'border-yellow-300 bg-yellow-300 text-black' : 'border-white/20'
+                              selected
+                                ? light ? 'border-orange-500 bg-orange-500 text-white' : 'border-yellow-300 bg-yellow-300 text-black'
+                                : light ? 'border-gray-300' : 'border-white/20'
                             }`}>
                               {selected ? '✓' : ''}
                             </span>
@@ -1004,7 +1008,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                 {groupMembers.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {groupMembers.map((m) => (
-                      <span key={m.id} className="flex items-center gap-1 bg-yellow-300/10 border border-yellow-300/20 text-yellow-300 rounded-full px-2.5 py-1 text-xs font-bold">
+                      <span key={m.id} className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${light ? 'bg-orange-50 border border-orange-200 text-orange-700' : 'bg-yellow-300/10 border border-yellow-300/20 text-yellow-300'}`}>
                         {m.name.split(' ')[0]}
                         <button onClick={() => toggleGroupMember(m)} aria-label={`Remove ${m.name} from group`} className="hover:text-red-400 transition-colors leading-none">×</button>
                       </span>
@@ -1017,7 +1021,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                 <button
                   onClick={createGroup}
                   disabled={groupCreating}
-                  className="w-full py-2 sm:py-3 bg-yellow-300 text-black font-black uppercase text-xs sm:text-sm rounded-xl hover:bg-yellow-200 active:scale-95 transition-all disabled:opacity-50"
+                  className={`w-full py-2 sm:py-3 font-black uppercase text-xs sm:text-sm rounded-xl active:scale-95 transition-all disabled:opacity-50 ${light ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-yellow-300 text-black hover:bg-yellow-200'}`}
                 >
                   {groupCreating ? 'Creating…' : '👥 Create Group'}
                 </button>
@@ -1578,29 +1582,29 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                       animate={{ scale: 1, y: 0 }}
                       exit={{ scale: 0.93, y: 20 }}
                       transition={{ duration: 0.2 }}
-                      className="w-full max-w-sm bg-[#0e0e12] border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+                      className={`w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl ${light ? 'bg-white border border-gray-200' : 'bg-[#0e0e12] border border-white/10'}`}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                      <div className={`flex items-center justify-between px-4 py-3 border-b ${light ? 'border-gray-200' : 'border-white/10'}`}>
                         <div>
                           <p className="text-[--color-iron-gold] text-[10px] font-black tracking-widest uppercase">Group</p>
-                          <h3 className="text-white font-black uppercase text-base">👥 {activeConvo.group_name ?? 'Group'}</h3>
+                          <h3 className={`font-black uppercase text-base ${light ? 'text-gray-900' : 'text-white'}`}>👥 {activeConvo.group_name ?? 'Group'}</h3>
                         </div>
-                        <button onClick={() => setShowGroupInfo(false)} aria-label="Close group info" className="text-gray-500 hover:text-white transition-colors text-xl leading-none">×</button>
+                        <button onClick={() => setShowGroupInfo(false)} aria-label="Close group info" className={`text-xl leading-none transition-colors ${light ? 'text-gray-400 hover:text-gray-700' : 'text-gray-500 hover:text-white'}`}>×</button>
                       </div>
                       <div className="p-4 space-y-3">
-                        <p className="text-xs text-gray-500 font-black uppercase tracking-wide">{activeConvo.members?.length ?? 0} Members</p>
+                        <p className={`text-xs font-black uppercase tracking-wide ${light ? 'text-gray-500' : 'text-gray-500'}`}>{activeConvo.members?.length ?? 0} Members</p>
                         <div className="space-y-2 max-h-56 overflow-y-auto">
                           {(activeConvo.members ?? []).map((m) => (
-                            <div key={m.id} className="flex items-center gap-3 px-3 py-2 bg-white/5 rounded-xl">
+                            <div key={m.id} className={`flex items-center gap-3 px-3 py-2 rounded-xl ${light ? 'bg-gray-50' : 'bg-white/5'}`}>
                               <div className="relative">
                                 <Avatar name={m.name} src={m.profile_picture ?? undefined} size="sm" />
                                 {onlineUsers.has(m.id) && (
-                                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 border-2 border-[#0e0e12] rounded-full" />
+                                  <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 ${light ? 'border-white' : 'border-[#0e0e12]'}`} />
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-black uppercase truncate text-gray-200">{m.name}</p>
+                                <p className={`text-sm font-black uppercase truncate ${light ? 'text-gray-800' : 'text-gray-200'}`}>{m.name}</p>
                                 {onlineUsers.has(m.id) && <p className="text-[10px] text-green-400">Online</p>}
                               </div>
                             </div>
