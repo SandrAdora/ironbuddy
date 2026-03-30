@@ -682,11 +682,11 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                         const totalSets = ex.sets + (extraSets[key] ?? 0);
                         const doneCount = done.filter(Boolean).length;
                         return (
-                          <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+                          <div key={i} className="rounded-xl p-4 space-y-3" style={{ background: theme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)', border: `1px solid ${theme === 'light' ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.10)'}` }}>
                             {/* Header */}
                             <div className="flex items-start justify-between gap-2">
                               <div>
-                                <p className="text-white font-black text-sm uppercase">{ex.name}</p>
+                                <p className="font-black text-sm uppercase" style={{ color: theme === 'light' ? '#111' : '#fff' }}>{ex.name}</p>
                                 {ex.muscle && <p className="text-[--color-iron-gold] text-xs font-semibold">{ex.muscle}</p>}
                               </div>
                               <div className="flex items-center gap-2 shrink-0">

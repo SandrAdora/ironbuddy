@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import i18n, { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../i18n';
 import { useUser } from '../context/userContext';
 import { useTheme } from '../context/themeContext';
-import { apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, apiSaveProfile, apiAnalyzeMealPhoto, apiCheckAchievements, type AIMealItem, type AIMealPlan, type WorkoutSession, type CustomWorkout, type BadgeMeta } from '../api';
+import { apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, apiSaveProfile, apiAnalyzeMealPhoto, apiCheckAchievements, apiWearableAuthUrl, apiWearableStatus, apiWearableDisconnect, type AIMealItem, type AIMealPlan, type WorkoutSession, type CustomWorkout, type BadgeMeta } from '../api';
 import BadgeToast from './BadgeToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
@@ -12,7 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot, faBowlFood, faBook, faVideo, faSliders, faCircleUser, faKey, faGavel, faGlobe, faCircleHalfStroke, faUsersGear, faCamera,
   faEye, faEyeSlash, faGauge, faBullseye, faDumbbell, faUsers, faChartLine, faRightFromBracket,
   faMagnifyingGlass, faFire, faSun, faMoon, faCloudSun, faAppleWhole, faWeightScale,
-  faCartShopping, faTrash, faPen, faDrumstickBite, faLeaf, faDroplet, faTrophy
+  faCartShopping, faTrash, faPen, faDrumstickBite, faLeaf, faDroplet, faTrophy, faLink, faLinkSlash
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import CoachChat from './CoachChat';
@@ -175,7 +175,9 @@ export default function UserProfile() {
   const [communityUnread, setCommunityUnread] = useState(0);
   const [workoutTab, setWorkoutTab] = useState<'ai' | 'my' | 'library'>('ai');
   const [mealTab, setMealTab] = useState<'ai' | 'my' | 'recipes' | 'custom' | 'ingredients'>('ai');
-  const [settingsTab, setSettingsTab] = useState<'account' | 'password' | 'legal' | 'delete_account' | 'languages' | 'appearance'>('account');
+  const [settingsTab, setSettingsTab] = useState<'account' | 'password' | 'legal' | 'delete_account' | 'languages' | 'appearance' | 'wearable'>('account');
+  const [wearableConnected, setWearableConnected] = useState(false);
+  const [wearableLoading, setWearableLoading] = useState(false);
   // Meal photo analysis
   const [photoAnalyzing, setPhotoAnalyzing] = useState(false);
   const [photoResult, setPhotoResult]       = useState<null | { meal_name: string; description: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; ingredients: string[]; confidence: string }>(null);
@@ -277,6 +279,16 @@ export default function UserProfile() {
 
   // Community visibility toggle
   const [visibilityLoading, setVisibilityLoading] = useState(false);
+
+  // Wearable status — load when wearable tab is opened
+  useEffect(() => {
+    if (settingsTab !== 'wearable' || !token) return;
+    setWearableLoading(true);
+    apiWearableStatus(token)
+      .then(setWearableConnected)
+      .catch(() => setWearableConnected(false))
+      .finally(() => setWearableLoading(false));
+  }, [settingsTab, token]);
 
   // Editable ingredients in AI Meals
   const [editedIngredients, setEditedIngredients] = useState<Record<string, string[]>>({});
@@ -1896,6 +1908,7 @@ export default function UserProfile() {
                     { id: 'legal',          icon: faGavel, label: t('settings.tabs.legal'),    desc: t('settings.tabs.legal_desc') },
                     { id: 'languages',      icon: faGlobe, label: t('settings.tabs.languages'),desc: t('settings.tabs.languages_desc') },
                     { id: 'appearance',     icon: faCircleHalfStroke, label: t('settings.tabs.appearance'), desc: t('settings.tabs.appearance_desc') },
+                    { id: 'wearable',       icon: faLink,      label: 'Wearable',                  desc: 'Connect fitness tracker' },
                     { id: 'delete_account', icon: faUsersGear, label: t('settings.tabs.danger'),   desc: t('settings.tabs.danger_desc') },
                   ] as const).map((tab) => (
                     <button
@@ -2382,6 +2395,63 @@ export default function UserProfile() {
                     </div>
                   </motion.div>
                 )}
+                {/* Wearable tab */}
+                {settingsTab === 'wearable' && (
+                  <motion.div key="wearable" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6 space-y-5 max-w-sm">
+                      <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">Wearable</p>
+
+                      <div className="flex items-center gap-3">
+                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${wearableConnected ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]' : 'bg-gray-600'}`} />
+                        <div>
+                          <p className="font-bold text-sm" style={{ color: theme === 'light' ? '#111' : '#fff' }}>
+                            {wearableLoading ? 'Checking…' : wearableConnected ? 'Google Fit connected' : 'Not connected'}
+                          </p>
+                          <p className="text-gray-400 text-xs mt-0.5">Sync steps, calories and active minutes</p>
+                        </div>
+                      </div>
+
+                      {!wearableLoading && (
+                        wearableConnected ? (
+                          <button
+                            onClick={async () => {
+                              setWearableLoading(true);
+                              try {
+                                await apiWearableDisconnect(token!);
+                                setWearableConnected(false);
+                              } finally {
+                                setWearableLoading(false);
+                              }
+                            }}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm uppercase tracking-wide transition-all active:scale-95"
+                            style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}
+                          >
+                            <FontAwesomeIcon icon={faLinkSlash} />
+                            Disconnect
+                          </button>
+                        ) : (
+                          <button
+                            onClick={async () => {
+                              setWearableLoading(true);
+                              try {
+                                const url = await apiWearableAuthUrl(token!);
+                                window.location.href = url;
+                              } catch {
+                                setWearableLoading(false);
+                              }
+                            }}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm uppercase tracking-wide transition-all active:scale-95"
+                            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }}
+                          >
+                            <FontAwesomeIcon icon={faLink} />
+                            Connect Google Fit
+                          </button>
+                        )
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+
               </AnimatePresence>
                 </div>{/* end content panel */}
               </div>{/* end sidebar + content flex */}

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { apiConfirmPasswordReset } from '../../api';
 
 export default function ResetPasswordPage() {
@@ -111,7 +113,7 @@ function PasswordField({ label, value, onChange, placeholder }: { label: string;
           onClick={() => setShow((s) => !s)}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors text-sm"
         >
-          {show ? '🙈' : '👁️'}
+          <FontAwesomeIcon icon={show ? faEyeSlash : faEye} />
         </button>
       </div>
     </div>
