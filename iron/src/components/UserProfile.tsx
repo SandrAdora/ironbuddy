@@ -1918,7 +1918,9 @@ export default function UserProfile() {
                         settingsTab === tab.id
                           ? tab.id === 'delete_account'
                             ? 'bg-red-500/20 border border-red-400/40 text-red-300 shadow-[0_0_16px_rgba(239,68,68,0.15)]'
-                            : 'bg-yellow-300/15 border border-yellow-300/40 text-yellow-300 shadow-[0_0_16px_rgba(253,224,71,0.15)]'
+                            : theme === 'light'
+                              ? 'bg-orange-700/10 border border-orange-600/40 text-orange-700 shadow-[0_0_16px_rgba(194,65,12,0.15)]'
+                              : 'bg-yellow-300/15 border border-yellow-300/40 text-yellow-300 shadow-[0_0_16px_rgba(253,224,71,0.15)]'
                           : tab.id === 'delete_account'
                             ? `border ${theme === 'light' ? 'bg-red-50 border-red-200 text-red-400 hover:bg-red-100 hover:text-red-600' : 'bg-white/3 border-red-500/10 text-gray-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-400/20'}`
                             : `border ${theme === 'light' ? 'bg-gray-100 border-gray-200 text-gray-600 hover:bg-orange-500/10 hover:text-orange-700 hover:border-orange-300' : 'bg-white/3 border-white/8 text-gray-400 hover:bg-white/8 hover:text-white hover:border-white/15'}`
@@ -2441,7 +2443,9 @@ export default function UserProfile() {
                               }
                             }}
                             className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm uppercase tracking-wide transition-all active:scale-95"
-                            style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }}
+                            style={theme === 'light'
+                              ? { background: 'rgba(194,65,12,0.1)', color: '#c24102', border: '1px solid rgba(194,65,12,0.4)' }
+                              : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }}
                           >
                             <FontAwesomeIcon icon={faLink} />
                             Connect Google Fit

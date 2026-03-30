@@ -893,8 +893,8 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
           <button
             onClick={() => setShowAddUser(true)}
             className="text-xs font-black uppercase tracking-[0.14em] bg-transparent border-none outline-none cursor-pointer transition-all duration-200"
-            style={{ color: '#facc15' }}
-            onMouseEnter={e => (e.currentTarget.style.textShadow = '0 0 8px rgba(250,204,21,0.8), 0 0 20px rgba(250,204,21,0.5)')}
+            style={{ color: light ? '#c24102' : '#facc15' }}
+            onMouseEnter={e => (e.currentTarget.style.textShadow = light ? '0 0 8px rgba(194,65,12,0.4)' : '0 0 8px rgba(250,204,21,0.8), 0 0 20px rgba(250,204,21,0.5)')}
             onMouseLeave={e => (e.currentTarget.style.textShadow = 'none')}
           >
             + Athlete

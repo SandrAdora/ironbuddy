@@ -490,7 +490,7 @@ const ExerciseLibrary: React.FC<Props> = ({ token, language = 'en' }) => {
               <div className="p-2.5 space-y-1">
                 <p className="text-white text-xs font-bold leading-tight line-clamp-2">{capitalize(ex.name)}</p>
                 <div className="flex flex-wrap gap-1">
-                  <span className="bg-yellow-300/10 text-yellow-300 text-[10px] px-1.5 py-0.5 rounded-full">{capitalize(ex.body_part)}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${theme === 'light' ? 'bg-orange-700/10 text-orange-700' : 'bg-yellow-300/10 text-yellow-300'}`}>{capitalize(ex.body_part)}</span>
                   <span className="bg-white/5 text-gray-400 text-[10px] px-1.5 py-0.5 rounded-full">{capitalize(ex.equipment)}</span>
                 </div>
               </div>
