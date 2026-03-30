@@ -3,13 +3,23 @@
 IronBuddy is a next-generation AI fitness coaching web application. It delivers highly personalized workout plans, nutrition guidance, and post-workout recovery strategies by combining **Large Language Models (AI)** with **Strict Local Safety Logic**.
 
 ---
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)
+
+🌐 **Live Demo:** [ironbuddy](https://ironbuddy-1.onrender.com)
+---
 
 ##  Overview
-IronBuddy adapts to your progress, equipment, and physical limitations. Designed with **tailwindcss** a **Dark Gym Aesthetic**, it features high-contrast neon accents and a mobile-first interface to keep you motivated during every session.
+IronBuddy adapts to your progress, equipment, and physical limitations. Designed with **tailwindcss**, it features high-contrast neon accents when using *darkmode* and beautiful lightweight looking 
+constrast in *lightmode*. It is a mobile-first interface to keep you motivated during every session.
 
-### Key Pillars:
-- **Hybrid AI Approach:** Uses OpenAI (or similar) for creative content generation while enforcing safety and structure via local validation.
-- **Privacy First:** All user data, workout history, and meal plans are stored in **localStorage** (no external databases required for MVP).
+### Key Compoents:
+- **Hybrid AI Approach:**
+-    Uses Groqo AI and Antropy AI as a fallback for creative **meal** or **workout** generation while enforcing safety and structure via local validation using JWT.
+-    The AIs are only instructed to function as a Fitnesstrainer not a medical supervisor or personal. 
+- **Privacy First:**
+-    All user data, workout history, and meal plans are stored in **localStorage**.
+-    Only the user's email and password is stored in the database provided by render. 
 - **Adaptive Coaching:** The system learns from your feedback ("Too easy", "Too hard") to refine future routines.
 
 
