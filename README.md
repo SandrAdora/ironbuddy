@@ -3,6 +3,11 @@
 IronBuddy is a next-generation AI fitness coaching web application. It delivers highly personalized workout plans, nutrition guidance, and post-workout recovery strategies by combining **Large Language Models (AI)** with **Strict Local Safety Logic**.
 
 ---
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)
+
+🌐 **Live Demo:** [ironbuddy](https://ironbuddy-1.onrender.com)
+---
 
 ##  Overview
 IronBuddy adapts to your progress, equipment, and physical limitations. Designed with **tailwindcss**, it features high-contrast neon accents when using *darkmode* and beautiful lightweight looking 
