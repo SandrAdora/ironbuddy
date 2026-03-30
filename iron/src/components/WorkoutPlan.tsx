@@ -262,9 +262,10 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.85, y: 20 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-                className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[9999] max-w-sm mx-auto
-                  bg-white border border-orange-200 rounded-3xl p-8 shadow-xl
-                  flex flex-col items-center gap-6 text-center"
+                className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[9999] max-w-sm mx-auto rounded-3xl p-8 shadow-xl flex flex-col items-center gap-6 text-center"
+                style={theme === 'light'
+                  ? { background: '#ffffff', border: '1px solid rgba(234,88,12,0.25)' }
+                  : { background: '#111113', border: '1px solid rgba(255,255,255,0.12)' }}
               >
                 <motion.span
                   initial={{ scale: 0 }}
@@ -275,10 +276,10 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                   💪
                 </motion.span>
                 <div className="space-y-2">
-                  <p className="text-orange-600 font-black uppercase text-xs tracking-[0.3em]">Plan Ready</p>
-                  <h2 className="text-gray-900 font-black text-xl uppercase italic">{plan.plan_name}</h2>
-                  <p className="text-gray-500 text-sm leading-relaxed">
-                    Save all <strong className="text-gray-800">{plan.days.length} workout days</strong> to your
+                  <p className="font-black uppercase text-xs tracking-[0.3em]" style={{ color: theme === 'light' ? '#c2410c' : '#fb923c' }}>Plan Ready</p>
+                  <h2 className="font-black text-xl uppercase italic" style={{ color: theme === 'light' ? '#111827' : '#f9fafb' }}>{plan.plan_name}</h2>
+                  <p className="text-sm leading-relaxed" style={{ color: theme === 'light' ? '#6b7280' : '#9ca3af' }}>
+                    Save all <strong style={{ color: theme === 'light' ? '#374151' : '#e5e7eb' }}>{plan.days.length} workout days</strong> to your
                     My Workouts so you can access them anytime, even offline.
                   </p>
                 </div>
@@ -286,14 +287,16 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                   <button
                     onClick={() => { importToMyWorkouts(plan); setShowSaveModal(false); }}
                     className="w-full py-3 font-black rounded-xl uppercase text-sm hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
-                    style={{ background: '#ea580c', color: '#fff', border: '1px solid #c2410c' }}
+                    style={{ background: '#c2410c', color: '#fff', border: '1px solid #9a3412' }}
                   >
                     <FontAwesomeIcon icon={faSave} /> Save to my workouts
                   </button>
                   <button
                     onClick={() => setShowSaveModal(false)}
                     className="w-full py-3 font-bold rounded-xl uppercase text-sm hover:scale-[1.02] active:scale-95 transition-all duration-200"
-                    style={{ background: '#f5f5f5', color: '#6b7280', border: '1px solid #e5e7eb' }}
+                    style={theme === 'light'
+                      ? { background: '#f5f5f5', color: '#6b7280', border: '1px solid #e5e7eb' }
+                      : { background: 'rgba(255,255,255,0.06)', color: '#9ca3af', border: '1px solid rgba(255,255,255,0.1)' }}
                   >
                     Not Now
                   </button>

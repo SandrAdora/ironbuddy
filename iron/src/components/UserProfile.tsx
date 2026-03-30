@@ -1073,7 +1073,7 @@ export default function UserProfile() {
                     })()}
 
                     {/* ── AI Meal Photo Analyzer ── */}
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 space-y-3">
+                    <div className="backdrop-blur-md rounded-2xl p-4 space-y-3" style={theme === 'light' ? { background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(0,0,0,0.09)' } : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="text-[--color-iron-gold] font-black text-xs uppercase tracking-widest"> {t('meals.photo_title')}</p>
@@ -1097,10 +1097,10 @@ export default function UserProfile() {
                       </div>
                       {photoError && <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded-xl px-3 py-2">{photoError}</p>}
                       {photoResult && (
-                        <div className="space-y-2 pt-1 border-t border-white/10">
+                        <div className="space-y-2 pt-1" style={{ borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <p className="text-white font-black text-sm uppercase">{photoResult.meal_name}</p>
+                              <p className="font-black text-sm uppercase" style={{ color: theme === 'light' ? '#111827' : '#f9fafb' }}>{photoResult.meal_name}</p>
                               <p className="text-gray-400 text-xs mt-0.5">{photoResult.description}</p>
                             </div>
                             <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${photoResult.confidence === 'high' ? 'bg-green-500/15 text-green-400 border border-green-500/30' : photoResult.confidence === 'medium' ? 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/30' : 'bg-gray-500/15 text-gray-400 border border-gray-500/30'}`}>
@@ -1264,7 +1264,7 @@ export default function UserProfile() {
                               const m = meals[Math.min(idx, meals.length - 1)];
                               if (!m) return null;
                               if (closedMealCards.has(mealTimeTab)) return (
-                                <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl px-4 py-3">
+                                <div className="flex items-center justify-between rounded-2xl px-4 py-3" style={theme === 'light' ? { background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(0,0,0,0.09)' } : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
                                   <span className="text-xs text-gray-400 font-bold">{m.meal}</span>
                                   <button
                                     onClick={() => setClosedMealCards(s => { const n = new Set(s); n.delete(mealTimeTab); return n; })}
@@ -1275,8 +1275,10 @@ export default function UserProfile() {
                               const srv = getSrv(m.meal);
                               return (
                                 <motion.div key={m.meal} {...fadeUp(0)}
-                                  className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4
-                                    hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)] transition-all duration-300">
+                                  className="backdrop-blur-md rounded-2xl p-4 sm:p-6 flex flex-col gap-4 transition-all duration-300 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)]"
+                                  style={theme === 'light'
+                                    ? { background: 'rgba(255,255,255,0.85)', border: '1px solid rgba(0,0,0,0.09)' }
+                                    : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
 
                                   {/* Card header: icon + name/desc + suggestion picker + close */}
                                   <div className="flex items-start gap-3">
@@ -1380,7 +1382,7 @@ export default function UserProfile() {
                                     <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">{t('meals.ingredients')}</p>
                                     <div className="flex flex-wrap gap-1.5 mb-2">
                                       {getMealIngredients(m).map((ing, j) => (
-                                        <span key={j} className="flex items-center gap-1 bg-white/10 border border-white/15 rounded-full px-2.5 py-0.5 text-[11px] text-gray-300">
+                                        <span key={j} className="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px]" style={theme === 'light' ? { background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.12)', color: '#374151' } : { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: '#d1d5db' }}>
                                           {scaleIngredient(ing, srv)}
                                           <button
                                             onClick={() => setEditedIngredients((prev) => ({
@@ -1408,7 +1410,10 @@ export default function UserProfile() {
                                           }
                                         }}
                                         placeholder={t('meals.add_ingredient')}
-                                        className="flex-1 bg-black/30 border border-white/15 rounded-lg px-2.5 py-1 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-yellow-300/50"
+                                        className={`flex-1 rounded-lg px-2.5 py-1 text-[11px] focus:outline-none transition-colors ${theme === 'light' ? 'placeholder:text-gray-400 focus:border-orange-300/70' : 'placeholder:text-gray-500 focus:border-yellow-300/50'}`}
+                                        style={theme === 'light'
+                                          ? { background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.12)', color: '#111' }
+                                          : { background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }}
                                       />
                                       <button
                                         onClick={() => {
@@ -1429,7 +1434,7 @@ export default function UserProfile() {
 
                                   {/* Macros (now after ingredients) */}
                                   {(m.protein_g || m.carbs_g || m.fat_g) && (
-                                    <div className="flex flex-wrap gap-1.5 border-t border-white/10 pt-3">
+                                    <div className="flex flex-wrap gap-1.5 pt-3" style={{ borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
                                       <span className="text-[11px] bg-red-500/10 text-red-300 font-bold px-2 py-0.5 rounded-full">P {scaleMacro(m.protein_g, srv)}g</span>
                                       <span className="text-[11px] bg-sky-500/10 text-sky-300 font-bold px-2 py-0.5 rounded-full">C {scaleMacro(m.carbs_g, srv)}g</span>
                                       <span className="text-[11px] bg-orange-500/10 text-orange-300 font-bold px-2 py-0.5 rounded-full">F {scaleMacro(m.fat_g, srv)}g</span>
@@ -1440,7 +1445,7 @@ export default function UserProfile() {
 
                                   {/* Action links */}
                                   {token && (
-                                    <div className="flex items-center gap-5 pt-2 border-t border-white/10 flex-wrap">
+                                    <div className="flex items-center gap-5 pt-2 flex-wrap" style={{ borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
                                       {/* Log — primary link */}
                                       {loggedMeals[m.meal] ? (
                                         <span className="text-xs font-black text-teal-400 uppercase tracking-wide">✓ Logged</span>
@@ -1515,10 +1520,11 @@ export default function UserProfile() {
                           const kcalFromC = totalC * 4;
                           const kcalFromF = totalF * 9;
                           return (
-                            <div className="border border-white/10 rounded-2xl overflow-hidden">
+                            <div className="rounded-2xl overflow-hidden" style={theme === 'light' ? { border: '1px solid rgba(0,0,0,0.09)' } : { border: '1px solid rgba(255,255,255,0.1)' }}>
                               <button
                                 onClick={() => setNutritionOpen(o => !o)}
-                                className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white/5 hover:bg-white/8 transition-colors"
+                                className="w-full flex items-center justify-between gap-3 px-4 py-3 transition-colors"
+                                style={theme === 'light' ? { background: 'rgba(0,0,0,0.03)' } : { background: 'rgba(255,255,255,0.05)' }}
                               >
                                 <div className="flex flex-col gap-1 min-w-0">
                                   <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{t('meals.daily_total')}</span>
@@ -1541,7 +1547,7 @@ export default function UserProfile() {
                                     transition={{ duration: 0.25, ease: 'easeInOut' }}
                                     className="overflow-hidden"
                                   >
-                                    <div className="px-4 py-4 space-y-4 border-t border-white/10 bg-black/20">
+                                    <div className="px-4 py-4 space-y-4" style={theme === 'light' ? { borderTop: '1px solid rgba(0,0,0,0.08)', background: 'rgba(0,0,0,0.02)' } : { borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}>
                                       {[
                                         { label: 'Protein', val: totalP, kcal: kcalFromP, pct: pct(kcalFromP, totalKcal), color: 'bg-red-400', text: 'text-red-300', border: 'border-red-400/30', bg: 'bg-red-500/10', icon: faDrumstickBite },
                                         { label: 'Carbs',   val: totalC, kcal: kcalFromC, pct: pct(kcalFromC, totalKcal), color: 'bg-sky-400',  text: 'text-sky-300',  border: 'border-sky-400/30',  bg: 'bg-sky-500/10',  icon: faLeaf },
