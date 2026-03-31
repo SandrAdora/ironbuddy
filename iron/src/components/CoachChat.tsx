@@ -20,6 +20,7 @@ function saveWorkoutToStorage(token: string, workout: { name: string; descriptio
 interface Props {
   profile: UserProfile;
   token?: string;
+  activeSession?: boolean;
 }
 
 function getUserId(token?: string): number {
@@ -217,7 +218,7 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
   );
 }
 
-export default function CoachChat({ profile, token }: Props) {
+export default function CoachChat({ profile, token, activeSession }: Props) {
   const { t } = useTranslation();
   const storageKey = `ironbuddy_coach_${getUserId(token)}`;
 
@@ -280,7 +281,7 @@ export default function CoachChat({ profile, token }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-9rem)] md:h-[calc(100vh-9rem)]">
+    <div className={`flex flex-col md:h-[calc(100vh-9rem)] ${activeSession ? 'h-[calc(100dvh-12.75rem)]' : 'h-[calc(100dvh-9rem)]'}`}>
       {/* Header */}
       <div className="mb-4 flex items-start justify-between">
         <div>

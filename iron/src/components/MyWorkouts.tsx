@@ -541,7 +541,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
               </button>
               <button
                 onClick={handleSave}
-                className="flex-1 py-1.5 font-black rounded-xl uppercase text-xs active:scale-95 transition-all duration-200"
+                className="flex-1 py-2 sm:py-2.5 font-black rounded-xl uppercase text-xs sm:text-sm active:scale-95 transition-all duration-200"
                 style={theme === 'light'
                   ? { background: 'rgba(250,204,21,0.15)', color: '#92600a', border: '1px solid rgba(180,120,0,0.3)' }
                   : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
@@ -578,9 +578,9 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                 onClick={() => setExpandedId(expandedId === w.id ? null : w.id)}
                 className="w-full flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 text-left"
               >
-                <div>
-                  <p className="font-black uppercase tracking-wide" style={{ color: theme === 'light' ? '#111' : '#fff' }}>{w.name}</p>
-                  <p className="text-xs mt-0.5" style={{ color: theme === 'light' ? '#888' : 'rgb(107,114,128)' }}>
+                <div className="min-w-0 flex-1 pr-2">
+                  <p className="font-black uppercase tracking-wide truncate" style={{ color: theme === 'light' ? '#111' : '#fff' }}>{w.name}</p>
+                  <p className="text-xs mt-0.5 truncate" style={{ color: theme === 'light' ? '#888' : 'rgb(107,114,128)' }}>
                     {w.exercises.length} exercise{w.exercises.length !== 1 ? 's' : ''}
                     {w.description ? ` · ${w.description}` : ''}
                     {' · '}{new Date(w.created_at).toLocaleDateString()}
