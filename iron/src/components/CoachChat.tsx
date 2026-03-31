@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFloppyDisk, faTriangleExclamation, faPills, faUtensils, faDumbbell } from '@fortawesome/free-solid-svg-icons';
 import { apiChat, apiCreateCustomMeal, type ChatMessage, type SavePrompt } from '../api';
 import type { UserProfile } from '../context/userContext';
 import { useTheme } from '../context/themeContext';
@@ -29,10 +31,10 @@ function getUserId(token?: string): number {
 }
 
 
-const SAVE_META: Record<string, { icon: string; tab: string; color: string }> = {
-  workout:    { icon: '💪', tab: 'My Workouts',    color: 'bg-blue-500/20 border-blue-400/30 text-blue-300' },
-  meal:       { icon: '🥗', tab: 'My Meals',        color: 'bg-green-500/20 border-green-400/30 text-green-300' },
-  supplement: { icon: '💊', tab: 'My Meals',        color: 'bg-purple-500/20 border-purple-400/30 text-purple-300' },
+const SAVE_META: Record<string, { icon: string | React.ReactNode; tab: string; color: string }> = {
+  workout:    { icon: <FontAwesomeIcon icon={faDumbbell} />, tab: 'My Workouts',    color: 'bg-blue-500/20 border-blue-400/30 text-blue-300' },
+      meal:       { icon: <FontAwesomeIcon icon={faUtensils} />, tab: 'My Meals',        color: 'bg-green-500/20 border-green-400/30 text-green-300' },
+      supplement: { icon: <FontAwesomeIcon icon={faPills} />, tab: 'My Meals',        color: 'bg-purple-500/20 border-purple-400/30 text-purple-300' },
 };
 
 function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: string; onSaved: () => void }) {
@@ -153,7 +155,7 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
                   onClick={() => removeIngredient(idx)}
                   className="text-gray-400 hover:text-red-400 transition-colors ml-0.5 leading-none"
                 >
-                  ×
+                  remove
                 </button>
               </span>
             ))}
@@ -193,7 +195,7 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
             className="btn-gold-send px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-50"
             style={theme === 'light' ? lightBtnStyle : darkBtnStyle}
           >
-            {state === 'saving' ? 'Saving…' : `💾 Save to ${meta.tab}`}
+            {state === 'saving' ? `Saving…to ${meta.tab}` : <FontAwesomeIcon icon={faFloppyDisk} />}
           </button>
           {prompt.type === 'meal' && (
             <button
@@ -202,7 +204,7 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
               className="btn-gold-send px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-40"
               style={theme === 'light' ? lightBtnStyle : darkBtnStyle}
             >
-              {savedAsRecipe ? '✓ Added to Recipes' : '👨‍🍳 Add to My Recipes'}
+              {savedAsRecipe ? '✓ Added to Recipes' : <FontAwesomeIcon icon={faFloppyDisk} />}
             </button>
           )}
           <button
@@ -273,7 +275,7 @@ export default function CoachChat({ profile, token, activeSession }: Props) {
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: '⚠️ ' + (err instanceof Error ? err.message : 'Something went wrong. Try again.') },
+        { role: 'assistant', content: <FontAwesomeIcon icon={faTriangleExclamation} /> + (err instanceof Error ? err.message : 'Something went wrong. Try again.') },
       ]);
     } finally {
       setLoading(false);

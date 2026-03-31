@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { io, Socket } from 'socket.io-client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComments, faFilePdf, faPaperclip, faDumbbell, faCircleExclamation, faMagnifyingGlass, faBell, faVolumeXmark, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faComments, faFilePdf, faPaperclip, faDumbbell, faCircleExclamation, faMagnifyingGlass, faBell, faVolumeXmark, faTrash, faPaperPlane, faFaceSmileBeam, faArrowRight, faEyeSlash, faEye } from '@fortawesome/free-solid-svg-icons';
 import {
   apiGetUsers, apiGetConversations, apiStartConversation, apiCreateGroup,
   apiGetMessages, apiSendMessage, apiUploadFile, apiToggleReaction,
@@ -208,7 +208,7 @@ function WorkoutShareCard({ content }: { content: string }) {
               onClick={() => setExpanded(v => !v)}
               className="w-full text-left px-3 py-1.5 text-xs text-yellow-400/60 hover:text-yellow-400 transition-colors border-t border-yellow-300/10 font-bold"
             >
-              {expanded ? '▲ Hide exercises' : '▼ Show exercises'}
+              {expanded ? <><FontAwesomeIcon icon={faEye} />' Hide exercises'</> : <><FontAwesomeIcon icon={faEyeSlash} />' Show exercises' </>}
             </button>
             {expanded && (
               <div className="px-3 pb-3 space-y-1.5 border-t border-yellow-300/10 pt-2">
@@ -256,7 +256,7 @@ function MessageContent({ msg }: { msg: DirectMessage }) {
         <video key="video" src={msg.file_url} controls className="max-w-[260px] rounded-xl" />
       );
     } else {
-      const icon = msg.file_type === 'pdf' ? '📄' : '📎';
+      const icon = msg.file_type === 'pdf' ? <FontAwesomeIcon icon={faFilePdf} /> : <FontAwesomeIcon icon={faPaperclip} />;
       parts.push(
         <a
           key="file"
@@ -1040,14 +1040,18 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
 
           {/* Tab bar */}
           <div className="flex border-b border-white/10 shrink-0">
-            {(['messages', 'athletes'] as const).map((tab) => (
+                {(['messages', 'athletes'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setLeftTab(tab)}
                 className={`flex-1 py-1.5 sm:py-2.5 text-xs font-black uppercase tracking-wider transition-colors
                   ${leftTab === tab ? 'text-orange-500 border-b-2 border-orange-500' : light ? 'text-gray-600 hover:text-gray-800' : 'text-gray-500 hover:text-gray-300'}`}
               >
-                {tab === 'messages' ? `💬 Messages${totalUnread > 0 ? ` (${totalUnread})` : ''}` : '🏋️ Athletes'}
+                {tab === 'messages' ? (
+                  <>
+                    <FontAwesomeIcon icon={faComments} /> Messages{totalUnread > 0 ? ` (${totalUnread})` : ''}
+                  </>
+                ) : <><FontAwesomeIcon icon={faDumbbell} /> Athletes</>}
               </button>
             ))}
           </div>
@@ -1090,7 +1094,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                     onClick={() => setLeftTab('athletes')}
                     className="mt-1 px-4 py-2 bg-yellow-300 text-black text-xs font-black uppercase rounded-xl hover:bg-yellow-200 active:scale-95 transition-all"
                   >
-                    Browse Athletes →
+                    Browse Athletes <FontAwesomeIcon icon={faArrowRight} />
                   </button>
                 </div>
               ) : (
@@ -1535,7 +1539,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                     title="Add emoji"
                     className="p-2.5 text-gray-400 hover:text-yellow-300 hover:bg-white/10 rounded-xl transition-all"
                   >
-                    😊
+                    <FontAwesomeIcon icon={faFaceSmileBeam} />
                   </button>
                   {showInputEmoji && (
                     <PortalPicker
@@ -1562,7 +1566,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                   className="px-3 py-2 sm:px-4 sm:py-2.5 bg-yellow-300 text-black font-black rounded-xl text-xs sm:text-sm uppercase
                     hover:bg-yellow-200 active:scale-95 transition-all duration-200 disabled:opacity-40 shrink-0"
                 >
-                  {uploading ? '⏫' : sending ? '…' : 'Send'}
+                  {uploading ? <FontAwesomeIcon icon={faPaperPlane} /> : sending ? '…' : 'Send'}
                 </button>
               </div>
 

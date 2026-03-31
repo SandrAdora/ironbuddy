@@ -89,25 +89,34 @@ function WeightTooltip({ active, payload, label }: { active?: boolean; payload?:
 
 // ── Weekly Goal Ring ──────────────────────────────────────────────────────────
 
-function GoalRing({ done, goal }: { done: number; goal: number }) {
+function GoalRing({ done, goal, theme }: { done: number; goal: number; theme: string }) {
   const r = 44, stroke = 8;
   const circ = 2 * Math.PI * r;
   const pct = goal > 0 ? Math.min(done / goal, 1) : 0;
   const dash = pct * circ;
+  const isLight = theme === 'light';
+  const activeColor = pct >= 1
+    ? (isLight ? '#16a34a' : '#4ade80')
+    : (isLight ? '#ea580c' : '#fde047');
+  const glowColor = pct >= 1
+    ? (isLight ? 'rgba(22,163,74,0.4)' : 'rgba(74,222,128,0.7)')
+    : (isLight ? 'rgba(234,88,12,0.4)' : 'rgba(253,224,71,0.7)');
+  const trackColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.06)';
+  const subTextColor = isLight ? 'rgba(107,114,128,1)' : 'rgba(156,163,175,0.6)';
   return (
     <svg viewBox="0 0 110 110" className="w-28 h-28">
-      <circle cx={55} cy={55} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
+      <circle cx={55} cy={55} r={r} fill="none" stroke={trackColor} strokeWidth={stroke} />
       <circle
         cx={55} cy={55} r={r} fill="none"
-        stroke={pct >= 1 ? '#4ade80' : '#fde047'}
+        stroke={activeColor}
         strokeWidth={stroke}
         strokeLinecap="round"
         strokeDasharray={`${dash} ${circ}`}
         transform="rotate(-90 55 55)"
-        style={{ transition: 'stroke-dasharray 0.5s ease', filter: `drop-shadow(0 0 6px ${pct >= 1 ? 'rgba(74,222,128,0.7)' : 'rgba(253,224,71,0.7)'})` }}
+        style={{ transition: 'stroke-dasharray 0.5s ease', filter: `drop-shadow(0 0 6px ${glowColor})` }}
       />
-      <text x={55} y={51} textAnchor="middle" fill={pct >= 1 ? '#4ade80' : '#fde047'} fontSize="18" fontWeight="900" fontFamily="helvetica">{done}</text>
-      <text x={55} y={64} textAnchor="middle" fill="rgba(156,163,175,0.6)" fontSize="9" fontFamily="helvetica">of {goal}</text>
+      <text x={55} y={51} textAnchor="middle" fill={activeColor} fontSize="18" fontWeight="900" fontFamily="helvetica">{done}</text>
+      <text x={55} y={64} textAnchor="middle" fill={subTextColor} fontSize="9" fontFamily="helvetica">of {goal}</text>
     </svg>
   );
 }
@@ -679,7 +688,7 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
           {openCards.has('goal') && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden px-6 pb-6">
               <div className="flex items-center gap-6 flex-wrap">
-                <GoalRing done={thisWeekDone} goal={weeklyGoal} />
+                <GoalRing done={thisWeekDone} goal={weeklyGoal} theme={theme} />
                 <div className="flex-1 min-w-[160px] space-y-3">
                   <div>
                     <p className="text-white font-black text-2xl">{thisWeekDone}<span className="text-gray-500 text-base font-bold"> / {weeklyGoal}</span></p>
