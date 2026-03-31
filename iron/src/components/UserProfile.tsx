@@ -604,7 +604,7 @@ export default function UserProfile() {
 
       {/* ── Mobile bottom nav (mobile only) ─────────────── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl flex items-center gap-1 px-2 py-2 overflow-x-auto"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl flex items-center gap-0.5 px-1 py-1.5 overflow-x-auto scrollbar-none"
         style={{
           background: theme === 'light' ? 'rgba(240,240,243,0.97)' : 'rgba(6,6,8,0.95)',
           borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.08)',
@@ -615,13 +615,13 @@ export default function UserProfile() {
           <button
             key={item.id}
             onClick={() => setActive(item.id)}
-            className={`shrink-0 flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 min-w-0 relative
+            className={`shrink-0 flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-xl transition-all duration-200 min-w-0 relative
               ${active === item.id
                 ? 'text-[--color-iron-gold]'
                 : theme === 'light' ? 'text-gray-600' : 'text-gray-500'}`}
           >
             <span
-              className="w-9 h-9 flex items-center justify-center rounded-xl text-xl transition-all duration-300"
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-base transition-all duration-300"
               style={theme === 'light' ? {
                 background: active === item.id ? 'rgba(250,204,21,0.15)' : 'rgba(0,0,0,0.06)',
                 border: active === item.id ? '1px solid rgba(250,204,21,0.6)' : '1px solid rgba(0,0,0,0.1)',
@@ -638,7 +638,7 @@ export default function UserProfile() {
                   : 'inset 0 1px 0 rgba(255,255,255,0.06)',
               }}
             >{item.icon}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wide">{t(item.key)}</span>
+            <span className="text-[9px] font-bold uppercase tracking-tight leading-none mt-0.5">{t(item.key)}</span>
             {item.id === 'community' && communityUnread > 0 && (
               <span className="absolute -top-0.5 right-0 bg-yellow-300 text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center leading-none">
                 {communityUnread > 9 ? '9+' : communityUnread}
@@ -648,10 +648,10 @@ export default function UserProfile() {
         ))}
         <button
           onClick={() => { logout(); navigate('/'); }}
-          className={`shrink-0 flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 bg-transparent border-none cursor-pointer ${theme === 'light' ? 'text-gray-600' : 'text-gray-500'}`}
+          className={`shrink-0 flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-xl transition-all duration-200 bg-transparent border-none cursor-pointer ${theme === 'light' ? 'text-gray-600' : 'text-gray-500'}`}
         >
-          <span className="text-xl">🚪</span>
-          <span className="text-[10px] font-bold uppercase tracking-wide">{t('common.out')}</span>
+          <span className="w-8 h-8 flex items-center justify-center rounded-xl text-base" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>🚪</span>
+          <span className="text-[9px] font-bold uppercase tracking-tight leading-none mt-0.5">{t('common.out')}</span>
         </button>
       </nav>
 
@@ -685,7 +685,7 @@ export default function UserProfile() {
       </AnimatePresence>
 
       {/* ── Main content ─────────────────────────────── */}
-      <main className={`flex-1 md:ml-64 px-3 md:px-6 pt-3 pb-24 md:pt-6 md:pb-8 space-y-4 md:space-y-8 overflow-x-hidden ${activeSession ? 'mt-[44px]' : ''}`}>
+      <main className={`flex-1 md:ml-64 px-3 md:px-6 pt-3 pb-24 md:pt-6 md:pb-8 space-y-4 md:space-y-8 overflow-x-hidden ${activeSession ? 'mt-[56px]' : ''}`}>
         <AnimatePresence mode="wait">
 
           {/* ── DASHBOARD ── */}
@@ -1426,7 +1426,7 @@ export default function UserProfile() {
 
                                   {/* Action links */}
                                   {token && (
-                                    <div className="flex items-center gap-5 pt-2 border-t border-white/10 flex-wrap">
+                                    <div className="flex items-center gap-x-4 gap-y-1.5 pt-2 border-t border-white/10 flex-wrap">
                                       {/* Log — primary link */}
                                       {loggedMeals[m.meal] ? (
                                         <span className="text-xs font-black text-teal-400 uppercase tracking-wide">✓ Logged</span>

@@ -441,12 +441,12 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
             </div>
 
             {/* Day tabs */}
-            <div className="flex border-b border-white/10">
+            <div className="flex overflow-x-auto scrollbar-none border-b border-white/10">
               {plan.days.map((_d, i) => (
                 <button
                   key={i}
                   onClick={() => { setActiveDay(i); if (timerActive) finishWorkout(); }}
-                  className="px-4 py-2 text-xs font-black uppercase tracking-wide transition-all duration-200 border-none outline-none bg-transparent relative"
+                  className="shrink-0 px-4 py-2 text-xs font-black uppercase tracking-wide transition-all duration-200 border-none outline-none bg-transparent relative"
                   style={activeDay === i
                     ? { color: '#facc15', textShadow: '0 0 8px rgba(250,204,21,0.6)' }
                     : { color: 'rgba(156,163,175,0.6)' }
