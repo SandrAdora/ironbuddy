@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import { apiChat, apiCreateCustomMeal, type ChatMessage, type SavePrompt } from '../api';
 import type { UserProfile } from '../context/userContext';
+import { useTheme } from '../context/themeContext';
 
 // ── localStorage workout helpers (same storage as MyWorkouts.tsx) ──────────────
 function saveWorkoutToStorage(token: string, workout: { name: string; description: string; exercises: unknown[] }) {
@@ -36,6 +37,7 @@ const SAVE_META: Record<string, { icon: string; tab: string; color: string }> = 
 function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: string; onSaved: () => void }) {
   const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'declined'>('idle');
   const [savedAsRecipe, setSavedAsRecipe] = useState(false);
+  const { theme } = useTheme();
   const meta = SAVE_META[prompt.type];
   const d = prompt.data as Record<string, unknown>;
 
@@ -118,11 +120,17 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
 
   if (state === 'declined') return null;
 
+  const lightIngredientStyle = { background: 'rgba(0,0,0,0.07)', border: '1px solid rgba(0,0,0,0.15)', color: '#166534' };
+  const darkIngredientStyle = { background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.15)' };
+  const lightBtnStyle = { color: '#fff', background: '#166534', border: '1px solid #14532d', boxShadow: 'none' };
+  const darkBtnStyle = {};
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className={`ml-10 mt-1 rounded-2xl border px-4 py-3 flex flex-col gap-2 text-xs ${meta.color}`}
+      style={theme === 'light' ? { color: '#166534' } : {}}
     >
       <p className="font-black uppercase tracking-wide">
         {meta.icon} Save "{prompt.label}" to {meta.tab}?
@@ -136,7 +144,8 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
             {ingredients.map((ing, idx) => (
               <span
                 key={idx}
-                className="flex items-center gap-1 bg-white/10 border border-white/15 rounded-full px-2.5 py-0.5 text-[11px]"
+                className="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px]"
+                style={theme === 'light' ? lightIngredientStyle : darkIngredientStyle}
               >
                 {ing}
                 <button
@@ -155,11 +164,15 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
               onChange={(e) => setNewIngredient(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addIngredient(); } }}
               placeholder="Add ingredient…"
-              className="flex-1 bg-white/5 border border-white/15 rounded-lg px-2.5 py-1 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-green-400/50"
+              className="flex-1 rounded-lg px-2.5 py-1 text-[11px] focus:outline-none"
+              style={theme === 'light'
+                ? { background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.15)', color: '#111', caretColor: '#166534' }
+                : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }}
             />
             <button
               onClick={addIngredient}
               className="btn-gold-send px-2.5 py-1 rounded-lg text-[11px] transition-all font-bold"
+              style={theme === 'light' ? lightBtnStyle : darkBtnStyle}
             >
               +
             </button>
@@ -177,6 +190,7 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
             disabled={state === 'saving'}
             onClick={handleSave}
             className="btn-gold-send px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-50"
+            style={theme === 'light' ? lightBtnStyle : darkBtnStyle}
           >
             {state === 'saving' ? 'Saving…' : `💾 Save to ${meta.tab}`}
           </button>
@@ -185,6 +199,7 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
               disabled={savedAsRecipe}
               onClick={handleSaveAsRecipe}
               className="btn-gold-send px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-40"
+              style={theme === 'light' ? lightBtnStyle : darkBtnStyle}
             >
               {savedAsRecipe ? '✓ Added to Recipes' : '👨‍🍳 Add to My Recipes'}
             </button>
@@ -192,6 +207,7 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
           <button
             onClick={() => setState('declined')}
             className="btn-gold-send px-4 py-1.5 font-bold rounded-lg uppercase text-[10px] tracking-wide transition-all opacity-60"
+            style={theme === 'light' ? { ...lightBtnStyle, opacity: 0.7 } : darkBtnStyle}
           >
             Not Now
           </button>

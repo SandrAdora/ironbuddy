@@ -511,7 +511,7 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
                     <button
                       onClick={startWorkout}
                       className="shrink-0 font-black text-xs border-none outline-none bg-transparent active:scale-95 transition-colors"
-                      style={{ color: '#facc15', textShadow: '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
+                      style={{ color: theme === 'light' ? 'darkorange' : '#facc15', textShadow: theme === 'light' ? 'none' : '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
                     >
                       ▶ Start
                     </button>
@@ -630,6 +630,7 @@ interface ExerciseCardProps {
 
 function ExerciseCard({ exercise, index, videoId, onFetchVideo, onRetryVideo, isActive, done, totalSets, doneCount, logs, workoutKey, onTickSet, onLogSet, onAddSet, onRemoveSet }: ExerciseCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const { theme } = useTheme();
 
   return (
     <motion.div
@@ -654,7 +655,7 @@ function ExerciseCard({ exercise, index, videoId, onFetchVideo, onRetryVideo, is
             <button
               onClick={() => { setExpanded((v) => !v); if (!expanded) onFetchVideo(); }}
               className="text-xs font-bold border-none outline-none bg-transparent transition-colors"
-              style={{ color: '#facc15' }}
+              style={{ color: theme === 'light' ? 'darkorange' : '#facc15' }}
             >
               {expanded ? 'Hide ▲' : 'How to ▼'}
             </button>

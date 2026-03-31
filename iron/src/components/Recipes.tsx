@@ -247,7 +247,9 @@ export default function Recipes({ token }: Props) {
               <button
                 onClick={handleSave}
                 className="flex-1 py-1.5 font-black rounded-xl uppercase text-xs active:scale-95 transition-all duration-200"
-                style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
+                style={theme === 'light'
+                  ? { background: 'rgba(250,204,21,0.15)', color: '#92600a', border: '1px solid rgba(180,120,0,0.3)' }
+                  : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
               >
                 {editingId !== null ? 'Update Recipe' : 'Save Recipe'}
               </button>
