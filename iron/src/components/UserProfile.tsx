@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot, faBowlFood, faBook, faVideo, faSliders, faCircleUser, faKey, faGavel, faGlobe, faCircleHalfStroke, faUsersGear, faCamera,
-  faEye, faEyeSlash, faGauge, faTarget, faDumbbell, faUsers, faChartLine, faCog
+  faEye, faEyeSlash, faGauge, faBullseye, faDumbbell, faUsers, faChartLine, faCog
 } from '@fortawesome/free-solid-svg-icons';
 import CoachChat from './CoachChat';
 import WorkoutPlanView from './WorkoutPlan';
@@ -35,7 +35,7 @@ function getUserIdFromToken(token: string): number | null {
 const NAV_IDS = [
   { id: 'dashboard', icon: <FontAwesomeIcon icon={faGauge} />, key: 'nav.dashboard' },
   { id: 'coach',     icon: <FontAwesomeIcon icon={faRobot} />, key: 'nav.coach' },
-  { id: 'goals',     icon: <FontAwesomeIcon icon={faTarget} />, key: 'nav.goals' },
+  { id: 'goals',     icon: <FontAwesomeIcon icon={faBullseye} />, key: 'nav.goals' },
   { id: 'meals',     icon: <FontAwesomeIcon icon={faBowlFood} />, key: 'nav.meals' },
   { id: 'workouts',  icon: <FontAwesomeIcon icon={faDumbbell} />, key: 'nav.workouts' },
   { id: 'community', icon: <FontAwesomeIcon icon={faUsers} />, key: 'nav.community' },
