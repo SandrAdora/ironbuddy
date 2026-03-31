@@ -821,9 +821,9 @@ export default function UserProfile() {
                       {(() => {
                         const r = 44, stroke = 8, circ = 2 * Math.PI * r;
                         const pct = weeklyGoal > 0 ? Math.min(thisWeekDone / weeklyGoal, 1) : 0;
-                        const col = pct >= 1 ? '#4ade80' : '#fde047';
+                        const col = pct >= 1 ? '#4ade80' : (theme === 'light' ? '#c2610c' : '#fde047');
                         return (<>
-                          <circle cx={55} cy={55} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
+                          <circle cx={55} cy={55} r={r} fill="none" stroke={theme === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'} strokeWidth={stroke} />
                           <circle cx={55} cy={55} r={r} fill="none" stroke={col} strokeWidth={stroke} strokeLinecap="round"
                             strokeDasharray={`${pct * circ} ${circ}`} transform="rotate(-90 55 55)"
                             style={{ filter: `drop-shadow(0 0 6px ${col}aa)` }} />
@@ -842,9 +842,9 @@ export default function UserProfile() {
                       <button
                         onClick={() => setActive('goals')}
                         className="text-[10px] font-black border-none outline-none bg-transparent"
-                        style={{ color: 'rgba(156,163,175,0.5)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 8px rgba(250,204,21,0.6)'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.5)'; }}
+                        style={{ color: theme === 'light' ? '#c2610c' : 'rgba(156,163,175,0.5)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = theme === 'light' ? 'color:#9a3412' : 'color:#facc15;text-shadow:0 0 8px rgba(250,204,21,0.6)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = theme === 'light' ? 'color:#c2610c' : 'color:rgba(156,163,175,0.5)'; }}
                       >{t('dashboard.change_goal')}</button>
                     </div>
                   </div>
