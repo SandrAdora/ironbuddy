@@ -10,7 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot, faBowlFood, faBook, faVideo, faSliders, faCircleUser, faKey, faGavel, faGlobe, faCircleHalfStroke, faUsersGear, faCamera,
-  faEye, faEyeSlash, faGauge, faBullseye, faDumbbell, faUsers, faChartLine, faCog
+  faEye, faEyeSlash, faGauge, faBullseye, faDumbbell, faUsers, faChartLine, faCog,
+  faFire, faScaleBalanced, faSun, faMoon, faCloudSun, faAppleWhole, faDrumstickBite, faWheatAwn, faDroplet
 } from '@fortawesome/free-solid-svg-icons';
 import CoachChat from './CoachChat';
 import WorkoutPlanView from './WorkoutPlan';
@@ -719,15 +720,15 @@ export default function UserProfile() {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
                 {[
-                  { label: t('dashboard.workouts'), value: String(totalWorkouts), icon: '🏋️' },
-                  { label: t('dashboard.streak'), value: streak > 0 ? `${streak} ${streak !== 1 ? t('dashboard.days') : t('dashboard.day')}` : '—', icon: '🔥' },
-                  { label: t('dashboard.goal'), value: profile.fitnessGoals || '—', icon: '🎯' },
-                  { label: t('dashboard.bmi'), value: bmi ? `${bmi.toFixed(1)} — ${bmiInfo ? t(bmiInfo.key) : ''}` : '—', icon: '⚖️' },
+                  { label: t('dashboard.workouts'), value: String(totalWorkouts), icon: faDumbbell },
+                  { label: t('dashboard.streak'), value: streak > 0 ? `${streak} ${streak !== 1 ? t('dashboard.days') : t('dashboard.day')}` : '—', icon: faFire },
+                  { label: t('dashboard.goal'), value: profile.fitnessGoals || '—', icon: faBullseye },
+                  { label: t('dashboard.bmi'), value: bmi ? `${bmi.toFixed(1)} — ${bmiInfo ? t(bmiInfo.key) : ''}` : '—', icon: faScaleBalanced },
                 ].map((s, i) => (
                   <motion.div key={s.label} {...fadeUp(0.1 + i * 0.08)}
                     className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-5 flex items-center gap-3
                       hover:border-yellow-300/30 hover:shadow-[0_0_16px_rgba(253,224,71,0.12)] transition-all duration-300">
-                    <span className="text-2xl md:text-3xl">{s.icon}</span>
+                    <FontAwesomeIcon icon={s.icon} className="text-2xl md:text-3xl text-[--color-iron-gold]" />
                     <div className="min-w-0">
                       <p className="text-base md:text-xl font-black text-[--color-iron-gold] truncate">{s.value}</p>
                       <p className="text-xs text-gray-400 uppercase font-bold">{s.label}</p>
@@ -1172,10 +1173,10 @@ export default function UserProfile() {
                         {/* ── All-meals overview row ── */}
                         {(() => {
                           const slots = [
-                            { id: 'breakfast' as const, emoji: '☀️', label: t('meals.breakfast') },
-                            { id: 'lunch'     as const, emoji: '🌤️', label: t('meals.lunch') },
-                            { id: 'dinner'    as const, emoji: '🌙', label: t('meals.dinner') },
-                            { id: 'snacks'    as const, emoji: '🍎', label: t('meals.snacks') },
+                            { id: 'breakfast' as const, icon: faSun,       label: t('meals.breakfast') },
+                            { id: 'lunch'     as const, icon: faCloudSun,  label: t('meals.lunch') },
+                            { id: 'dinner'    as const, icon: faMoon,      label: t('meals.dinner') },
+                            { id: 'snacks'    as const, icon: faAppleWhole, label: t('meals.snacks') },
                           ];
                           return (
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -1192,7 +1193,7 @@ export default function UserProfile() {
                                     className={`text-left rounded-xl p-2.5 border transition-all duration-200 ${isActive ? 'border-yellow-400/40 bg-yellow-400/8 shadow-[0_0_12px_rgba(250,204,21,0.15)]' : 'border-white/10 bg-white/3 hover:bg-white/6 hover:border-white/20'}`}
                                   >
                                     <div className="flex items-center justify-between mb-1">
-                                      <span className="text-base">{slot.emoji}</span>
+                                      <FontAwesomeIcon icon={slot.icon} className="text-base" />
                                       {isLogged && <span className="text-[9px] text-teal-400 font-black uppercase tracking-wide">✓ logged</span>}
                                     </div>
                                     <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-0.5">{slot.label}</div>
@@ -1208,10 +1209,10 @@ export default function UserProfile() {
                         {/* ── Meal time sub-tabs with status dots ── */}
                         <div className="flex gap-1.5 p-1 bg-white/5 border border-white/10 rounded-2xl">
                           {([
-                            { id: 'breakfast' as const, emoji: '☀️', label: t('meals.breakfast') },
-                            { id: 'lunch'     as const, emoji: '🌤️', label: t('meals.lunch') },
-                            { id: 'dinner'    as const, emoji: '🌙', label: t('meals.dinner') },
-                            { id: 'snacks'    as const, emoji: '🍎', label: t('meals.snacks') },
+                            { id: 'breakfast' as const, icon: faSun,        label: t('meals.breakfast') },
+                            { id: 'lunch'     as const, icon: faCloudSun,   label: t('meals.lunch') },
+                            { id: 'dinner'    as const, icon: faMoon,       label: t('meals.dinner') },
+                            { id: 'snacks'    as const, icon: faAppleWhole, label: t('meals.snacks') },
                           ]).map((tab) => {
                             const meal = (aiMealPlan[tab.id] ?? [])[mealSuggIdx[tab.id] ?? 0];
                             const isLogged = meal ? !!loggedMeals[meal.meal] : false;
@@ -1226,7 +1227,7 @@ export default function UserProfile() {
                                     : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
                                 }`}
                               >
-                                <span>{tab.emoji}</span>
+                                <FontAwesomeIcon icon={tab.icon} />
                                 <span className="hidden sm:inline">{tab.label}</span>
                                 {(isLogged || isSaved) && (
                                   <span className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full ${isLogged ? 'bg-teal-400' : 'bg-yellow-400'}`} />
@@ -1532,13 +1533,13 @@ export default function UserProfile() {
                                   >
                                     <div className="px-4 py-4 space-y-4 border-t border-white/10 bg-black/20">
                                       {[
-                                        { label: 'Protein', val: totalP, kcal: kcalFromP, pct: pct(kcalFromP, totalKcal), color: 'bg-red-400', text: 'text-red-300', border: 'border-red-400/30', bg: 'bg-red-500/10', emoji: '🥩' },
-                                        { label: 'Carbs',   val: totalC, kcal: kcalFromC, pct: pct(kcalFromC, totalKcal), color: 'bg-sky-400',  text: 'text-sky-300',  border: 'border-sky-400/30',  bg: 'bg-sky-500/10',  emoji: '🌾' },
-                                        { label: 'Fat',     val: totalF, kcal: kcalFromF, pct: pct(kcalFromF, totalKcal), color: 'bg-orange-400', text: 'text-orange-300', border: 'border-orange-400/30', bg: 'bg-orange-500/10', emoji: '🫒' },
+                                        { label: 'Protein', val: totalP, kcal: kcalFromP, pct: pct(kcalFromP, totalKcal), color: 'bg-red-400', text: 'text-red-300', border: 'border-red-400/30', bg: 'bg-red-500/10', icon: faDrumstickBite },
+                                        { label: 'Carbs',   val: totalC, kcal: kcalFromC, pct: pct(kcalFromC, totalKcal), color: 'bg-sky-400',  text: 'text-sky-300',  border: 'border-sky-400/30',  bg: 'bg-sky-500/10',  icon: faWheatAwn },
+                                        { label: 'Fat',     val: totalF, kcal: kcalFromF, pct: pct(kcalFromF, totalKcal), color: 'bg-orange-400', text: 'text-orange-300', border: 'border-orange-400/30', bg: 'bg-orange-500/10', icon: faDroplet },
                                       ].map(macro => (
                                         <div key={macro.label}>
                                           <div className="flex items-center justify-between mb-1.5">
-                                            <span className={`text-xs font-black ${macro.text} flex items-center gap-1.5`}>{macro.emoji} {macro.label}</span>
+                                            <span className={`text-xs font-black ${macro.text} flex items-center gap-1.5`}><FontAwesomeIcon icon={macro.icon} /> {macro.label}</span>
                                             <div className="flex items-center gap-2">
                                               <span className={`text-[11px] font-bold ${macro.text} ${macro.bg} border ${macro.border} px-2 py-0.5 rounded-full`}>{macro.val}g</span>
                                               <span className="text-[11px] text-gray-500 font-bold">{macro.kcal} kcal · {macro.pct}%</span>
@@ -2372,7 +2373,7 @@ export default function UserProfile() {
                             color: theme === 'dark' ? '#facc15' : '#0a0a0a',
                           }}
                         >
-                          <span>{theme === 'dark' ? '🌙' : '☀️'}</span>
+                          <FontAwesomeIcon icon={theme === 'dark' ? faMoon : faSun} />
                           <span>{theme === 'dark' ? t('appearance.dark') : t('appearance.light')}</span>
                         </button>
                       </div>
