@@ -287,7 +287,7 @@ export default function CoachChat({ profile, token, activeSession }: Props) {
   return (
     <div className={`flex flex-col md:h-[calc(100vh-9rem)] ${activeSession ? 'h-[calc(100dvh-12.75rem)]' : 'h-[calc(100dvh-9rem)]'}`}>
       {/* Header */}
-      <div className="mb-4 flex items-start justify-between">
+      <div className="mb-4 flex items-end justify-between">
         <div>
           <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('coach.subtitle')}</p>
           <h1 className="text-2xl md:text-3xl font-black uppercase italic mt-1">🦾 {t('coach.title')}</h1>
@@ -295,7 +295,7 @@ export default function CoachChat({ profile, token, activeSession }: Props) {
         {messages.length > 1 && (
           <button
             onClick={() => setMessages([{ role: 'assistant', content: welcome }])}
-            className="text-xs font-black border-none outline-none bg-transparent active:scale-95 transition-colors"
+            className="text-xs font-black border-none outline-none bg-transparent active:scale-95 transition-colors shrink-0 mb-0.5 px-1 py-1"
             style={{ color: '#f87171', textShadow: '0 0 10px rgba(248,113,113,0.8), 0 0 24px rgba(248,113,113,0.4), 0 0 40px rgba(248,113,113,0.2)' }}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#fca5a5;text-shadow:0 0 12px rgba(248,113,113,1),0 0 28px rgba(248,113,113,0.6),0 0 50px rgba(248,113,113,0.3)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#f87171;text-shadow:0 0 10px rgba(248,113,113,0.8),0 0 24px rgba(248,113,113,0.4),0 0 40px rgba(248,113,113,0.2)'; }}
