@@ -20,7 +20,7 @@ export async function apiSaveProfile(token: string, profile: Record<string, unkn
   if (!res.ok) throw new Error('Failed to save profile');
 }
 
-export async function apiLogin(email: string, password: string): Promise<{ access: string; refresh: string }> {
+export async function apiLogin(email: string, password: string): Promise<{ access: string; refresh: string; profile: Record<string, unknown> }> {
   const res = await fetch(`${BASE}/api/token/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

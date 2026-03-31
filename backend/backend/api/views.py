@@ -1163,7 +1163,9 @@ class ReactivatingTokenView(APIView):
             user.is_active = True
             user.save()
         refresh = RefreshToken.for_user(user)
-        return Response({'access': str(refresh.access_token), 'refresh': str(refresh)})
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile_data = UserProfileSerializer(profile).data
+        return Response({'access': str(refresh.access_token), 'refresh': str(refresh), 'profile': profile_data})
 
 
 class UserListView(APIView):

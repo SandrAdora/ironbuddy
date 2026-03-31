@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import React from "react";
 import type { ReactNode } from "react";
-import { apiLogin, apiGetProfile, apiSaveProfile } from "../api";
+import { apiLogin, apiSaveProfile } from "../api";
 
 // --- Types ---
 export interface UserProfile {
@@ -203,26 +203,16 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       // The useEffect will persist this full profile to the backend.
       setProfile({ ...defaultProfile, ...initialProfile, email, onboarded: true });
     } else {
-      // Normal login: load profile from backend, merge with any local cache.
-      try {
-        const backendProfile = await apiGetProfile(data.access);
-        const saved = localStorage.getItem(profileKey(email));
-        const localProfile = saved ? (JSON.parse(saved) as UserProfile) : null;
-        setProfile({
-          ...defaultProfile,
-          ...(localProfile ?? {}),
-          ...(backendProfile as Partial<UserProfile>),
-          email,
-          onboarded: true,
-        });
-      } catch {
-        const saved = localStorage.getItem(profileKey(email));
-        if (saved) {
-          setProfile({ ...JSON.parse(saved) as UserProfile, onboarded: true });
-        } else {
-          setProfile((p) => ({ ...p, email, onboarded: true }));
-        }
-      }
+      // Normal login: profile is included in the login response — no extra request needed.
+      const saved = localStorage.getItem(profileKey(email));
+      const localProfile = saved ? (JSON.parse(saved) as UserProfile) : null;
+      setProfile({
+        ...defaultProfile,
+        ...(localProfile ?? {}),
+        ...(data.profile as Partial<UserProfile>),
+        email,
+        onboarded: true,
+      });
     }
     return data.access;
   };
