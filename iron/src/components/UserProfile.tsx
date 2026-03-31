@@ -4,17 +4,14 @@ import { useTranslation } from 'react-i18next';
 import i18n, { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../i18n';
 import { useUser } from '../context/userContext';
 import { useTheme } from '../context/themeContext';
-import { apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, apiSaveProfile, apiAnalyzeMealPhoto, apiCheckAchievements, apiWearableAuthUrl, apiWearableStatus, apiWearableDisconnect, type AIMealItem, type AIMealPlan, type WorkoutSession, type CustomWorkout, type BadgeMeta } from '../api';
+import { apiChangePassword, apiDeleteAccount, apiDeactivateAccount, apiGetAIMealPlan, apiGetSessions, apiStartSession, apiFinishSession, apiCreateCustomMeal, apiSaveProfile, apiAnalyzeMealPhoto, apiCheckAchievements, type AIMealItem, type AIMealPlan, type WorkoutSession, type CustomWorkout, type BadgeMeta } from '../api';
 import BadgeToast from './BadgeToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot, faBowlFood, faBook, faVideo, faSliders, faCircleUser, faKey, faGavel, faGlobe, faCircleHalfStroke, faUsersGear, faCamera,
-  faEye, faEyeSlash, faGauge, faBullseye, faDumbbell, faUsers, faChartLine, faRightFromBracket,
-  faMagnifyingGlass, faFire, faSun, faMoon, faCloudSun, faAppleWhole, faWeightScale,
-  faCartShopping, faTrash, faPen, faDrumstickBite, faLeaf, faDroplet, faTrophy, faLink, faLinkSlash
+  faEye, faEyeSlash, faGauge, faTarget, faDumbbell, faUsers, faChartLine, faCog
 } from '@fortawesome/free-solid-svg-icons';
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import CoachChat from './CoachChat';
 import WorkoutPlanView from './WorkoutPlan';
 import MyWorkouts from './MyWorkouts';
@@ -35,17 +32,17 @@ function getUserIdFromToken(token: string): number | null {
 }
 
 // ── Sidebar nav ids (labels are computed inside the component via t()) ──────────
-const NAV_IDS: { id: string; icon: IconDefinition; key: string }[] = [
-  { id: 'dashboard', icon: faGauge,       key: 'nav.dashboard' },
-  { id: 'coach',     icon: faRobot,       key: 'nav.coach' },
-  { id: 'goals',     icon: faBullseye,    key: 'nav.goals' },
-  { id: 'meals',     icon: faBowlFood,    key: 'nav.meals' },
-  { id: 'workouts',  icon: faDumbbell,    key: 'nav.workouts' },
-  { id: 'community', icon: faUsers,       key: 'nav.community' },
-  { id: 'progress',  icon: faChartLine,   key: 'nav.progress' },
-  { id: 'settings',  icon: faSliders,     key: 'nav.settings' },
-];
-
+const NAV_IDS = [
+  { id: 'dashboard', icon: <FontAwesomeIcon icon={faGauge} />, key: 'nav.dashboard' },
+  { id: 'coach',     icon: <FontAwesomeIcon icon={faRobot} />, key: 'nav.coach' },
+  { id: 'goals',     icon: <FontAwesomeIcon icon={faTarget} />, key: 'nav.goals' },
+  { id: 'meals',     icon: <FontAwesomeIcon icon={faBowlFood} />, key: 'nav.meals' },
+  { id: 'workouts',  icon: <FontAwesomeIcon icon={faDumbbell} />, key: 'nav.workouts' },
+  { id: 'community', icon: <FontAwesomeIcon icon={faUsers} />, key: 'nav.community' },
+  { id: 'progress',  icon: <FontAwesomeIcon icon={faChartLine} />, key: 'nav.progress' },
+  { id: 'settings',  icon: <FontAwesomeIcon icon={faCog} />, key: 'nav.settings' },
+  
+] as const;
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -175,9 +172,7 @@ export default function UserProfile() {
   const [communityUnread, setCommunityUnread] = useState(0);
   const [workoutTab, setWorkoutTab] = useState<'ai' | 'my' | 'library'>('ai');
   const [mealTab, setMealTab] = useState<'ai' | 'my' | 'recipes' | 'custom' | 'ingredients'>('ai');
-  const [settingsTab, setSettingsTab] = useState<'account' | 'password' | 'legal' | 'delete_account' | 'languages' | 'appearance' | 'wearable'>('account');
-  const [wearableConnected, setWearableConnected] = useState(false);
-  const [wearableLoading, setWearableLoading] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<'account' | 'password' | 'legal' | 'delete_account' | 'languages' | 'appearance'>('account');
   // Meal photo analysis
   const [photoAnalyzing, setPhotoAnalyzing] = useState(false);
   const [photoResult, setPhotoResult]       = useState<null | { meal_name: string; description: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; ingredients: string[]; confidence: string }>(null);
@@ -279,16 +274,6 @@ export default function UserProfile() {
 
   // Community visibility toggle
   const [visibilityLoading, setVisibilityLoading] = useState(false);
-
-  // Wearable status — load when wearable tab is opened
-  useEffect(() => {
-    if (settingsTab !== 'wearable' || !token) return;
-    setWearableLoading(true);
-    apiWearableStatus(token)
-      .then(setWearableConnected)
-      .catch(() => setWearableConnected(false))
-      .finally(() => setWearableLoading(false));
-  }, [settingsTab, token]);
 
   // Editable ingredients in AI Meals
   const [editedIngredients, setEditedIngredients] = useState<Record<string, string[]>>({});
@@ -542,8 +527,8 @@ export default function UserProfile() {
             {profile.profilePicture && !avatarError ? (
               <img src={profile.profilePicture} alt="avatar" className="absolute inset-0 w-full h-full object-cover" onError={() => setAvatarError(true)} />
             ) : (
-              <div className="absolute inset-0 bg-yellow-300/20 flex items-center justify-center animate-coach-breathe">
-                <FontAwesomeIcon icon={faRobot} className="text-4xl text-yellow-300/60" />
+              <div className="absolute inset-0 bg-yellow-300/20 flex items-center justify-center text-4xl animate-coach-breathe">
+                🦾
               </div>
             )}
             <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -551,12 +536,12 @@ export default function UserProfile() {
                 <span className="text-white text-xs font-bold">{t('common.uploading')}</span>
               ) : profile.profilePicture && !avatarError ? (
                 <>
-                  <FontAwesomeIcon icon={faMagnifyingGlass} className="text-lg text-white" />
+                  <span className="text-lg">🔍</span>
                   <span className="text-white text-[10px] font-bold uppercase tracking-wide">{t('common.view')}</span>
                 </>
               ) : (
                 <>
-                  <FontAwesomeIcon icon={faCamera} className="text-lg text-white" />
+                  <span className="text-lg">📷</span>
                   <span className="text-white text-[10px] font-bold uppercase tracking-wide">{t('common.upload')}</span>
                 </>
               )}
@@ -592,9 +577,9 @@ export default function UserProfile() {
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wide transition-all duration-200
                 ${active === item.id
                   ? 'bg-yellow-300/15 text-[--color-iron-gold] shadow-[0_0_12px_rgba(250,204,21,0.2)]'
-                  : theme === 'light' ? 'text-gray-500 hover:text-gray-900 hover:bg-orange-500/15' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                  : theme === 'light' ? 'text-gray-500 hover:text-gray-900 hover:bg-black/5' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
             >
-              <FontAwesomeIcon icon={item.icon} className="text-lg w-4" />
+              <span className="text-lg" style={{ filter: theme === 'light' ? 'none' : 'grayscale(1) sepia(1) saturate(8) hue-rotate(0deg) brightness(1.2)' }}>{item.icon}</span>
               {t(item.key)}
               {item.id === 'community' && communityUnread > 0 && (
                 <span className="ml-auto bg-yellow-300 text-black text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none">
@@ -619,7 +604,7 @@ export default function UserProfile() {
 
       {/* ── Mobile bottom nav (mobile only) ─────────────── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl flex items-center gap-0.5 px-1 py-1.5 overflow-x-auto scrollbar-none"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl flex items-center gap-1 px-2 py-2 overflow-x-auto"
         style={{
           background: theme === 'light' ? 'rgba(240,240,243,0.97)' : 'rgba(6,6,8,0.95)',
           borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.08)',
@@ -630,13 +615,13 @@ export default function UserProfile() {
           <button
             key={item.id}
             onClick={() => setActive(item.id)}
-            className={`shrink-0 flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-xl transition-all duration-200 min-w-0 relative
+            className={`shrink-0 flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 min-w-0 relative
               ${active === item.id
                 ? 'text-[--color-iron-gold]'
                 : theme === 'light' ? 'text-gray-600' : 'text-gray-500'}`}
           >
             <span
-              className="w-8 h-8 flex items-center justify-center rounded-xl text-lg transition-all duration-300"
+              className="w-9 h-9 flex items-center justify-center rounded-xl text-xl transition-all duration-300"
               style={theme === 'light' ? {
                 background: active === item.id ? 'rgba(250,204,21,0.15)' : 'rgba(0,0,0,0.06)',
                 border: active === item.id ? '1px solid rgba(250,204,21,0.6)' : '1px solid rgba(0,0,0,0.1)',
@@ -652,7 +637,7 @@ export default function UserProfile() {
                   ? '0 0 12px rgba(250,204,21,0.5), 0 0 24px rgba(250,204,21,0.2), inset 0 1px 0 rgba(255,255,255,0.08)'
                   : 'inset 0 1px 0 rgba(255,255,255,0.06)',
               }}
-            ><FontAwesomeIcon icon={item.icon} /></span>
+            >{item.icon}</span>
             <span className="text-[10px] font-bold uppercase tracking-wide">{t(item.key)}</span>
             {item.id === 'community' && communityUnread > 0 && (
               <span className="absolute -top-0.5 right-0 bg-yellow-300 text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center leading-none">
@@ -663,9 +648,9 @@ export default function UserProfile() {
         ))}
         <button
           onClick={() => { logout(); navigate('/'); }}
-          className={`shrink-0 flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-xl transition-all duration-200 bg-transparent border-none cursor-pointer ${theme === 'light' ? 'text-gray-600' : 'text-gray-500'}`}
+          className={`shrink-0 flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 bg-transparent border-none cursor-pointer ${theme === 'light' ? 'text-gray-600' : 'text-gray-500'}`}
         >
-          <FontAwesomeIcon icon={faRightFromBracket} className="text-lg" />
+          <span className="text-xl">🚪</span>
           <span className="text-[10px] font-bold uppercase tracking-wide">{t('common.out')}</span>
         </button>
       </nav>
@@ -681,7 +666,7 @@ export default function UserProfile() {
             className="fixed top-16 left-0 right-0 z-40 md:left-64 bg-yellow-300 text-black px-4 py-2.5 flex items-center justify-between gap-3 shadow-[0_4px_20px_rgba(253,224,71,0.4)]"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <FontAwesomeIcon icon={faDumbbell} className="text-xl shrink-0 animate-pulse" />
+              <span className="text-xl shrink-0 animate-pulse">🏋️</span>
               <div className="min-w-0">
                 <p className="font-black uppercase text-xs tracking-wide truncate">{activeSession.workout_name}</p>
                 <p className="text-black/60 text-xs font-bold">{t('session.in_progress')}{fmtElapsed(elapsedSec)}</p>
@@ -717,8 +702,8 @@ export default function UserProfile() {
                   {profile.profilePicture && !avatarError ? (
                     <img src={profile.profilePicture} alt="avatar" className="absolute inset-0 w-full h-full object-cover" onError={() => setAvatarError(true)} />
                   ) : (
-                    <div className="absolute inset-0 bg-yellow-300/20 flex items-center justify-center">
-                      <FontAwesomeIcon icon={faRobot} className="text-2xl text-yellow-300/60" />
+                    <div className="absolute inset-0 bg-yellow-300/20 flex items-center justify-center text-2xl">
+                      🦾
                     </div>
                   )}
                 </button>
@@ -726,22 +711,22 @@ export default function UserProfile() {
                 <div>
                   <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.title')}</p>
                   <h1 className="text-xl md:text-3xl font-black uppercase italic mt-1">
-                    {t('dashboard.welcome')} <span className="text-[--color-iron-gold]">{profile.name?.split(' ')[0] || t('common.athlete')}</span>
+                    {t('dashboard.welcome')} <span className="text-[--color-iron-gold]">{profile.name?.split(' ')[0] || t('common.athlete')}</span> 💪
                   </h1>
                 </div>
               </motion.div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
                 {[
-                  { label: t('dashboard.workouts'), value: String(totalWorkouts), icon: faDumbbell },
-                  { label: t('dashboard.streak'), value: streak > 0 ? `${streak} ${streak !== 1 ? t('dashboard.days') : t('dashboard.day')}` : '—', icon: faFire },
-                  { label: t('dashboard.goal'), value: profile.fitnessGoals || '—', icon: faBullseye },
-                  { label: t('dashboard.bmi'), value: bmi ? `${bmi.toFixed(1)} — ${bmiInfo ? t(bmiInfo.key) : ''}` : '—', icon: faWeightScale },
+                  { label: t('dashboard.workouts'), value: String(totalWorkouts), icon: '🏋️' },
+                  { label: t('dashboard.streak'), value: streak > 0 ? `${streak} ${streak !== 1 ? t('dashboard.days') : t('dashboard.day')}` : '—', icon: '🔥' },
+                  { label: t('dashboard.goal'), value: profile.fitnessGoals || '—', icon: '🎯' },
+                  { label: t('dashboard.bmi'), value: bmi ? `${bmi.toFixed(1)} — ${bmiInfo ? t(bmiInfo.key) : ''}` : '—', icon: '⚖️' },
                 ].map((s, i) => (
                   <motion.div key={s.label} {...fadeUp(0.1 + i * 0.08)}
                     className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-5 flex items-center gap-3
                       hover:border-yellow-300/30 hover:shadow-[0_0_16px_rgba(253,224,71,0.12)] transition-all duration-300">
-                    <FontAwesomeIcon icon={s.icon} className="text-2xl md:text-3xl text-[--color-iron-gold]" />
+                    <span className="text-2xl md:text-3xl">{s.icon}</span>
                     <div className="min-w-0">
                       <p className="text-base md:text-xl font-black text-[--color-iron-gold] truncate">{s.value}</p>
                       <p className="text-xs text-gray-400 uppercase font-bold">{s.label}</p>
@@ -821,9 +806,9 @@ export default function UserProfile() {
                       {(() => {
                         const r = 44, stroke = 8, circ = 2 * Math.PI * r;
                         const pct = weeklyGoal > 0 ? Math.min(thisWeekDone / weeklyGoal, 1) : 0;
-                        const col = pct >= 1 ? '#4ade80' : (theme === 'light' ? '#c2610c' : '#fde047');
+                        const col = pct >= 1 ? '#4ade80' : '#fde047';
                         return (<>
-                          <circle cx={55} cy={55} r={r} fill="none" stroke={theme === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'} strokeWidth={stroke} />
+                          <circle cx={55} cy={55} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
                           <circle cx={55} cy={55} r={r} fill="none" stroke={col} strokeWidth={stroke} strokeLinecap="round"
                             strokeDasharray={`${pct * circ} ${circ}`} transform="rotate(-90 55 55)"
                             style={{ filter: `drop-shadow(0 0 6px ${col}aa)` }} />
@@ -842,9 +827,9 @@ export default function UserProfile() {
                       <button
                         onClick={() => setActive('goals')}
                         className="text-[10px] font-black border-none outline-none bg-transparent"
-                        style={{ color: theme === 'light' ? '#c2610c' : 'rgba(156,163,175,0.5)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = theme === 'light' ? 'color:#9a3412' : 'color:#facc15;text-shadow:0 0 8px rgba(250,204,21,0.6)'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = theme === 'light' ? 'color:#c2610c' : 'color:rgba(156,163,175,0.5)'; }}
+                        style={{ color: 'rgba(156,163,175,0.5)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 8px rgba(250,204,21,0.6)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.5)'; }}
                       >{t('dashboard.change_goal')}</button>
                     </div>
                   </div>
@@ -879,7 +864,7 @@ export default function UserProfile() {
                           const isToday = d.toDateString() === new Date().toDateString();
                           return (
                             <div key={s.id} className="flex items-center gap-3 py-2 px-3 rounded-xl hover:bg-white/5 transition-colors">
-                              <FontAwesomeIcon icon={s.workout_type === 'ai' ? faRobot : faPen} className="text-base shrink-0 text-gray-400" />
+                              <span className="text-base shrink-0">{s.workout_type === 'ai' ? '🤖' : '✎'}</span>
                               <div className="flex-1 min-w-0">
                                 <p className="text-white text-sm font-bold truncate">{s.workout_name}</p>
                                 <p className="text-gray-500 text-[10px]">{isToday ? t('dashboard.today_label') : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
@@ -902,7 +887,7 @@ export default function UserProfile() {
           {/* ── COACH ── */}
           {active === 'coach' && (
             <motion.div key="coach" {...fadeUp(0)}>
-              <CoachChat profile={profile} token={token} activeSession={!!activeSession} />
+              <CoachChat profile={profile} token={token} />
             </motion.div>
           )}
 
@@ -1073,7 +1058,7 @@ export default function UserProfile() {
                     })()}
 
                     {/* ── AI Meal Photo Analyzer ── */}
-                    <div className="backdrop-blur-md rounded-2xl p-4 space-y-3" style={theme === 'light' ? { background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(0,0,0,0.09)' } : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 space-y-3">
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="text-[--color-iron-gold] font-black text-xs uppercase tracking-widest"> {t('meals.photo_title')}</p>
@@ -1097,10 +1082,10 @@ export default function UserProfile() {
                       </div>
                       {photoError && <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded-xl px-3 py-2">{photoError}</p>}
                       {photoResult && (
-                        <div className="space-y-2 pt-1" style={{ borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
+                        <div className="space-y-2 pt-1 border-t border-white/10">
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <p className="font-black text-sm uppercase" style={{ color: theme === 'light' ? '#111827' : '#f9fafb' }}>{photoResult.meal_name}</p>
+                              <p className="text-white font-black text-sm uppercase">{photoResult.meal_name}</p>
                               <p className="text-gray-400 text-xs mt-0.5">{photoResult.description}</p>
                             </div>
                             <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${photoResult.confidence === 'high' ? 'bg-green-500/15 text-green-400 border border-green-500/30' : photoResult.confidence === 'medium' ? 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/30' : 'bg-gray-500/15 text-gray-400 border border-gray-500/30'}`}>
@@ -1145,7 +1130,7 @@ export default function UserProfile() {
                             onMouseEnter={e => (e.currentTarget.style.textShadow = '0 0 8px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)')}
                             onMouseLeave={e => (e.currentTarget.style.textShadow = 'none')}
                           >
-                            <FontAwesomeIcon icon={faCartShopping} className="mr-1.5" /> Shopping List
+                            🛒 Shopping List
                           </button>
                         )}
                         <button
@@ -1184,10 +1169,10 @@ export default function UserProfile() {
                         {/* ── All-meals overview row ── */}
                         {(() => {
                           const slots = [
-                            { id: 'breakfast' as const, icon: faSun,      label: t('meals.breakfast') },
-                            { id: 'lunch'     as const, icon: faCloudSun, label: t('meals.lunch') },
-                            { id: 'dinner'    as const, icon: faMoon,     label: t('meals.dinner') },
-                            { id: 'snacks'    as const, icon: faAppleWhole, label: t('meals.snacks') },
+                            { id: 'breakfast' as const, emoji: '☀️', label: t('meals.breakfast') },
+                            { id: 'lunch'     as const, emoji: '🌤️', label: t('meals.lunch') },
+                            { id: 'dinner'    as const, emoji: '🌙', label: t('meals.dinner') },
+                            { id: 'snacks'    as const, emoji: '🍎', label: t('meals.snacks') },
                           ];
                           return (
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -1204,11 +1189,11 @@ export default function UserProfile() {
                                     className={`text-left rounded-xl p-2.5 border transition-all duration-200 ${isActive ? 'border-yellow-400/40 bg-yellow-400/8 shadow-[0_0_12px_rgba(250,204,21,0.15)]' : 'border-white/10 bg-white/3 hover:bg-white/6 hover:border-white/20'}`}
                                   >
                                     <div className="flex items-center justify-between mb-1">
-                                      <FontAwesomeIcon icon={slot.icon} className="text-base" />
+                                      <span className="text-base">{slot.emoji}</span>
                                       {isLogged && <span className="text-[9px] text-teal-400 font-black uppercase tracking-wide">✓ logged</span>}
                                     </div>
                                     <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-0.5">{slot.label}</div>
-                                    <div className="text-xs font-black text-white truncate">{meal.meal}</div>
+                                    <div className="text-xs font-black text-white truncate">{meal.icon} {meal.meal}</div>
                                     <div className="text-[10px] font-bold mt-0.5" style={{ color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,0.7)' }}>{k} kcal</div>
                                   </button>
                                 );
@@ -1220,10 +1205,10 @@ export default function UserProfile() {
                         {/* ── Meal time sub-tabs with status dots ── */}
                         <div className="flex gap-1.5 p-1 bg-white/5 border border-white/10 rounded-2xl">
                           {([
-                            { id: 'breakfast' as const, icon: faSun,       label: t('meals.breakfast') },
-                            { id: 'lunch'     as const, icon: faCloudSun,  label: t('meals.lunch') },
-                            { id: 'dinner'    as const, icon: faMoon,      label: t('meals.dinner') },
-                            { id: 'snacks'    as const, icon: faAppleWhole, label: t('meals.snacks') },
+                            { id: 'breakfast' as const, emoji: '☀️', label: t('meals.breakfast') },
+                            { id: 'lunch'     as const, emoji: '🌤️', label: t('meals.lunch') },
+                            { id: 'dinner'    as const, emoji: '🌙', label: t('meals.dinner') },
+                            { id: 'snacks'    as const, emoji: '🍎', label: t('meals.snacks') },
                           ]).map((tab) => {
                             const meal = (aiMealPlan[tab.id] ?? [])[mealSuggIdx[tab.id] ?? 0];
                             const isLogged = meal ? !!loggedMeals[meal.meal] : false;
@@ -1238,7 +1223,7 @@ export default function UserProfile() {
                                     : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
                                 }`}
                               >
-                                <FontAwesomeIcon icon={tab.icon} />
+                                <span>{tab.emoji}</span>
                                 <span className="hidden sm:inline">{tab.label}</span>
                                 {(isLogged || isSaved) && (
                                   <span className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full ${isLogged ? 'bg-teal-400' : 'bg-yellow-400'}`} />
@@ -1264,8 +1249,8 @@ export default function UserProfile() {
                               const m = meals[Math.min(idx, meals.length - 1)];
                               if (!m) return null;
                               if (closedMealCards.has(mealTimeTab)) return (
-                                <div className="flex items-center justify-between rounded-2xl px-4 py-3" style={theme === 'light' ? { background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(0,0,0,0.09)' } : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                  <span className="text-xs text-gray-400 font-bold">{m.meal}</span>
+                                <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl px-4 py-3">
+                                  <span className="text-xs text-gray-400 font-bold">{m.icon} {m.meal}</span>
                                   <button
                                     onClick={() => setClosedMealCards(s => { const n = new Set(s); n.delete(mealTimeTab); return n; })}
                                     className="text-xs text-gray-500 hover:text-yellow-300 font-black uppercase tracking-wide transition-colors"
@@ -1275,13 +1260,12 @@ export default function UserProfile() {
                               const srv = getSrv(m.meal);
                               return (
                                 <motion.div key={m.meal} {...fadeUp(0)}
-                                  className="backdrop-blur-md rounded-2xl p-4 sm:p-6 flex flex-col gap-4 transition-all duration-300 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)]"
-                                  style={theme === 'light'
-                                    ? { background: 'rgba(255,255,255,0.85)', border: '1px solid rgba(0,0,0,0.09)' }
-                                    : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                  className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col gap-4
+                                    hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)] transition-all duration-300">
 
                                   {/* Card header: icon + name/desc + suggestion picker + close */}
                                   <div className="flex items-start gap-3">
+                                    <span className="text-4xl shrink-0">{m.icon}</span>
                                     <div className="min-w-0 flex-1">
                                       <p className="font-black text-[--color-iron-gold] uppercase text-sm">{m.meal}</p>
                                       <p className="text-gray-400 text-xs mt-0.5">{m.desc}</p>
@@ -1303,7 +1287,7 @@ export default function UserProfile() {
                                           >
                                             {meals.map((opt, i) => (
                                               <option key={i} value={i} style={{ background: theme === 'light' ? '#ffffff' : '#0d0d10', color: theme === 'light' ? '#111111' : '#ffffff' }}>
-                                                {opt.meal}
+                                                {opt.icon} {opt.meal}
                                               </option>
                                             ))}
                                           </select>
@@ -1327,7 +1311,7 @@ export default function UserProfile() {
                                             }}
                                             title="Remove this suggestion"
                                             aria-label="Remove meal suggestion"
-                                          ><FontAwesomeIcon icon={faTrash} /></button>
+                                          >🗑</button>
                                         </div>
                                       )}
                                     </div>
@@ -1382,7 +1366,7 @@ export default function UserProfile() {
                                     <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">{t('meals.ingredients')}</p>
                                     <div className="flex flex-wrap gap-1.5 mb-2">
                                       {getMealIngredients(m).map((ing, j) => (
-                                        <span key={j} className="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px]" style={theme === 'light' ? { background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.12)', color: '#374151' } : { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: '#d1d5db' }}>
+                                        <span key={j} className="flex items-center gap-1 bg-white/10 border border-white/15 rounded-full px-2.5 py-0.5 text-[11px] text-gray-300">
                                           {scaleIngredient(ing, srv)}
                                           <button
                                             onClick={() => setEditedIngredients((prev) => ({
@@ -1410,10 +1394,7 @@ export default function UserProfile() {
                                           }
                                         }}
                                         placeholder={t('meals.add_ingredient')}
-                                        className={`flex-1 rounded-lg px-2.5 py-1 text-[11px] focus:outline-none transition-colors ${theme === 'light' ? 'placeholder:text-gray-400 focus:border-orange-300/70' : 'placeholder:text-gray-500 focus:border-yellow-300/50'}`}
-                                        style={theme === 'light'
-                                          ? { background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.12)', color: '#111' }
-                                          : { background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }}
+                                        className="flex-1 bg-black/30 border border-white/15 rounded-lg px-2.5 py-1 text-[11px] text-white placeholder:text-gray-500 focus:outline-none focus:border-yellow-300/50"
                                       />
                                       <button
                                         onClick={() => {
@@ -1434,7 +1415,7 @@ export default function UserProfile() {
 
                                   {/* Macros (now after ingredients) */}
                                   {(m.protein_g || m.carbs_g || m.fat_g) && (
-                                    <div className="flex flex-wrap gap-1.5 pt-3" style={{ borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
+                                    <div className="flex flex-wrap gap-1.5 border-t border-white/10 pt-3">
                                       <span className="text-[11px] bg-red-500/10 text-red-300 font-bold px-2 py-0.5 rounded-full">P {scaleMacro(m.protein_g, srv)}g</span>
                                       <span className="text-[11px] bg-sky-500/10 text-sky-300 font-bold px-2 py-0.5 rounded-full">C {scaleMacro(m.carbs_g, srv)}g</span>
                                       <span className="text-[11px] bg-orange-500/10 text-orange-300 font-bold px-2 py-0.5 rounded-full">F {scaleMacro(m.fat_g, srv)}g</span>
@@ -1445,7 +1426,7 @@ export default function UserProfile() {
 
                                   {/* Action links */}
                                   {token && (
-                                    <div className="flex items-center gap-5 pt-2 flex-wrap" style={{ borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
+                                    <div className="flex items-center gap-5 pt-2 border-t border-white/10 flex-wrap">
                                       {/* Log — primary link */}
                                       {loggedMeals[m.meal] ? (
                                         <span className="text-xs font-black text-teal-400 uppercase tracking-wide">✓ Logged</span>
@@ -1491,7 +1472,7 @@ export default function UserProfile() {
                                           style={{ color: theme === 'light' ? '#d97706' : '#facc15' }}
                                           onMouseEnter={e => { e.currentTarget.style.textShadow = theme === 'light' ? 'none' : '0 0 8px rgba(250,204,21,0.8), 0 0 20px rgba(250,204,21,0.5)'; e.currentTarget.style.color = theme === 'light' ? '#b45309' : '#facc15'; }}
                                           onMouseLeave={e => { e.currentTarget.style.textShadow = 'none'; e.currentTarget.style.color = theme === 'light' ? '#d97706' : '#facc15'; }}
-                                        ><FontAwesomeIcon icon={faBook} className="mr-1" /> Save Recipe</button>
+                                        ><span style={{ filter: theme === 'light' ? 'none' : 'sepia(1) saturate(8) brightness(1.2)' }}>📋</span> Save Recipe</button>
                                       )}
                                     </div>
                                   )}
@@ -1520,16 +1501,15 @@ export default function UserProfile() {
                           const kcalFromC = totalC * 4;
                           const kcalFromF = totalF * 9;
                           return (
-                            <div className="rounded-2xl overflow-hidden" style={theme === 'light' ? { border: '1px solid rgba(0,0,0,0.09)' } : { border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <div className="border border-white/10 rounded-2xl overflow-hidden">
                               <button
                                 onClick={() => setNutritionOpen(o => !o)}
-                                className="w-full flex items-center justify-between gap-3 px-4 py-3 transition-colors"
-                                style={theme === 'light' ? { background: 'rgba(0,0,0,0.03)' } : { background: 'rgba(255,255,255,0.05)' }}
+                                className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white/5 hover:bg-white/8 transition-colors"
                               >
                                 <div className="flex flex-col gap-1 min-w-0">
                                   <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{t('meals.daily_total')}</span>
                                   <div className="flex flex-wrap gap-1.5">
-                                    <span className="text-xs font-black px-2.5 py-0.5 rounded-full flex items-center gap-1" style={{ background: theme === 'light' ? 'rgba(217,119,6,0.1)' : 'rgba(250,204,21,0.15)', color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,1)', border: theme === 'light' ? '1px solid rgba(217,119,6,0.25)' : '1px solid rgba(250,204,21,0.2)' }}><FontAwesomeIcon icon={faFire} /> {totalKcal} kcal</span>
+                                    <span className="text-xs font-black px-2.5 py-0.5 rounded-full" style={{ background: theme === 'light' ? 'rgba(217,119,6,0.1)' : 'rgba(250,204,21,0.15)', color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,1)', border: theme === 'light' ? '1px solid rgba(217,119,6,0.25)' : '1px solid rgba(250,204,21,0.2)' }}>🔥 {totalKcal} kcal</span>
                                     <span className="text-xs bg-red-500/10 text-red-300 font-bold px-2 py-0.5 rounded-full">P {totalP}g</span>
                                     <span className="text-xs bg-sky-500/10 text-sky-300 font-bold px-2 py-0.5 rounded-full">C {totalC}g</span>
                                     <span className="text-xs bg-orange-500/10 text-orange-300 font-bold px-2 py-0.5 rounded-full">F {totalF}g</span>
@@ -1547,15 +1527,15 @@ export default function UserProfile() {
                                     transition={{ duration: 0.25, ease: 'easeInOut' }}
                                     className="overflow-hidden"
                                   >
-                                    <div className="px-4 py-4 space-y-4" style={theme === 'light' ? { borderTop: '1px solid rgba(0,0,0,0.08)', background: 'rgba(0,0,0,0.02)' } : { borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}>
+                                    <div className="px-4 py-4 space-y-4 border-t border-white/10 bg-black/20">
                                       {[
-                                        { label: 'Protein', val: totalP, kcal: kcalFromP, pct: pct(kcalFromP, totalKcal), color: 'bg-red-400', text: 'text-red-300', border: 'border-red-400/30', bg: 'bg-red-500/10', icon: faDrumstickBite },
-                                        { label: 'Carbs',   val: totalC, kcal: kcalFromC, pct: pct(kcalFromC, totalKcal), color: 'bg-sky-400',  text: 'text-sky-300',  border: 'border-sky-400/30',  bg: 'bg-sky-500/10',  icon: faLeaf },
-                                        { label: 'Fat',     val: totalF, kcal: kcalFromF, pct: pct(kcalFromF, totalKcal), color: 'bg-orange-400', text: 'text-orange-300', border: 'border-orange-400/30', bg: 'bg-orange-500/10', icon: faDroplet },
+                                        { label: 'Protein', val: totalP, kcal: kcalFromP, pct: pct(kcalFromP, totalKcal), color: 'bg-red-400', text: 'text-red-300', border: 'border-red-400/30', bg: 'bg-red-500/10', emoji: '🥩' },
+                                        { label: 'Carbs',   val: totalC, kcal: kcalFromC, pct: pct(kcalFromC, totalKcal), color: 'bg-sky-400',  text: 'text-sky-300',  border: 'border-sky-400/30',  bg: 'bg-sky-500/10',  emoji: '🌾' },
+                                        { label: 'Fat',     val: totalF, kcal: kcalFromF, pct: pct(kcalFromF, totalKcal), color: 'bg-orange-400', text: 'text-orange-300', border: 'border-orange-400/30', bg: 'bg-orange-500/10', emoji: '🫒' },
                                       ].map(macro => (
                                         <div key={macro.label}>
                                           <div className="flex items-center justify-between mb-1.5">
-                                            <span className={`text-xs font-black ${macro.text} flex items-center gap-1.5`}><FontAwesomeIcon icon={macro.icon} /> {macro.label}</span>
+                                            <span className={`text-xs font-black ${macro.text} flex items-center gap-1.5`}>{macro.emoji} {macro.label}</span>
                                             <div className="flex items-center gap-2">
                                               <span className={`text-[11px] font-bold ${macro.text} ${macro.bg} border ${macro.border} px-2 py-0.5 rounded-full`}>{macro.val}g</span>
                                               <span className="text-[11px] text-gray-500 font-bold">{macro.kcal} kcal · {macro.pct}%</span>
@@ -1575,15 +1555,15 @@ export default function UserProfile() {
                                         <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Per Meal</p>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                           {[
-                                            { label: t('meals.breakfast'), icon: faSun,       meal: (aiMealPlan.breakfast ?? [])[0] },
-                                            { label: t('meals.lunch'),     icon: faCloudSun,  meal: (aiMealPlan.lunch ?? [])[0] },
-                                            { label: t('meals.dinner'),    icon: faMoon,      meal: (aiMealPlan.dinner ?? [])[0] },
-                                            { label: t('meals.snacks'),    icon: faAppleWhole, meal: (aiMealPlan.snacks ?? [])[0] },
-                                          ].filter(x => x.meal).map(({ label, icon, meal }) => {
+                                            { label: t('meals.breakfast'), emoji: '☀️', meal: (aiMealPlan.breakfast ?? [])[0] },
+                                            { label: t('meals.lunch'),     emoji: '🌤️', meal: (aiMealPlan.lunch ?? [])[0] },
+                                            { label: t('meals.dinner'),    emoji: '🌙', meal: (aiMealPlan.dinner ?? [])[0] },
+                                            { label: t('meals.snacks'),    emoji: '🍎', meal: (aiMealPlan.snacks ?? [])[0] },
+                                          ].filter(x => x.meal).map(({ label, emoji, meal }) => {
                                             const k = typeof meal!.kcal === 'number' ? meal!.kcal : parseInt(String(meal!.kcal)) || 0;
                                             return (
                                               <div key={label} className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-center">
-                                                <FontAwesomeIcon icon={icon} className="text-lg mb-0.5" />
+                                                <div className="text-lg mb-0.5">{emoji}</div>
                                                 <div className="text-[10px] text-gray-400 font-black uppercase mb-1">{label}</div>
                                                 <div className="text-xs font-black" style={{ color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,1)' }}>{k} kcal</div>
                                                 <div className="text-[10px] text-gray-500 mt-0.5">P{meal!.protein_g ?? '—'} · C{meal!.carbs_g ?? '—'} · F{meal!.fat_g ?? '—'}</div>
@@ -1606,16 +1586,16 @@ export default function UserProfile() {
                     <AnimatePresence>
                       {shoppingListOpen && aiMealPlan && (() => {
                         const sections = [
-                          { label: t('meals.breakfast'), icon: faSun,       key: 'breakfast' as const },
-                          { label: t('meals.lunch'),     icon: faCloudSun,  key: 'lunch' as const },
-                          { label: t('meals.dinner'),    icon: faMoon,      key: 'dinner' as const },
-                          { label: t('meals.snacks'),    icon: faAppleWhole, key: 'snacks' as const },
+                          { label: t('meals.breakfast'), emoji: '☀️', key: 'breakfast' as const },
+                          { label: t('meals.lunch'),     emoji: '🌤️', key: 'lunch' as const },
+                          { label: t('meals.dinner'),    emoji: '🌙', key: 'dinner' as const },
+                          { label: t('meals.snacks'),    emoji: '🍎', key: 'snacks' as const },
                         ];
                         const allLines: string[] = [];
                         sections.forEach(sec => {
                           const items = aiMealPlan[sec.key] ?? [];
                           if (!items.length) return;
-                          allLines.push(`${sec.label.toUpperCase()}`);
+                          allLines.push(`${sec.emoji} ${sec.label.toUpperCase()}`);
                           items.forEach(meal => {
                             const ings = editedIngredients[meal.meal] ?? meal.ingredients;
                             ings.forEach(ing => allLines.push(`  • ${ing}`));
@@ -1639,23 +1619,20 @@ export default function UserProfile() {
                               animate={{ y: 0, opacity: 1 }}
                               exit={{ y: 40, opacity: 0 }}
                               transition={{ duration: 0.22 }}
-                              className="w-full max-w-md rounded-2xl overflow-hidden"
-                              style={theme === 'light'
-                                ? { background: '#ffffff', border: '1px solid rgba(0,0,0,0.12)' }
-                                : { background: '#0d0d10', border: '1px solid rgba(255,255,255,0.15)' }}
+                              className="w-full max-w-md rounded-2xl border border-white/15 overflow-hidden"
+                              style={{ background: '#0d0d10' }}
                               onClick={e => e.stopPropagation()}
                             >
                               {/* Header */}
-                              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
+                              <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                                 <div>
-                                  <p className="text-[10px] uppercase font-black tracking-widest" style={{ color: theme === 'light' ? '#999' : '#6b7280' }}>AI Meal Plan</p>
-                                  <h3 className="text-base font-black flex items-center gap-1.5" style={{ color: theme === 'light' ? '#111' : '#fff' }}><FontAwesomeIcon icon={faCartShopping} /> Shopping List</h3>
+                                  <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">AI Meal Plan</p>
+                                  <h3 className="text-base font-black text-white">🛒 Shopping List</h3>
                                 </div>
                                 <button
                                   onClick={() => setShoppingListOpen(false)}
                                   aria-label="Close shopping list"
-                                  className="w-8 h-8 rounded-xl flex items-center justify-center transition-all text-lg"
-                                  style={{ color: theme === 'light' ? '#666' : '#9ca3af' }}
+                                  className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all text-lg"
                                 >×</button>
                               </div>
 
@@ -1668,14 +1645,12 @@ export default function UserProfile() {
                                   const unique = [...new Set(allIngs)];
                                   return (
                                     <div key={sec.key}>
-                                      <p className="text-[10px] uppercase font-black tracking-widest mb-2 flex items-center gap-1.5" style={{ color: theme === 'light' ? '#999' : '#6b7280' }}>
-                                        <FontAwesomeIcon icon={sec.icon} />{sec.label}
+                                      <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">
+                                        {sec.emoji} {sec.label}
                                       </p>
                                       <div className="flex flex-wrap gap-1.5">
                                         {unique.map((ing, i) => (
-                                          <span key={i} className="rounded-full px-2.5 py-1 text-xs" style={theme === 'light'
-                                            ? { background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.1)', color: '#333' }
-                                            : { background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: '#e5e7eb' }}>
+                                          <span key={i} className="bg-white/8 border border-white/10 rounded-full px-2.5 py-1 text-xs text-gray-200">
                                             {ing}
                                           </span>
                                         ))}
@@ -1686,7 +1661,7 @@ export default function UserProfile() {
                               </div>
 
                               {/* Footer */}
-                              <div className="px-5 py-4 flex gap-3" style={{ borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)' }}>
+                              <div className="px-5 py-4 border-t border-white/10 flex gap-3">
                                 <button
                                   onClick={() => {
                                     navigator.clipboard.writeText(copyText).then(() => {
@@ -1696,20 +1671,15 @@ export default function UserProfile() {
                                   }}
                                   className="flex-1 py-2.5 rounded-xl font-black uppercase tracking-wide text-sm transition-all duration-200 active:scale-95"
                                   style={shoppingListCopied
-                                    ? { background: 'rgba(34,197,94,0.12)', color: '#16a34a', border: '1px solid rgba(34,197,94,0.3)' }
-                                    : theme === 'light'
-                                      ? { background: 'rgba(250,204,21,0.15)', color: '#92600a', border: '1px solid rgba(180,120,0,0.3)' }
-                                      : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }
+                                    ? { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }
+                                    : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }
                                   }
                                 >
                                   {shoppingListCopied ? '✓ Copied!' : 'Copy List'}
                                 </button>
                                 <button
                                   onClick={() => setShoppingListOpen(false)}
-                                  className="px-4 py-2.5 rounded-xl font-black uppercase tracking-wide text-sm transition-all"
-                                  style={theme === 'light'
-                                    ? { color: '#555', border: '1px solid rgba(0,0,0,0.12)' }
-                                    : { color: '#9ca3af', border: '1px solid rgba(255,255,255,0.1)' }}
+                                  className="px-4 py-2.5 rounded-xl font-black uppercase tracking-wide text-sm text-gray-400 hover:text-white border border-white/10 hover:border-white/20 transition-all"
                                 >
                                   Close
                                 </button>
@@ -1820,23 +1790,30 @@ export default function UserProfile() {
           {active === 'workouts' && (
             <motion.div key="workouts" {...fadeUp(0)} className="space-y-3 md:space-y-6">
               {/* Sub-tabs */}
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+              <div className="flex border-b border-white/10">
                 {([
-                  { id: 'ai',      icon: faRobot,    key: 'workouts.ai_tab' },
-                  { id: 'my',      icon: faPen,      key: 'workouts.my_tab' },
-                  { id: 'library', icon: faBook,     key: 'workouts.library_tab' },
+                  { id: 'ai', key: 'workouts.ai_tab' },
+                  { id: 'my', key: 'workouts.my_tab' },
+                  { id: 'library', key: 'workouts.library_tab' },
                 ] as const).map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setWorkoutTab(tab.id)}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-black uppercase tracking-wide whitespace-nowrap shrink-0 transition-all duration-200 active:scale-95 ${
+                    style={{ fontSize: '0.75rem' }}
+                    className={`flex-1 py-1.5 sm:py-2.5 text-xs font-black uppercase tracking-wide transition-all duration-200 border-b-2 -mb-px ${
                       workoutTab === tab.id
-                        ? 'bg-[--color-iron-gold] text-black shadow-[0_0_14px_rgba(250,204,21,0.35)]'
-                        : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
+                        ? 'border-[--color-iron-gold] text-[--color-iron-gold]'
+                        : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'
                     }`}
                   >
-                    <FontAwesomeIcon icon={tab.icon} className="w-3.5 h-3.5" />
-                    <span>{t(tab.key)}</span>
+                    {tab.id === 'ai'
+                      ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}>🤖</span> {t(tab.key)}</>
+                      : tab.id === 'my'
+                        ? <><span style={{ color: '#facc15' }}>✎</span> {t(tab.key)}</>
+                        : tab.id === 'library'
+                          ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}>📚</span> {t(tab.key)}</>
+                          : t((tab as {key: string}).key)
+                    }
                   </button>
                 ))}
               </div>
@@ -1914,7 +1891,6 @@ export default function UserProfile() {
                     { id: 'legal',          icon: faGavel, label: t('settings.tabs.legal'),    desc: t('settings.tabs.legal_desc') },
                     { id: 'languages',      icon: faGlobe, label: t('settings.tabs.languages'),desc: t('settings.tabs.languages_desc') },
                     { id: 'appearance',     icon: faCircleHalfStroke, label: t('settings.tabs.appearance'), desc: t('settings.tabs.appearance_desc') },
-                    { id: 'wearable',       icon: faLink,      label: 'Wearable',                  desc: 'Connect fitness tracker' },
                     { id: 'delete_account', icon: faUsersGear, label: t('settings.tabs.danger'),   desc: t('settings.tabs.danger_desc') },
                   ] as const).map((tab) => (
                     <button
@@ -1924,15 +1900,13 @@ export default function UserProfile() {
                         settingsTab === tab.id
                           ? tab.id === 'delete_account'
                             ? 'bg-red-500/20 border border-red-400/40 text-red-300 shadow-[0_0_16px_rgba(239,68,68,0.15)]'
-                            : theme === 'light'
-                              ? 'bg-orange-700/10 border border-orange-600/40 text-orange-700 shadow-[0_0_16px_rgba(194,65,12,0.15)]'
-                              : 'bg-yellow-300/15 border border-yellow-300/40 text-yellow-300 shadow-[0_0_16px_rgba(253,224,71,0.15)]'
+                            : 'bg-yellow-300/15 border border-yellow-300/40 text-yellow-300 shadow-[0_0_16px_rgba(253,224,71,0.15)]'
                           : tab.id === 'delete_account'
-                            ? `border ${theme === 'light' ? 'bg-red-50 border-red-200 text-red-400 hover:bg-red-100 hover:text-red-600' : 'bg-white/3 border-red-500/10 text-gray-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-400/20'}`
-                            : `border ${theme === 'light' ? 'bg-gray-100 border-gray-200 text-gray-600 hover:bg-orange-500/10 hover:text-orange-700 hover:border-orange-300' : 'bg-white/3 border-white/8 text-gray-400 hover:bg-white/8 hover:text-white hover:border-white/15'}`
+                            ? 'bg-white/3 border border-red-500/10 text-gray-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-400/20'
+                            : 'bg-white/3 border border-white/8 text-gray-400 hover:bg-white/8 hover:text-white hover:border-white/15'
                       }`}
                     >
-                      <span className="text-xl shrink-0"><FontAwesomeIcon icon={tab.icon} /></span>
+                      <span className="text-xl shrink-0"> <FontAwesomeIcon icon={tab.icon} /></span>
                       <div className="min-w-0">
                         <p className="font-black uppercase text-xs tracking-wide leading-none">{tab.label}</p>
                         <p className="text-[10px] opacity-60 mt-0.5 font-medium leading-none">{tab.desc}</p>
@@ -1960,8 +1934,8 @@ export default function UserProfile() {
                         {profile.profilePicture && !avatarError ? (
                           <img src={profile.profilePicture} alt="avatar" className="absolute inset-0 w-full h-full object-cover" onError={() => setAvatarError(true)} />
                         ) : (
-                          <div className="absolute inset-0 bg-yellow-300/20 flex items-center justify-center">
-                            <FontAwesomeIcon icon={faRobot} className="text-3xl text-yellow-300/60" />
+                          <div className="absolute inset-0 bg-yellow-300/20 flex items-center justify-center text-3xl">
+                            🦾
                           </div>
                         )}
                         <div className={`absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 transition-opacity duration-200 ${profile.profilePicture && !avatarError && !avatarUploading ? 'opacity-0 active:opacity-100' : 'opacity-100'}`}>
@@ -2396,72 +2370,13 @@ export default function UserProfile() {
                             color: theme === 'dark' ? '#facc15' : '#0a0a0a',
                           }}
                         >
-                          <FontAwesomeIcon icon={theme === 'dark' ? faMoon : faSun} />
+                          <span>{theme === 'dark' ? '🌙' : '☀️'}</span>
                           <span>{theme === 'dark' ? t('appearance.dark') : t('appearance.light')}</span>
                         </button>
                       </div>
                     </div>
                   </motion.div>
                 )}
-                {/* Wearable tab */}
-                {settingsTab === 'wearable' && (
-                  <motion.div key="wearable" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6 space-y-5 max-w-sm">
-                      <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest">Wearable</p>
-
-                      <div className="flex items-center gap-3">
-                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${wearableConnected ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]' : 'bg-gray-600'}`} />
-                        <div>
-                          <p className="font-bold text-sm" style={{ color: theme === 'light' ? '#111' : '#fff' }}>
-                            {wearableLoading ? 'Checking…' : wearableConnected ? 'Google Fit connected' : 'Not connected'}
-                          </p>
-                          <p className="text-gray-400 text-xs mt-0.5">Sync steps, calories and active minutes</p>
-                        </div>
-                      </div>
-
-                      {!wearableLoading && (
-                        wearableConnected ? (
-                          <button
-                            onClick={async () => {
-                              setWearableLoading(true);
-                              try {
-                                await apiWearableDisconnect(token!);
-                                setWearableConnected(false);
-                              } finally {
-                                setWearableLoading(false);
-                              }
-                            }}
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm uppercase tracking-wide transition-all active:scale-95"
-                            style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}
-                          >
-                            <FontAwesomeIcon icon={faLinkSlash} />
-                            Disconnect
-                          </button>
-                        ) : (
-                          <button
-                            onClick={async () => {
-                              setWearableLoading(true);
-                              try {
-                                const url = await apiWearableAuthUrl(token!);
-                                window.location.href = url;
-                              } catch {
-                                setWearableLoading(false);
-                              }
-                            }}
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm uppercase tracking-wide transition-all active:scale-95"
-                            style={theme === 'light'
-                              ? { background: 'rgba(194,65,12,0.1)', color: '#c24102', border: '1px solid rgba(194,65,12,0.4)' }
-                              : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }}
-                          >
-                            <FontAwesomeIcon icon={faLink} />
-                            Connect Google Fit
-                          </button>
-                        )
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-
               </AnimatePresence>
                 </div>{/* end content panel */}
               </div>{/* end sidebar + content flex */}
@@ -2488,9 +2403,9 @@ export default function UserProfile() {
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               className="card-gold max-w-sm w-full"
             >
-              <div className="workout-complete-card p-6 rounded-[calc(1.25rem-1px)] space-y-4">
+              <div className="bg-[#0d0d10] p-6 rounded-[calc(1.25rem-1px)] space-y-4">
                 <div>
-                  <p className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.3em] uppercase flex items-center gap-1.5">Workout Complete <FontAwesomeIcon icon={faTrophy} /></p>
+                  <p className="text-[--color-iron-gold] text-[10px] font-black tracking-[0.3em] uppercase">Workout Complete 🎉</p>
                   <h3 className="text-lg font-black uppercase italic mt-0.5">How did it go?</h3>
                 </div>
                 <textarea
@@ -2510,7 +2425,8 @@ export default function UserProfile() {
                   </button>
                   <button
                     onClick={() => finishWorkout(notesInput.trim() || undefined)}
-                    className="btn-gold-send flex-1 py-2 sm:py-3 font-black rounded-xl uppercase text-xs active:scale-95 transition-all"
+                    className="flex-1 py-2 sm:py-3 font-black rounded-xl uppercase text-xs active:scale-95 transition-all"
+                    style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}
                   >
                     Save & Finish ✓
                   </button>
@@ -2593,7 +2509,7 @@ function GoalDonut({ goalData, goal, large }: { goalData: { key: string; value: 
       className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col items-center gap-4
         hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.12)] transition-all duration-300"
     >
-      <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest self-start flex items-center gap-1.5"><FontAwesomeIcon icon={faBullseye} /> Goal Focus</p>
+      <p className="text-[--color-iron-gold] font-black uppercase text-sm tracking-widest self-start">🎯 Goal Focus</p>
       <ResponsiveContainer width="100%" height={size}>
         <PieChart>
           <Pie data={goalData} cx="50%" cy="50%" innerRadius={size * 0.28} outerRadius={size * 0.42}
