@@ -604,18 +604,19 @@ export default function UserProfile() {
 
       {/* ── Mobile bottom nav (mobile only) ─────────────── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl flex items-center gap-0.5 px-1 py-1.5 overflow-x-auto scrollbar-none"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl flex items-center gap-0.5 px-1 pt-1.5 overflow-x-auto scrollbar-none"
         style={{
           background: theme === 'light' ? 'rgba(240,240,243,0.97)' : 'rgba(6,6,8,0.95)',
           borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.08)',
           boxShadow: theme === 'light' ? '0 -2px 16px rgba(0,0,0,0.08)' : 'none',
+          paddingBottom: 'max(6px, env(safe-area-inset-bottom))',
         }}
       >
         {NAV_IDS.map((item) => (
           <button
             key={item.id}
             onClick={() => setActive(item.id)}
-            className={`shrink-0 flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-xl transition-all duration-200 min-w-0 relative
+            className={`shrink-0 flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 min-w-[52px] relative
               ${active === item.id
                 ? 'text-[--color-iron-gold]'
                 : theme === 'light' ? 'text-gray-600' : 'text-gray-500'}`}
@@ -638,9 +639,9 @@ export default function UserProfile() {
                   : 'inset 0 1px 0 rgba(255,255,255,0.06)',
               }}
             >{item.icon}</span>
-            <span className="text-[9px] font-bold uppercase tracking-tight leading-none mt-0.5">{t(item.key)}</span>
+            <span className="text-[9px] font-bold uppercase tracking-tight leading-none mt-0.5 whitespace-nowrap overflow-hidden max-w-[56px] text-center" style={{ textOverflow: 'ellipsis', display: 'block' }}>{t(item.key)}</span>
             {item.id === 'community' && communityUnread > 0 && (
-              <span className="absolute -top-0.5 right-0 bg-yellow-300 text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center leading-none">
+              <span className="absolute -top-0.5 right-0.5 bg-yellow-300 text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center leading-none">
                 {communityUnread > 9 ? '9+' : communityUnread}
               </span>
             )}
@@ -648,10 +649,10 @@ export default function UserProfile() {
         ))}
         <button
           onClick={() => { logout(); navigate('/'); }}
-          className={`shrink-0 flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-xl transition-all duration-200 bg-transparent border-none cursor-pointer ${theme === 'light' ? 'text-gray-600' : 'text-gray-500'}`}
+          className={`shrink-0 flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 min-w-[52px] bg-transparent border-none cursor-pointer ${theme === 'light' ? 'text-gray-600' : 'text-gray-500'}`}
         >
           <span className="w-8 h-8 flex items-center justify-center rounded-xl text-base" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>🚪</span>
-          <span className="text-[9px] font-bold uppercase tracking-tight leading-none mt-0.5">{t('common.out')}</span>
+          <span className="text-[9px] font-bold uppercase tracking-tight leading-none mt-0.5 whitespace-nowrap">{t('common.out')}</span>
         </button>
       </nav>
 
