@@ -1810,11 +1810,11 @@ export default function UserProfile() {
                     }`}
                   >
                     {tab.id === 'ai'
-                      ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}>🤖</span> {t(tab.key)}</>
+                      ? <><FontAwesomeIcon icon={faRobot} /> {t(tab.key)}</>
                       : tab.id === 'my'
-                        ? <><span style={{ color: workoutTab === 'my' ? '#000' : '#facc15' }}>✎</span> {t(tab.key)}</>
+                        ? <><FontAwesomeIcon icon={faDumbbell} /> {t(tab.key)}</>
                         : tab.id === 'library'
-                          ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}>📚</span> {t(tab.key)}</>
+                          ? <><FontAwesomeIcon icon={faBook} /> {t(tab.key)}</>
                           : t((tab as {key: string}).key)
                     }
                   </button>

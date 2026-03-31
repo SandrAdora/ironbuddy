@@ -7,7 +7,7 @@ import { useTheme } from '../context/themeContext';
 import { useTranslation } from 'react-i18next';
 import { savePR } from '../prStorage';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSave, faArrowsRotate, faDumbbell, faCalendarDays, faBullseye, faLightbulb, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faArrowsRotate, faDumbbell, faCalendarDays, faBullseye, faLightbulb, faWandMagicSparkles, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 
 interface Props {
   profile: UserProfile;
@@ -657,7 +657,11 @@ function ExerciseCard({ exercise, index, videoId, onFetchVideo, onRetryVideo, is
               className="text-xs font-bold border-none outline-none bg-transparent transition-colors"
               style={{ color: theme === 'light' ? 'darkorange' : '#facc15' }}
             >
-              {expanded ? 'Hide ▲' : 'How to ▼'}
+              {expanded ? (
+                <><FontAwesomeIcon icon={faChevronUp} className="mr-1" />Hide</>
+              ) : (
+                <><FontAwesomeIcon icon={faChevronDown} className="mr-1" />How to</>
+              )}
             </button>
           </div>
         </div>
