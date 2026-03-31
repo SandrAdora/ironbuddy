@@ -799,7 +799,7 @@ export default function UserProfile() {
                 >
                   <div className="mb-4">
                     <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.this_week_label')}</p>
-                    <h2 className="text-lg font-black uppercase italic mt-0.5">{t('dashboard.weekly_goal')}</h2>
+                    <h2 className="text-lg font-black uppercase italic mt-0.5" style={{ color: theme === 'light' ? '#111827' : '#f9fafb' }}>{t('dashboard.weekly_goal')}</h2>
                   </div>
                   <div className="flex items-center gap-5">
                     <svg viewBox="0 0 110 110" className="w-24 h-24 shrink-0">
@@ -818,18 +818,18 @@ export default function UserProfile() {
                       })()}
                     </svg>
                     <div className="space-y-2 flex-1">
-                      <p className="text-white font-black text-xl">{thisWeekDone}<span className="text-gray-500 text-sm font-bold"> / {weeklyGoal}</span></p>
-                      <p className="text-gray-400 text-xs">{t('dashboard.workouts_this_week')}</p>
+                      <p className="font-black text-xl" style={{ color: theme === 'light' ? '#111827' : '#ffffff' }}>{thisWeekDone}<span className="text-sm font-bold" style={{ color: theme === 'light' ? '#6b7280' : '#6b7280' }}> / {weeklyGoal}</span></p>
+                      <p className="text-xs" style={{ color: theme === 'light' ? '#6b7280' : '#9ca3af' }}>{t('dashboard.workouts_this_week')}</p>
                       {thisWeekDone >= weeklyGoal
-                        ? <p className="text-green-400 text-xs font-black">{t('dashboard.goal_reached')}</p>
-                        : <p className="text-gray-500 text-xs">{t('dashboard.more_to_go', { count: weeklyGoal - thisWeekDone })}</p>
+                        ? <p className="text-xs font-black" style={{ color: theme === 'light' ? '#16a34a' : '#4ade80' }}>{t('dashboard.goal_reached')}</p>
+                        : <p className="text-xs" style={{ color: theme === 'light' ? '#6b7280' : '#6b7280' }}>{t('dashboard.more_to_go', { count: weeklyGoal - thisWeekDone })}</p>
                       }
                       <button
                         onClick={() => setActive('goals')}
                         className="text-[10px] font-black border-none outline-none bg-transparent"
-                        style={{ color: 'rgba(156,163,175,0.5)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 8px rgba(250,204,21,0.6)'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.5)'; }}
+                        style={{ color: theme === 'light' ? 'rgba(107,114,128,0.9)' : 'rgba(156,163,175,0.5)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = theme === 'light' ? 'color:#ea580c;text-shadow:0 0 8px rgba(234,88,12,0.4)' : 'color:#facc15;text-shadow:0 0 8px rgba(250,204,21,0.6)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = theme === 'light' ? 'color:rgba(107,114,128,0.9)' : 'color:rgba(156,163,175,0.5)'; }}
                       >{t('dashboard.change_goal')}</button>
                     </div>
                   </div>
@@ -901,7 +901,7 @@ export default function UserProfile() {
               <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
                 <div>
                   <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('goals.goal_label')}</p>
-                  <h2 className="text-lg font-black uppercase italic mt-0.5">{t('goals.weekly_goal')}</h2>
+                  <h2 className="text-lg font-black uppercase italic mt-0.5" style={{ color: theme === 'light' ? '#111827' : '#f9fafb' }}>{t('goals.weekly_goal')}</h2>
                 </div>
                 <div className="flex items-center gap-6 flex-wrap">
                   {/* ring */}
@@ -924,9 +924,9 @@ export default function UserProfile() {
                   </svg>
                   <div className="flex-1 min-w-[160px] space-y-3">
                     <div>
-                      <p className="text-white font-black text-2xl">{thisWeekDone}<span className="text-gray-500 text-base font-bold"> / {weeklyGoal}</span></p>
-                      <p className="text-gray-400 text-xs mt-0.5">{t('goals.workouts_this_week')}</p>
-                      {thisWeekDone >= weeklyGoal && <p className="text-green-400 text-xs font-black mt-1">{t('goals.goal_reached')}</p>}
+                      <p className="font-black text-2xl" style={{ color: theme === 'light' ? '#111827' : '#ffffff' }}>{thisWeekDone}<span className="text-base font-bold" style={{ color: theme === 'light' ? '#6b7280' : '#6b7280' }}> / {weeklyGoal}</span></p>
+                      <p className="text-xs mt-0.5" style={{ color: theme === 'light' ? '#6b7280' : '#9ca3af' }}>{t('goals.workouts_this_week')}</p>
+                      {thisWeekDone >= weeklyGoal && <p className="text-xs font-black mt-1" style={{ color: theme === 'light' ? '#16a34a' : '#4ade80' }}>{t('goals.goal_reached')}</p>}
                     </div>
                     {editingWeeklyGoal ? (
                       <div className="flex gap-2 items-center">
@@ -934,19 +934,20 @@ export default function UserProfile() {
                           type="number" min={1} max={14} value={weeklyGoalDraft}
                           onChange={e => setWeeklyGoalDraft(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') saveWeeklyGoal(parseInt(weeklyGoalDraft)); if (e.key === 'Escape') setEditingWeeklyGoal(false); }}
-                          className="w-16 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-white text-sm text-center focus:outline-none focus:border-yellow-300/60"
+                          className="w-16 rounded-lg px-2 py-1 text-sm text-center focus:outline-none"
+                          style={{ background: theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)', border: theme === 'light' ? '1px solid rgba(0,0,0,0.15)' : '1px solid rgba(255,255,255,0.1)', color: theme === 'light' ? '#111827' : '#ffffff' }}
                           autoFocus
                         />
-                        <button onClick={() => saveWeeklyGoal(parseInt(weeklyGoalDraft))} className="text-xs font-black text-yellow-300">{t('common.save')}</button>
-                        <button onClick={() => setEditingWeeklyGoal(false)} className="text-xs text-gray-500">{t('common.cancel')}</button>
+                        <button onClick={() => saveWeeklyGoal(parseInt(weeklyGoalDraft))} className="text-xs font-black" style={{ color: theme === 'light' ? '#ea580c' : '#fde047' }}>{t('common.save')}</button>
+                        <button onClick={() => setEditingWeeklyGoal(false)} className="text-xs" style={{ color: theme === 'light' ? '#6b7280' : '#6b7280' }}>{t('common.cancel')}</button>
                       </div>
                     ) : (
                       <button
                         onClick={() => { setWeeklyGoalDraft(String(weeklyGoal)); setEditingWeeklyGoal(true); }}
                         className="text-xs font-black border-none outline-none bg-transparent"
-                        style={{ color: 'rgba(156,163,175,0.6)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 10px rgba(250,204,21,0.7)'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
+                        style={{ color: theme === 'light' ? 'rgba(107,114,128,0.9)' : 'rgba(156,163,175,0.6)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = theme === 'light' ? 'color:#ea580c;text-shadow:0 0 8px rgba(234,88,12,0.4)' : 'color:#facc15;text-shadow:0 0 10px rgba(250,204,21,0.7)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = theme === 'light' ? 'color:rgba(107,114,128,0.9)' : 'color:rgba(156,163,175,0.6)'; }}
                       >{t('goals.change_goal')}</button>
                     )}
                   </div>

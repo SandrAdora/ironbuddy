@@ -680,7 +680,7 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
         <button onClick={() => toggleCard('goal')} className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors">
           <div className="text-left">
             <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Goal</p>
-            <h2 className="text-lg font-black uppercase italic mt-0.5">🎯 Weekly Goal</h2>
+            <h2 className="text-lg font-black uppercase italic mt-0.5" style={{ color: theme === 'light' ? '#111827' : '#f9fafb' }}>🎯 Weekly Goal</h2>
           </div>
           <span className="text-gray-500 text-lg transition-transform duration-300" style={{ display: 'inline-block', transform: openCards.has('goal') ? 'rotate(0deg)' : 'rotate(-90deg)' }}>⌄</span>
         </button>
@@ -701,19 +701,20 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
                         type="number" min={1} max={14} value={goalDraft}
                         onChange={e => setGoalDraft(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') saveGoal(parseInt(goalDraft)); if (e.key === 'Escape') setEditingGoal(false); }}
-                        className="w-16 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-white text-sm text-center focus:outline-none focus:border-yellow-300/60"
+                        className="w-16 rounded-lg px-2 py-1 text-sm text-center focus:outline-none"
+                        style={{ background: theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)', border: theme === 'light' ? '1px solid rgba(0,0,0,0.15)' : '1px solid rgba(255,255,255,0.1)', color: theme === 'light' ? '#111827' : '#ffffff' }}
                         autoFocus
                       />
-                      <button onClick={() => saveGoal(parseInt(goalDraft))} className="text-xs font-black text-yellow-300">Save</button>
-                      <button onClick={() => setEditingGoal(false)} className="text-xs text-gray-500">Cancel</button>
+                      <button onClick={() => saveGoal(parseInt(goalDraft))} className="text-xs font-black" style={{ color: theme === 'light' ? '#ea580c' : '#fde047' }}>Save</button>
+                      <button onClick={() => setEditingGoal(false)} className="text-xs" style={{ color: theme === 'light' ? '#6b7280' : '#6b7280' }}>Cancel</button>
                     </div>
                   ) : (
                     <button
                       onClick={() => { setGoalDraft(String(weeklyGoal)); setEditingGoal(true); }}
                       className="text-xs font-black border-none outline-none bg-transparent"
-                      style={{ color: 'rgba(156,163,175,0.6)' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#facc15;text-shadow:0 0 10px rgba(250,204,21,0.7)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
+                      style={{ color: theme === 'light' ? 'rgba(107,114,128,0.9)' : 'rgba(156,163,175,0.6)' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = theme === 'light' ? 'color:#ea580c;text-shadow:0 0 8px rgba(234,88,12,0.4)' : 'color:#facc15;text-shadow:0 0 10px rgba(250,204,21,0.7)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = theme === 'light' ? 'color:rgba(107,114,128,0.9)' : 'color:rgba(156,163,175,0.6)'; }}
                     >✎ Change goal</button>
                   )}
                 </div>
