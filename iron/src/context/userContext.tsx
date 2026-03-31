@@ -154,6 +154,26 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     return () => clearInterval(interval);
   }, [token, applyNewToken, logout]);
 
+  // Refresh token when user returns to the tab after inactivity
+  useEffect(() => {
+    const handleVisibility = async () => {
+      if (document.visibilityState !== 'visible') return;
+      const storedToken = localStorage.getItem("ironbuddy_token");
+      if (!storedToken || !isTokenExpired(storedToken)) return;
+      const refresh = localStorage.getItem("ironbuddy_refresh");
+      if (!refresh) { logout(); return; }
+      const newToken = await doRefresh(refresh);
+      if (newToken) {
+        applyNewToken(newToken);
+      } else {
+        logout();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [applyNewToken, logout]);
+
   // Sync profile to localStorage and backend — debounced so rapid field edits
   // don't flood localStorage or fire an API call on every keystroke.
   const profileSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
