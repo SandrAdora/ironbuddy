@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFloppyDisk, faTriangleExclamation, faPills, faUtensils, faDumbbell } from '@fortawesome/free-solid-svg-icons';
+import { faFloppyDisk, faTriangleExclamation, faPills, faUtensils, faDumbbell, faBookOpen } from '@fortawesome/free-solid-svg-icons';
 import { apiChat, apiCreateCustomMeal, type ChatMessage, type SavePrompt } from '../api';
 import type { UserProfile } from '../context/userContext';
 import { useTheme } from '../context/themeContext';
@@ -192,19 +192,21 @@ function SaveCard({ prompt, token, onSaved }: { prompt: SavePrompt; token?: stri
           <button
             disabled={state === 'saving'}
             onClick={handleSave}
-            className="btn-gold-send px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-50"
+            className="btn-gold-send px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-50 flex items-center gap-1.5"
             style={theme === 'light' ? lightBtnStyle : darkBtnStyle}
           >
-            {state === 'saving' ? `Saving…to ${meta.tab}` : <FontAwesomeIcon icon={faFloppyDisk} />}
+            <FontAwesomeIcon icon={faFloppyDisk} />
+            {state === 'saving' ? `Saving…` : `Save to ${meta.tab}`}
           </button>
           {prompt.type === 'meal' && (
             <button
               disabled={savedAsRecipe}
               onClick={handleSaveAsRecipe}
-              className="btn-gold-send px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-40"
+              className="btn-gold-send px-4 py-1.5 font-black rounded-lg uppercase text-[10px] tracking-wide active:scale-95 transition-all disabled:opacity-40 flex items-center gap-1.5"
               style={theme === 'light' ? lightBtnStyle : darkBtnStyle}
             >
-              {savedAsRecipe ? '✓ Added to Recipes' : <FontAwesomeIcon icon={faFloppyDisk} />}
+              <FontAwesomeIcon icon={faBookOpen} />
+              {savedAsRecipe ? 'Added to Recipes' : 'Add to My Recipes'}
             </button>
           )}
           <button

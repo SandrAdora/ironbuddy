@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiGetCustomMeals, apiCreateCustomMeal, apiUpdateCustomMeal, apiDeleteCustomMeal, type CustomMeal } from '../api';
 import { useTheme } from '../context/themeContext';
@@ -7,7 +7,7 @@ import {
   faUtensils, faBowlFood, faEgg, faDrumstickBite, faBowlRice,
   faLeaf, faBreadSlice, faFish, faSeedling, faMortarPestle,
   faJar, faGlassWater, faBox, faCarrot, faBacon, faCheese,
-  faAppleWhole, faLemon,
+  faAppleWhole, faLemon, faPen, faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
@@ -38,11 +38,33 @@ const ICON_OPTIONS: { id: string; icon: IconDefinition }[] = [
 
 const DEFAULT_ICON = 'faUtensils';
 
+const CARD_COLORS = [
+  { id: 'gold',   color: '#fde047', border: 'rgba(253,224,71,0.35)' },
+  { id: 'orange', color: '#fb923c', border: 'rgba(251,146,60,0.35)' },
+  { id: 'green',  color: '#4ade80', border: 'rgba(74,222,128,0.35)' },
+  { id: 'blue',   color: '#60a5fa', border: 'rgba(96,165,250,0.35)' },
+  { id: 'purple', color: '#c084fc', border: 'rgba(192,132,252,0.35)' },
+  { id: 'red',    color: '#f87171', border: 'rgba(248,113,113,0.35)' },
+  { id: 'pink',   color: '#f472b6', border: 'rgba(244,114,182,0.35)' },
+  { id: 'teal',   color: '#2dd4bf', border: 'rgba(45,212,191,0.35)' },
+];
+
+function getUserIdFromToken(token: string): number {
+  try { return JSON.parse(atob(token.split('.')[1])).user_id ?? 0; } catch { return 0; }
+}
+function colorMapKey(token: string) { return `ironbuddy_meal_colors_${getUserIdFromToken(token)}`; }
+function loadColorMap(token: string): Record<number, string> {
+  try { return JSON.parse(localStorage.getItem(colorMapKey(token)) ?? '{}'); } catch { return {}; }
+}
+function saveColorMap(token: string, map: Record<number, string>) {
+  localStorage.setItem(colorMapKey(token), JSON.stringify(map));
+}
+
 /** Renders either a FA icon (new) or a legacy emoji string */
-function MealIcon({ value, className }: { value: string; className?: string }) {
+function MealIcon({ value, className, style }: { value: string; className?: string; style?: CSSProperties }) {
   const match = ICON_OPTIONS.find((o) => o.id === value);
-  if (match) return <FontAwesomeIcon icon={match.icon} className={className} />;
-  return <span>{value}</span>; // legacy emoji fallback
+  if (match) return <span style={style}><FontAwesomeIcon icon={match.icon} className={className} /></span>;
+  return <span style={style}>{value}</span>; // legacy emoji fallback
 }
 
 export default function MyMeals({ token }: Props) {
@@ -59,6 +81,8 @@ export default function MyMeals({ token }: Props) {
   const [description, setDescription] = useState('');
   const [kcal, setKcal] = useState('');
   const [icon, setIcon] = useState(DEFAULT_ICON);
+  const [cardColor, setCardColor] = useState('gold');
+  const [colorMap, setColorMap] = useState<Record<number, string>>(() => loadColorMap(token));
 
   useEffect(() => {
     apiGetCustomMeals(token)
@@ -68,7 +92,7 @@ export default function MyMeals({ token }: Props) {
   }, [token]);
 
   const resetForm = () => {
-    setName(''); setDescription(''); setKcal(''); setIcon(DEFAULT_ICON);
+    setName(''); setDescription(''); setKcal(''); setIcon(DEFAULT_ICON); setCardColor('gold');
     setFormOpen(false); setEditingId(null); setError('');
   };
 
@@ -77,6 +101,7 @@ export default function MyMeals({ token }: Props) {
     setDescription(m.description);
     setKcal(m.kcal);
     setIcon(m.icon || DEFAULT_ICON);
+    setCardColor(colorMap[m.id] ?? 'gold');
     setEditingId(m.id);
     setFormOpen(true);
   };
@@ -95,6 +120,9 @@ export default function MyMeals({ token }: Props) {
           recipe_url: '',
         });
         setMeals((prev) => prev.map((m) => m.id === editingId ? updated : m));
+        const newMap = { ...colorMap, [editingId]: cardColor };
+        setColorMap(newMap);
+        saveColorMap(token, newMap);
       } else {
         const created = await apiCreateCustomMeal(token, {
           name: name.trim(),
@@ -105,6 +133,9 @@ export default function MyMeals({ token }: Props) {
           ingredients: [],
         });
         setMeals((prev) => [created, ...prev]);
+        const newMap = { ...colorMap, [created.id]: cardColor };
+        setColorMap(newMap);
+        saveColorMap(token, newMap);
       }
       resetForm();
     } catch {
@@ -139,12 +170,9 @@ export default function MyMeals({ token }: Props) {
             onClick={() => setFormOpen(true)}
             aria-label="Add new meal"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wide active:scale-95 transition-all duration-200"
-            style={{
-              background: theme === 'light' ? '#ffffff' : '#060608',
-              color: '#facc15',
-              border: '1px solid rgba(250,204,21,0.4)',
-              boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 20px rgba(250,204,21,0.1)',
-            }}
+            style={theme === 'light'
+              ? { background: '#fff7ed', color: '#c2410c', border: '1px solid rgba(194,65,12,0.4)', boxShadow: '0 0 10px rgba(194,65,12,0.15)' }
+              : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25), 0 0 20px rgba(250,204,21,0.1)' }}
           >
             + Add Meal
           </button>
@@ -186,6 +214,27 @@ export default function MyMeals({ token }: Props) {
                   >
                     <FontAwesomeIcon icon={o.icon} className="w-4 h-4" />
                   </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Card color picker */}
+            <div className="space-y-2">
+              <label className="text-xs text-gray-500 uppercase font-bold">Card Color</label>
+              <div className="flex flex-wrap gap-2">
+                {CARD_COLORS.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCardColor(c.id)}
+                    aria-label={`Color ${c.id}`}
+                    className="w-7 h-7 rounded-lg transition-all duration-150 hover:scale-110"
+                    style={{
+                      background: c.color,
+                      border: cardColor === c.id ? '2px solid white' : '2px solid transparent',
+                      boxShadow: cardColor === c.id ? `0 0 6px ${c.color}` : 'none',
+                    }}
+                  />
                 ))}
               </div>
             </div>
@@ -256,52 +305,56 @@ export default function MyMeals({ token }: Props) {
         </motion.div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {meals.map((m, i) => (
+          {meals.map((m, i) => {
+            const accent = CARD_COLORS.find(c => c.id === (colorMap[m.id] ?? 'gold')) ?? CARD_COLORS[0];
+            return (
             <motion.div
               key={m.id}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 flex flex-col gap-3
-                hover:border-yellow-300/30 hover:shadow-[0_0_20px_rgba(253,224,71,0.08)] transition-all duration-300 group"
+              className="bg-white/5 backdrop-blur-md border rounded-2xl p-5 flex flex-col gap-3 transition-all duration-300 group"
+              style={{ borderColor: accent.border }}
             >
               <div className="flex items-start justify-between">
-                <MealIcon value={m.icon || DEFAULT_ICON} className="w-8 h-8 text-[--color-iron-gold]" />
+                <MealIcon value={m.icon || DEFAULT_ICON} className="w-8 h-8" style={{ color: accent.color }} />
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => openEdit(m)}
-                    className="text-yellow-300 p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors text-sm"
+                    className="p-1.5 rounded-lg transition-colors text-sm"
+                    style={{ color: theme === 'light' ? '#c2410c' : '#fde047' }}
                     title="Edit meal"
                     aria-label={`Edit meal: ${m.name}`}
                   >
-                    ✎
+                    <FontAwesomeIcon icon={faPen} />
                   </button>
                   <button
                     onClick={() => handleDelete(m.id)}
-                    className="text-gray-600 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-400/10 transition-colors"
+                    className="text-gray-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-400/10 transition-colors"
                     title="Delete meal"
                     aria-label={`Delete meal: ${m.name}`}
                   >
-                    🗑
+                    <FontAwesomeIcon icon={faTrash} />
                   </button>
                 </div>
               </div>
               <div>
-                <p className="font-black text-[--color-iron-gold] uppercase text-sm">{m.name}</p>
+                <p className="font-black uppercase text-sm" style={{ color: accent.color }}>{m.name}</p>
                 {m.description && <p className="text-gray-400 text-xs mt-1">{m.description}</p>}
               </div>
               <div className="flex items-center justify-between mt-auto">
                 {m.kcal ? (
                   <span className="text-xs font-bold px-3 py-1 rounded-full"
                     style={{
-                      background: theme === 'light' ? 'rgba(180,120,0,0.1)' : 'rgba(250,204,21,0.1)',
-                      color: theme === 'light' ? '#92640a' : '#fde047',
+                      background: `${accent.color}18`,
+                      color: accent.color,
                     }}
                   >{m.kcal}</span>
                 ) : <span />}
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

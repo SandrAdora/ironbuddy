@@ -806,14 +806,14 @@ export default function UserProfile() {
                       {(() => {
                         const r = 44, stroke = 8, circ = 2 * Math.PI * r;
                         const pct = weeklyGoal > 0 ? Math.min(thisWeekDone / weeklyGoal, 1) : 0;
-                        const col = pct >= 1 ? '#4ade80' : '#fde047';
+                        const col = pct >= 1 ? (theme === 'light' ? '#16a34a' : '#4ade80') : (theme === 'light' ? '#ea580c' : '#fde047');
                         return (<>
-                          <circle cx={55} cy={55} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
+                          <circle cx={55} cy={55} r={r} fill="none" stroke={theme === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'} strokeWidth={stroke} />
                           <circle cx={55} cy={55} r={r} fill="none" stroke={col} strokeWidth={stroke} strokeLinecap="round"
                             strokeDasharray={`${pct * circ} ${circ}`} transform="rotate(-90 55 55)"
                             style={{ filter: `drop-shadow(0 0 6px ${col}aa)` }} />
                           <text x={55} y={51} textAnchor="middle" fill={col} fontSize="18" fontWeight="900" fontFamily="helvetica">{thisWeekDone}</text>
-                          <text x={55} y={64} textAnchor="middle" fill="rgba(156,163,175,0.6)" fontSize="9" fontFamily="helvetica">{t('dashboard.of_goal', { count: weeklyGoal })}</text>
+                          <text x={55} y={64} textAnchor="middle" fill={theme === 'light' ? 'rgba(0,0,0,0.4)' : 'rgba(156,163,175,0.6)'} fontSize="9" fontFamily="helvetica">{t('dashboard.of_goal', { count: weeklyGoal })}</text>
                         </>);
                       })()}
                     </svg>
@@ -910,14 +910,15 @@ export default function UserProfile() {
                       const r = 44, stroke = 8, circ = 2 * Math.PI * r;
                       const pct = weeklyGoal > 0 ? Math.min(thisWeekDone / weeklyGoal, 1) : 0;
                       const dash = pct * circ;
-                      const col = pct >= 1 ? '#4ade80' : '#fde047';
+                      const col = pct >= 1 ? (theme === 'light' ? '#16a34a' : '#4ade80') : (theme === 'light' ? '#ea580c' : '#fde047');
+                      const glow = pct >= 1 ? (theme === 'light' ? 'rgba(22,163,74,0.5)' : 'rgba(74,222,128,0.7)') : (theme === 'light' ? 'rgba(234,88,12,0.5)' : 'rgba(253,224,71,0.7)');
                       return (<>
-                        <circle cx={55} cy={55} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
+                        <circle cx={55} cy={55} r={r} fill="none" stroke={theme === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'} strokeWidth={stroke} />
                         <circle cx={55} cy={55} r={r} fill="none" stroke={col} strokeWidth={stroke} strokeLinecap="round"
                           strokeDasharray={`${dash} ${circ}`} transform="rotate(-90 55 55)"
-                          style={{ filter: `drop-shadow(0 0 6px ${pct >= 1 ? 'rgba(74,222,128,0.7)' : 'rgba(253,224,71,0.7)'})` }} />
+                          style={{ filter: `drop-shadow(0 0 6px ${glow})` }} />
                         <text x={55} y={51} textAnchor="middle" fill={col} fontSize="18" fontWeight="900" fontFamily="helvetica">{thisWeekDone}</text>
-                        <text x={55} y={64} textAnchor="middle" fill="rgba(156,163,175,0.6)" fontSize="9" fontFamily="helvetica">{t('goals.of_goal', { count: weeklyGoal })}</text>
+                        <text x={55} y={64} textAnchor="middle" fill={theme === 'light' ? 'rgba(0,0,0,0.4)' : 'rgba(156,163,175,0.6)'} fontSize="9" fontFamily="helvetica">{t('goals.of_goal', { count: weeklyGoal })}</text>
                       </>);
                     })()}
                   </svg>

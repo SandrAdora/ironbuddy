@@ -8,9 +8,20 @@ import {
   faJar, faGlassWater, faBox, faCarrot, faBacon, faCheese,
   faAppleWhole, faLemon, faCakeCandles, faPizzaSlice, faHotdog,
   faKitchenSet, faMugHot, faBlender,
-  faFire, faClock,
+  faFire, faClock, faPen, faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+
+const CARD_COLORS = [
+  { id: 'gold',   color: '#fde047', border: 'rgba(253,224,71,0.35)' },
+  { id: 'orange', color: '#fb923c', border: 'rgba(251,146,60,0.35)' },
+  { id: 'green',  color: '#4ade80', border: 'rgba(74,222,128,0.35)' },
+  { id: 'blue',   color: '#60a5fa', border: 'rgba(96,165,250,0.35)' },
+  { id: 'purple', color: '#c084fc', border: 'rgba(192,132,252,0.35)' },
+  { id: 'red',    color: '#f87171', border: 'rgba(248,113,113,0.35)' },
+  { id: 'pink',   color: '#f472b6', border: 'rgba(244,114,182,0.35)' },
+  { id: 'teal',   color: '#2dd4bf', border: 'rgba(45,212,191,0.35)' },
+];
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface CustomRecipe {
@@ -18,6 +29,7 @@ interface CustomRecipe {
   name: string;
   description: string;
   icon: string;
+  color: string;
   prepTime: string;
   cookTime: string;
   servings: string;
@@ -78,10 +90,10 @@ const ICON_OPTIONS: { id: string; icon: IconDefinition }[] = [
 const DEFAULT_ICON = 'faUtensils';
 
 /** Renders a FA icon or falls back to legacy emoji string */
-function RecipeIcon({ value, className }: { value: string; className?: string }) {
+function RecipeIcon({ value, className, style }: { value: string; className?: string; style?: React.CSSProperties }) {
   const match = ICON_OPTIONS.find((o) => o.id === value);
-  if (match) return <FontAwesomeIcon icon={match.icon} className={className} />;
-  return <span>{value}</span>;
+  if (match) return <span style={style}><FontAwesomeIcon icon={match.icon} className={className} /></span>;
+  return <span style={style}>{value}</span>;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -97,6 +109,7 @@ export default function CustomRecipeBuilder({ token }: Props) {
   const [name, setName]           = useState('');
   const [description, setDesc]    = useState('');
   const [icon, setIcon]           = useState(DEFAULT_ICON);
+  const [cardColor, setCardColor] = useState('gold');
   const [prepTime, setPrepTime]   = useState('');
   const [cookTime, setCookTime]   = useState('');
   const [servings, setServings]   = useState('');
@@ -107,13 +120,13 @@ export default function CustomRecipeBuilder({ token }: Props) {
   useEffect(() => { setRecipes(load(token)); }, [token]);
 
   const resetForm = () => {
-    setName(''); setDesc(''); setIcon(DEFAULT_ICON); setPrepTime(''); setCookTime('');
+    setName(''); setDesc(''); setIcon(DEFAULT_ICON); setCardColor('gold'); setPrepTime(''); setCookTime('');
     setServings(''); setKcal(''); setIngredients(['']); setSteps(['']);
     setFormOpen(false); setEditingId(null); setError('');
   };
 
   const openEdit = (r: CustomRecipe) => {
-    setName(r.name); setDesc(r.description); setIcon(r.icon);
+    setName(r.name); setDesc(r.description); setIcon(r.icon); setCardColor(r.color ?? 'gold');
     setPrepTime(r.prepTime); setCookTime(r.cookTime);
     setServings(r.servings); setKcal(r.kcal);
     setIngredients(r.ingredients.length ? r.ingredients : ['']);
@@ -134,6 +147,7 @@ export default function CustomRecipeBuilder({ token }: Props) {
       name: name.trim(),
       description: description.trim(),
       icon,
+      color: cardColor,
       prepTime: prepTime.trim(),
       cookTime: cookTime.trim(),
       servings: servings.trim(),
@@ -231,6 +245,27 @@ export default function CustomRecipeBuilder({ token }: Props) {
               </div>
             </div>
 
+            {/* Card color picker */}
+            <div className="space-y-2">
+              <label className="text-xs text-gray-500 uppercase font-bold">Card Color</label>
+              <div className="flex flex-wrap gap-2">
+                {CARD_COLORS.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCardColor(c.id)}
+                    aria-label={`Color ${c.id}`}
+                    className="w-7 h-7 rounded-lg transition-all duration-150 hover:scale-110"
+                    style={{
+                      background: c.color,
+                      border: cardColor === c.id ? '2px solid white' : '2px solid transparent',
+                      boxShadow: cardColor === c.id ? `0 0 6px ${c.color}` : 'none',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
             {/* Name + description */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Recipe Name *" value={name} onChange={setName} placeholder="e.g. High-Protein Pasta" />
@@ -312,7 +347,9 @@ export default function CustomRecipeBuilder({ token }: Props) {
               </button>
               <button onClick={handleSave}
                 className="flex-1 py-1.5 font-black rounded-xl uppercase text-xs active:scale-95 transition-all duration-200"
-                style={{ background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}>
+                style={theme === 'light'
+                  ? { background: '#fff7ed', color: '#c2410c', border: '1px solid rgba(194,65,12,0.4)', boxShadow: '0 0 8px rgba(194,65,12,0.15)' }
+                  : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.35), 0 0 24px rgba(250,204,21,0.15)' }}>
                 {editingId !== null ? 'Update Recipe' : 'Save Recipe'}
               </button>
             </div>
@@ -330,16 +367,19 @@ export default function CustomRecipeBuilder({ token }: Props) {
         </motion.div>
       ) : (
         <div className="space-y-4">
-          {recipes.map((r) => (
+          {recipes.map((r) => {
+            const accent = CARD_COLORS.find(c => c.id === (r.color ?? 'gold')) ?? CARD_COLORS[0];
+            return (
             <motion.div key={r.id} layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:border-yellow-300/20 transition-all duration-300">
+              className="bg-white/5 backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-300"
+              style={{ borderColor: accent.border }}>
 
               {/* Card header — click to expand */}
               <button
                 onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}
                 className="w-full flex items-center gap-4 px-5 py-4 text-left"
               >
-                <RecipeIcon value={r.icon || DEFAULT_ICON} className="w-7 h-7 text-[--color-iron-gold] shrink-0" />
+                <RecipeIcon value={r.icon || DEFAULT_ICON} className="w-7 h-7 shrink-0" style={{ color: accent.color }} />
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-black uppercase tracking-wide truncate">{r.name}</p>
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
@@ -354,11 +394,16 @@ export default function CustomRecipeBuilder({ token }: Props) {
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <button onClick={(e) => { e.stopPropagation(); openEdit(r); }}
-                    className="text-yellow-300 text-sm p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors"
-                    title="Edit recipe" aria-label={`Edit recipe: ${r.name}`}>✎</button>
+                    className="p-1.5 rounded-lg hover:bg-yellow-300/10 transition-colors text-sm"
+                    style={{ color: theme === 'light' ? '#c2410c' : '#fde047' }}
+                    title="Edit recipe" aria-label={`Edit recipe: ${r.name}`}>
+                    <FontAwesomeIcon icon={faPen} />
+                  </button>
                   <button onClick={(e) => { e.stopPropagation(); handleDelete(r.id); }}
-                    className="text-gray-600 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-400/10 transition-colors"
-                    title="Delete recipe" aria-label={`Delete recipe: ${r.name}`}>🗑</button>
+                    className="text-gray-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-400/10 transition-colors"
+                    title="Delete recipe" aria-label={`Delete recipe: ${r.name}`}>
+                    <FontAwesomeIcon icon={faTrash} />
+                  </button>
                   <span className={`text-gray-400 transition-transform duration-200 ml-1 ${expandedId === r.id ? 'rotate-180' : ''}`}>▾</span>
                 </div>
               </button>
@@ -404,7 +449,8 @@ export default function CustomRecipeBuilder({ token }: Props) {
                 )}
               </AnimatePresence>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
