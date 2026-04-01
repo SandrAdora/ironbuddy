@@ -281,10 +281,10 @@
     "videos": "Videos",
     "ai_tab": "AI Plan",
     "my_tab": "My Workouts",
-    "videos_tab": "🎬 Videos",
+    "videos_tab": "Videos",
     "library_tab": "Workout Library",
     "start_ai": "▶ Start AI Workout",
-    "in_progress": "🏋️ Workout in progress — "
+    "in_progress": "Workout in progress — "
   },
   "progress": {
     "title": "Progress",

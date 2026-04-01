@@ -1805,31 +1805,24 @@ export default function UserProfile() {
           {/* ── WORKOUTS ── */}
           {active === 'workouts' && (
             <motion.div key="workouts" {...fadeUp(0)} className="space-y-3 md:space-y-6">
-              {/* Sub-tabs */}
-              <div className="flex border-b border-white/10">
+              {/* Sub-tabs — scrollable pills */}
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
                 {([
-                  { id: 'ai', key: 'workouts.ai_tab' },
-                  { id: 'my', key: 'workouts.my_tab' },
-                  { id: 'library', key: 'workouts.library_tab' },
+                  { id: 'ai',      icon: faRobot,       label: t('workouts.ai_tab') },
+                  { id: 'my',      icon: faDumbbell,    label: t('workouts.my_tab') },
+                  { id: 'library', icon: faBookBookmark, label: t('workouts.library_tab') },
                 ] as const).map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setWorkoutTab(tab.id)}
-                    style={{ fontSize: '0.75rem' }}
-                    className={`flex-1 py-1.5 sm:py-2.5 text-xs font-black uppercase tracking-wide transition-all duration-200 border-b-2 -mb-px ${
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-black uppercase tracking-wide whitespace-nowrap shrink-0 transition-all duration-200 active:scale-95 ${
                       workoutTab === tab.id
-                        ? 'border-[--color-iron-gold] text-[--color-iron-gold]'
-                        : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'
+                        ? 'bg-[--color-iron-gold] text-black shadow-[0_0_14px_rgba(250,204,21,0.35)]'
+                        : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    {tab.id === 'ai'
-                      ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}><FontAwesomeIcon icon={faRobot} /></span> {t(tab.key)}</>
-                      : tab.id === 'my'
-                        ? <><span style={{ color: '#facc15' }}><FontAwesomeIcon icon={faPencil} /></span> {t(tab.key)}</>
-                        : tab.id === 'library'
-                          ? <><span style={{ filter: 'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)' }}><FontAwesomeIcon icon={faBookBookmark} /></span> {t(tab.key)}</>
-                          : t((tab as {key: string}).key)
-                    }
+                    <FontAwesomeIcon icon={tab.icon} />
+                    {tab.label}
                   </button>
                 ))}
               </div>

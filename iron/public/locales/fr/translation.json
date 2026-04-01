@@ -281,10 +281,10 @@
     "videos": "Vidéos",
     "ai_tab": "Plan IA",
     "my_tab": "Mes entraînements",
-    "videos_tab": "🎬 Vidéos",
+    "videos_tab": "Vidéos",
     "library_tab": "Bibliothèque d'exercices",
     "start_ai": "▶ Démarrer l'entraînement IA",
-    "in_progress": "🏋️ Entraînement en cours — "
+    "in_progress": "Entraînement en cours — "
   },
   "progress": {
     "title": "Progrès",
