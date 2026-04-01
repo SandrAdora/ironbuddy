@@ -338,8 +338,8 @@ export default function WorkoutPlanView({ profile, token, onStartSession, onFini
               disabled={imported}
               className="font-black text-xs border-none outline-none bg-transparent transition-colors active:scale-95 disabled:cursor-default flex items-center gap-1"
               style={imported
-                ? { color: '#4ade80', textShadow: '0 0 10px rgba(74,222,128,0.7), 0 0 20px rgba(34,211,238,0.4)' }
-                : { color: '#4ade80', textShadow: '0 0 10px rgba(74,222,128,0.7), 0 0 20px rgba(34,211,238,0.4)' }
+                ? { color: '#058835', textShadow: '0 0 10px rgba(74,222,128,0.7), 0 0 20px rgba(34,211,238,0.4)' }
+                : { color: '#058835', textShadow: '0 0 10px rgba(74,222,128,0.7), 0 0 20px rgba(34,211,238,0.4)' }
               }
             >
               {imported ? `✓ ${t('workoutplan.saved')}` : <><FontAwesomeIcon icon={faSave} /> {t('workoutplan.save')}</>}

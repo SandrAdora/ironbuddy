@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { apiGetWorkoutVideos, apiCreateWorkoutVideo, apiDeleteWorkoutVideo, type WorkoutVideo } from '../api';
 import { useTheme } from '../context/themeContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, faClapperboard, faPlus } from '@fortawesome/free-solid-svg-icons';
 
 interface Props {
   token: string;
@@ -69,15 +69,15 @@ export default function WorkoutVideos({ token }: Props) {
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
           <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Video Library</p>
-          <h2 className="text-2xl font-black uppercase italic mt-1">🎬 Workout Videos</h2>
+          <h2 className="text-2xl font-black uppercase italic mt-1"><FontAwesomeIcon icon={faClapperboard} /> Workout Videos</h2>
         </div>
         {!adding && (
           <button
             onClick={() => setAdding(true)}
             className="font-black text-xs sm:text-sm border-none outline-none bg-transparent active:scale-95 transition-colors"
-            style={{ color: theme === 'light' ? '#1a1a1a' : '#facc15', textShadow: theme === 'light' ? 'none' : '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
+            style={{ color: theme === 'light' ? '#d97415' : '#facc15', textShadow: theme === 'light' ? 'none' : '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
           >
-            + Add Video
+             <FontAwesomeIcon icon={faPlus} /> Add Video
           </button>
         )}
       </div>
