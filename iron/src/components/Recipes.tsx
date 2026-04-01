@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { apiImportRecipe, type UserRecipe } from '../api';
 import { useTheme } from '../context/themeContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClapperboard } from '@fortawesome/free-solid-svg-icons';
 
 interface Props {
   token: string;
@@ -265,7 +267,7 @@ export default function Recipes({ token }: Props) {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-10 flex flex-col items-center justify-center text-center gap-4"
         >
-          <span className="text-5xl">🎬</span>
+          <span className="text-5xl"><FontAwesomeIcon icon={faClapperboard} /></span>
           <p className="text-[--color-iron-gold] font-black uppercase text-lg">No recipes yet</p>
           <p className="text-gray-400 text-sm">Add a YouTube link and it will appear here as a video player.</p>
         </motion.div>
