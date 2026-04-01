@@ -3,7 +3,11 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { io, Socket } from 'socket.io-client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComments, faFilePdf, faPaperclip, faDumbbell, faCircleExclamation, faMagnifyingGlass, faBell, faVolumeXmark, faTrash, faPaperPlane, faFaceSmileBeam, faArrowRight, faEyeSlash, faEye } from '@fortawesome/free-solid-svg-icons';
+import { faComments, faFilePdf, faPaperclip, faDumbbell, faCircleExclamation, 
+  faMagnifyingGlass, faBell, faVolumeXmark, faTrash, faPaperPlane, faFaceSmileBeam, 
+  faArrowRight, faEyeSlash, faEye, faHandPeace, faArrowDown, faLocationDot, 
+  faArrowRightFromBracket
+} from '@fortawesome/free-solid-svg-icons';
 import {
   apiGetUsers, apiGetConversations, apiStartConversation, apiCreateGroup,
   apiGetMessages, apiSendMessage, apiUploadFile, apiToggleReaction,
@@ -884,9 +888,9 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
           <button
             onClick={openCreateGroup}
             className="text-xs font-black uppercase tracking-[0.14em] bg-transparent border-none outline-none cursor-pointer transition-all duration-200"
-            style={{ color: '#9ca3af' }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#facc15'; e.currentTarget.style.textShadow = '0 0 8px rgba(250,204,21,0.7), 0 0 18px rgba(250,204,21,0.35)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = '#9ca3af'; e.currentTarget.style.textShadow = 'none'; }}
+            style={{ color: light ? '#9ca3af' : '#facc15' }}
+            onMouseEnter={e => { e.currentTarget.style.color = light ? '#c24102' : '#facc15'; e.currentTarget.style.textShadow = '0 0 8px rgba(250,204,21,0.7), 0 0 18px rgba(250,204,21,0.35)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = light ? '#c24102' : '#facc15'; e.currentTarget.style.textShadow = 'none'; }}
           >
             👥 Group
           </button>
@@ -1149,7 +1153,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                     title="Delete chat"
                     className="opacity-0 group-hover/item:opacity-100 transition-opacity mr-2 p-1.5 text-gray-600 hover:text-red-400 hover:bg-red-400/10 rounded-lg shrink-0"
                   >
-                    🗑
+                    <FontAwesomeIcon icon={faTrash} />
                   </button>
                   </div>
                 ))
@@ -1232,7 +1236,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
           bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden`}>
           {!activeConvo ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-8">
-              <span className="text-5xl">💬</span>
+              <span className="text-5xl"><FontAwesomeIcon icon={faComments} /></span>
               <p className="text-[--color-iron-gold] font-black uppercase text-lg">Your messages</p>
               <p className="text-gray-500 text-sm max-w-xs">Select a conversation to get started, or connect with a new athlete.</p>
               <button
@@ -1335,7 +1339,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
               <div ref={messagesScrollRef} className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4 space-y-3 relative">
                 {messages.length === 0 && (
                   <div className="flex flex-col items-center justify-center h-full gap-3 text-center mt-8">
-                    <span className="text-4xl">👋</span>
+                    <span className="text-4xl"><FontAwesomeIcon icon={faHandPeace} /></span>
                     <p className="text-white font-black uppercase text-sm">No messages yet</p>
                     <p className="text-gray-500 text-xs">Be the first to say hi!</p>
                   </div>
@@ -1388,7 +1392,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                             className={`opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 flex items-center justify-center rounded-full text-sm ${isPinned ? 'bg-yellow-300/20 text-yellow-300' : 'bg-white/10 hover:bg-white/20'}`}
                             title={isPinned ? 'Unpin' : 'Pin'}
                           >
-                            📌
+                            <FontAwesomeIcon icon={faLocationDot} />
                           </button>
 
                           {/* Delete button — own messages only, visible on hover */}
@@ -1398,7 +1402,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                               className="opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-red-500/30 text-sm"
                               title="Delete message"
                             >
-                              🗑
+                              <FontAwesomeIcon icon={faTrash} />
                             </button>
                           )}
 
@@ -1414,7 +1418,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                               className="opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-sm"
                               title="React"
                             >
-                              😊
+                              <FontAwesomeIcon icon={faFaceSmileBeam} />
                             </button>
                             {showPicker && (
                               <PortalPicker
@@ -1486,7 +1490,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                     onClick={() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); setScrolledUp(false); }}
                     className="sticky bottom-4 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 px-4 py-1.5 bg-yellow-300 text-black text-xs font-black rounded-full shadow-lg hover:bg-yellow-200 active:scale-95 transition-all z-10"
                   >
-                    ↓ Latest
+                    <FontAwesomeIcon icon={faArrowDown} /> Latest
                   </button>
                 )}
               </div>
@@ -1618,7 +1622,7 @@ export default function CommunityChat({ token, currentUserId, currentUserName = 
                           onClick={() => { setShowGroupInfo(false); handleDeleteConversation(activeConvo); }}
                           className="w-full py-2.5 bg-red-500/10 border border-red-500/20 text-red-400 font-black uppercase text-xs rounded-xl hover:bg-red-500/20 transition-all active:scale-95"
                         >
-                          Leave Group
+                          <FontAwesomeIcon icon={faArrowRightFromBracket} /> Leave Group
                         </button>
                       </div>
                     </motion.div>
