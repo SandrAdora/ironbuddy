@@ -177,11 +177,13 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   // Sync profile to localStorage and backend — debounced so rapid field edits
   // don't flood localStorage or fire an API call on every keystroke.
   const profileSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skipNextSave = useRef(false);
   useEffect(() => {
     if (!profile.email) return;
     if (profileSaveTimer.current) clearTimeout(profileSaveTimer.current);
     profileSaveTimer.current = setTimeout(() => {
       localStorage.setItem(profileKey(profile.email!), JSON.stringify(profile));
+      if (skipNextSave.current) { skipNextSave.current = false; return; }
       if (token && profile.onboarded) {
         const { email: _e, password: _p, onboarded: _o, disclaimerAcceptedAt: _d, ...profileData } = profile;
         apiSaveProfile(token, profileData as Record<string, unknown>).catch(() => {});
@@ -197,6 +199,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     localStorage.setItem("ironbuddy_refresh", data.refresh);
     localStorage.setItem("ironbuddy_last_email", email);
 
+    skipNextSave.current = true;
     if (initialProfile) {
       // Registration flow: use the provided profile directly — skip the backend
       // fetch so we don't overwrite with the blank just-created profile.

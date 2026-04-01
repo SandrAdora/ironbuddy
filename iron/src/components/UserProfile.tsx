@@ -214,11 +214,6 @@ export default function UserProfile() {
     }).catch(() => {});
   };
 
-  // Check achievements only when we have a fresh token (fires after login / token refresh)
-  useEffect(() => {
-    if (token && isTokenFresh(token)) triggerAchievementCheck();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
 
   // AI Meal Plan state
   const [aiMealPlan, setAiMealPlan] = useState<AIMealPlan | null>(null);
