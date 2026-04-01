@@ -23,8 +23,7 @@ import { faRobot, faBowlFood, faBook, faVideo, faSliders, faCircleUser, faKey, f
   faSave,
   faCheck,
   faWeightHanging,
-  faFire,
-  faKhanda
+  faFire
 } from '@fortawesome/free-solid-svg-icons';
 import CoachChat from './CoachChat';
 import WorkoutPlanView from './WorkoutPlan';
