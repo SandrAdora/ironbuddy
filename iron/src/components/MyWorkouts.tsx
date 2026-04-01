@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGear, faShareFromSquare, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faGear, faShareFromSquare, faEdit, faTrash, faCirclePlus, faXmark, faPlus, faPlay } from '@fortawesome/free-solid-svg-icons';
 import type { CustomWorkout, CustomExercise, Exercise, PublicUser } from '../api';
 import { apiGetExercises, apiGetUsers, apiStartConversation, apiSendMessage, apiGetYouTubeVideo } from '../api';
 import { savePR } from '../prStorage';
@@ -385,7 +385,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
             className="font-black uppercase text-xs sm:text-sm border-none outline-none bg-transparent active:scale-95 transition-colors"
             style={{ color: theme === 'light' ? '#d97706' : '#facc15', textShadow: theme === 'light' ? 'none' : '0 0 10px rgba(250,204,21,0.7), 0 0 20px rgba(250,204,21,0.4)' }}
           >
-            + Create Workout
+            <FontAwesomeIcon icon={faCirclePlus} /> Create Workout
           </button>
         )}
       </div>
@@ -445,7 +445,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                         onClick={() => removeExercise(i)}
                         className="text-gray-600 hover:text-red-400 text-xs transition-colors"
                       >
-                        ✕ Remove
+                        <FontAwesomeIcon icon={faXmark} /> Remove
                       </button>
                     )}
                   </div>
@@ -479,7 +479,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                   onClick={addExercise}
                   className="flex-1 py-1.5 border border-dashed border-white/20 rounded-xl text-gray-500 hover:text-white hover:border-yellow-300/30 text-xs font-bold uppercase transition-all duration-200"
                 >
-                  + Add Exercise
+                  <FontAwesomeIcon icon={faPlus} /> Add Exercise
                 </button>
                 <button
                   onClick={() => { setLibOpen((v) => !v); setLibSearch(''); }}
@@ -622,10 +622,10 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                     <button
                       onClick={(e) => { e.stopPropagation(); startActiveWorkout(w); }}
                       className="text-sm font-black border-none outline-none bg-transparent active:scale-95 transition-colors"
-                      style={{ color: '#facc15' }}
+                      style={{ color: theme === 'light' ? '#d07e02' : '#facc15' }}
                       title="Start workout"
                     >
-                      ▶
+                      <FontAwesomeIcon icon={faPlay} />
                     </button>
                   ) : null}
                   {/* Gear menu */}
@@ -702,7 +702,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                                   className="text-xs font-black border-none outline-none bg-transparent transition-colors"
                                   style={{ color: theme === 'light' ? '#b45309' : '#facc15', textShadow: theme === 'light' ? 'none' : '0 0 8px rgba(250,204,21,0.5)' }}
                                 >
-                                  ▶ Tutorial
+                                  <FontAwesomeIcon icon={faPlay} /> Tutorial
                                 </button>
                               </div>
                             </div>
@@ -864,7 +864,7 @@ export default function MyWorkouts({ token, onStartWorkout, autoStartName, onAut
                                       onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:#f87171;text-shadow:0 0 10px rgba(248,113,113,0.7)'; }}
                                       onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.cssText = 'color:rgba(156,163,175,0.6)'; }}
                                     >
-                                      − Remove Set
+                                      <FontAwesomeIcon icon={faXmark} /> Remove Set
                                     </button>
                                   )}
                                 </div>
