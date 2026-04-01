@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTheme } from '../context/themeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowUpFromBracket, faDownload, faDumbbell, faClock, faFire, faTrophy } from '@fortawesome/free-solid-svg-icons';
+import { faArrowUpFromBracket, faDownload, faDumbbell, faClock, faFire, faTrophy, faBullseye, faAnglesDown, faThumbsUp, faGauge, faCalendarDays, faWeightHanging, faRuler } from '@fortawesome/free-solid-svg-icons';
 import {
   LineChart, Line, ReferenceLine,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -96,7 +96,7 @@ function GoalRing({ done, goal, theme }: { done: number; goal: number; theme: st
   const dash = pct * circ;
   const isLight = theme === 'light';
   const activeColor = pct >= 1
-    ? (isLight ? '#16a34a' : '#4ade80')
+    ? (isLight ? '#06963b' : '#4ade80')
     : (isLight ? '#ea580c' : '#fde047');
   const glowColor = pct >= 1
     ? (isLight ? 'rgba(22,163,74,0.4)' : 'rgba(74,222,128,0.7)')
@@ -680,9 +680,9 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
         <button onClick={() => toggleCard('goal')} className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors">
           <div className="text-left">
             <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Goal</p>
-            <h2 className="text-lg font-black uppercase italic mt-0.5" style={{ color: theme === 'light' ? '#111827' : '#f9fafb' }}>🎯 Weekly Goal</h2>
+            <h2 className="text-lg font-black uppercase italic mt-0.5" style={{ color: theme === 'light' ? '#111827' : '#f9fafb' }}><FontAwesomeIcon icon={faBullseye} /> Weekly Goal</h2>
           </div>
-          <span className="text-gray-500 text-lg transition-transform duration-300" style={{ display: 'inline-block', transform: openCards.has('goal') ? 'rotate(0deg)' : 'rotate(-90deg)' }}>⌄</span>
+          <span className="text-gray-500 text-lg transition-transform duration-300" style={{ display: 'inline-block', transform: openCards.has('goal') ? 'rotate(0deg)' : 'rotate(-90deg)' }}><FontAwesomeIcon icon={faAnglesDown} /></span>
         </button>
         <AnimatePresence initial={false}>
           {openCards.has('goal') && (
@@ -693,7 +693,7 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
                   <div>
                     <p className="text-white font-black text-2xl">{thisWeekDone}<span className="text-gray-500 text-base font-bold"> / {weeklyGoal}</span></p>
                     <p className="text-gray-400 text-xs mt-0.5">workouts this week</p>
-                    {thisWeekDone >= weeklyGoal && <p className="text-green-400 text-xs font-black mt-1">🎉 Goal reached!</p>}
+                    {thisWeekDone >= weeklyGoal && <p className="text-green-400 text-xs font-black mt-1"> <FontAwesomeIcon icon={faThumbsUp} />Goal reached!</p>}
                   </div>
                   {editingGoal ? (
                     <div className="flex gap-2 items-center">
@@ -730,7 +730,7 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
         <button onClick={() => toggleCard('prs')} className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors">
           <div className="text-left">
             <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Strength</p>
-            <h2 className="text-lg font-black uppercase italic mt-0.5">🏆 Personal Records</h2>
+            <h2 className="text-lg font-black uppercase italic mt-0.5"><FontAwesomeIcon icon={faTrophy} /> Personal Records</h2>
           </div>
           <span className="text-gray-500 text-lg transition-transform duration-300" style={{ display: 'inline-block', transform: openCards.has('prs') ? 'rotate(0deg)' : 'rotate(-90deg)' }}>⌄</span>
         </button>
@@ -769,7 +769,7 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
         <button onClick={() => toggleCard('bmi')} className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors">
           <div className="text-left">
             <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Body</p>
-            <h2 className="text-lg font-black uppercase italic mt-0.5">📊 BMI & Body Stats</h2>
+            <h2 className="text-lg font-black uppercase italic mt-0.5"><FontAwesomeIcon icon={faGauge} /> BMI & Body Stats</h2>
           </div>
           <span className="text-gray-500 text-lg transition-transform duration-300" style={{ display: 'inline-block', transform: openCards.has('bmi') ? 'rotate(0deg)' : 'rotate(-90deg)' }}>⌄</span>
         </button>
@@ -810,7 +810,7 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
         <button onClick={() => toggleCard('muscles')} className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors">
           <div className="text-left">
             <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Recovery</p>
-            <h2 className="text-lg font-black uppercase italic mt-0.5">🔥 Muscle Heatmap</h2>
+            <h2 className="text-lg font-black uppercase italic mt-0.5"><FontAwesomeIcon icon={faFire} /> Muscle Heatmap</h2>
           </div>
           <span className="text-gray-500 text-lg transition-transform duration-300" style={{ display: 'inline-block', transform: openCards.has('muscles') ? 'rotate(0deg)' : 'rotate(-90deg)' }}>⌄</span>
         </button>
@@ -840,7 +840,7 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
         >
           <div className="text-left">
             <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Activity</p>
-            <h2 className="text-lg font-black uppercase italic mt-0.5">📅 Workouts per Week</h2>
+            <h2 className="text-lg font-black uppercase italic mt-0.5"><FontAwesomeIcon icon={faCalendarDays} /> Workouts per Week</h2>
           </div>
           <span className="text-gray-500 text-lg transition-transform duration-300" style={{ display: 'inline-block', transform: openCards.has('activity') ? 'rotate(0deg)' : 'rotate(-90deg)' }}>⌄</span>
         </button>
@@ -876,7 +876,7 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
         >
           <div className="text-left">
             <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Body</p>
-            <h2 className="text-lg font-black uppercase italic mt-0.5">⚖️ Weight Tracker</h2>
+            <h2 className="text-lg font-black uppercase italic mt-0.5"><FontAwesomeIcon icon={faWeightHanging} /> Weight Tracker</h2>
           </div>
           <div className="flex items-center gap-3">
             {weightDelta !== null && (
@@ -1029,7 +1029,7 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
         >
           <div className="text-left">
             <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">Body</p>
-            <h2 className="text-lg font-black uppercase italic mt-0.5">📏 Body Measurements</h2>
+            <h2 className="text-lg font-black uppercase italic mt-0.5"><FontAwesomeIcon icon={faRuler} /> Body Measurements</h2>
           </div>
           <span className="text-gray-500 text-lg transition-transform duration-300" style={{ display: 'inline-block', transform: openCards.has('measurements') ? 'rotate(0deg)' : 'rotate(-90deg)' }}>⌄</span>
         </button>
@@ -1149,7 +1149,7 @@ export default function ProgressTab({ token, sessions, onDeleteSession, currentW
           <button onClick={() => toggleCard('history')} className="flex items-center gap-3 flex-1 text-left hover:opacity-80 transition-opacity">
             <div>
               <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">History</p>
-              <h2 className="text-lg font-black uppercase italic mt-0.5">🗓️ Recent Workouts</h2>
+              <h2 className="text-lg font-black uppercase italic mt-0.5"><FontAwesomeIcon icon={faCalendarDays} /> Recent Workouts</h2>
             </div>
           </button>
           <div className="flex items-center gap-4">
