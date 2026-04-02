@@ -23,7 +23,10 @@ import { faRobot, faBowlFood, faBook, faVideo, faSliders, faCircleUser, faKey, f
   faSave,
   faCheck,
   faWeightHanging,
-  faFire
+  faFire,
+  faCloudMeatball,
+  faWheatAlt,
+  faOilCan
 } from '@fortawesome/free-solid-svg-icons';
 import CoachChat from './CoachChat';
 import WorkoutPlanView from './WorkoutPlan';
@@ -1445,7 +1448,7 @@ export default function UserProfile() {
                                     <div className="flex items-center gap-x-4 gap-y-1.5 pt-2 border-t border-white/10 flex-wrap">
                                       {/* Log — primary link */}
                                       {loggedMeals[m.meal] ? (
-                                        <span className="text-xs font-black text-teal-400 uppercase tracking-wide">✓ Logged</span>
+                                        <span className="text-xs font-black text-teal-400 uppercase tracking-wide"><FontAwesomeIcon icon={faCheck} /> Logged</span>
                                       ) : (
                                         <button
                                           onClick={() => { logMealToday(m, getSrv(m.meal)); setLoggedMeals(prev => ({ ...prev, [m.meal]: true })); }}
@@ -1457,7 +1460,7 @@ export default function UserProfile() {
                                       )}
                                       {/* Save */}
                                       {savedMeals[m.meal] ? (
-                                        <span className="text-xs font-black text-green-800 uppercase tracking-wide">✓ Saved</span>
+                                        <span className="text-xs font-black text-green-800 uppercase tracking-wide"><FontAwesomeIcon icon={faCheck} /> Saved</span>
                                       ) : (
                                         <button
                                           onClick={async () => {
@@ -1525,7 +1528,9 @@ export default function UserProfile() {
                                 <div className="flex flex-col gap-1 min-w-0">
                                   <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{t('meals.daily_total')}</span>
                                   <div className="flex flex-wrap gap-1.5">
-                                    <span className="text-xs font-black px-2.5 py-0.5 rounded-full" style={{ background: theme === 'light' ? 'rgba(217,119,6,0.1)' : 'rgba(250,204,21,0.15)', color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,1)', border: theme === 'light' ? '1px solid rgba(217,119,6,0.25)' : '1px solid rgba(250,204,21,0.2)' }}>🔥 {totalKcal} kcal</span>
+                                    <span className="text-xs font-black px-2.5 py-0.5 rounded-full" style={{ background: theme === 'light' ? 'rgba(217,119,6,0.1)' : 'rgba(250,204,21,0.15)', color: theme === 'light' ? '#d97706' : 'rgba(253,224,71,1)', border: theme === 'light' ? '1px solid rgba(217,119,6,0.25)' : '1px solid rgba(250,204,21,0.2)' }}>
+                                      <FontAwesomeIcon icon={faFire} /> {totalKcal} kcal
+                                    </span>
                                     <span className="text-xs bg-red-500/10 text-red-300 font-bold px-2 py-0.5 rounded-full">P {totalP}g</span>
                                     <span className="text-xs bg-sky-500/10 text-sky-300 font-bold px-2 py-0.5 rounded-full">C {totalC}g</span>
                                     <span className="text-xs bg-orange-500/10 text-orange-300 font-bold px-2 py-0.5 rounded-full">F {totalF}g</span>
@@ -1545,9 +1550,9 @@ export default function UserProfile() {
                                   >
                                     <div className="px-4 py-4 space-y-4 border-t border-white/10 bg-black/20">
                                       {[
-                                        { label: 'Protein', val: totalP, kcal: kcalFromP, pct: pct(kcalFromP, totalKcal), color: 'bg-red-400', text: 'text-red-300', border: 'border-red-400/30', bg: 'bg-red-500/10', emoji: '🥩' },
-                                        { label: 'Carbs',   val: totalC, kcal: kcalFromC, pct: pct(kcalFromC, totalKcal), color: 'bg-sky-400',  text: 'text-sky-300',  border: 'border-sky-400/30',  bg: 'bg-sky-500/10',  emoji: '🌾' },
-                                        { label: 'Fat',     val: totalF, kcal: kcalFromF, pct: pct(kcalFromF, totalKcal), color: 'bg-orange-400', text: 'text-orange-300', border: 'border-orange-400/30', bg: 'bg-orange-500/10', emoji: '🫒' },
+                                        { label: 'Protein', val: totalP, kcal: kcalFromP, pct: pct(kcalFromP, totalKcal), color: 'bg-red-400', text: 'text-red-300', border: 'border-red-400/30', bg: 'bg-red-500/10', emoji: <FontAwesomeIcon icon={faCloudMeatball} /> },
+                                        { label: 'Carbs',   val: totalC, kcal: kcalFromC, pct: pct(kcalFromC, totalKcal), color: 'bg-sky-400',  text: 'text-sky-300',  border: 'border-sky-400/30',  bg: 'bg-sky-500/10',  emoji: <FontAwesomeIcon icon={faWheatAlt} /> },
+                                        { label: 'Fat',     val: totalF, kcal: kcalFromF, pct: pct(kcalFromF, totalKcal), color: 'bg-orange-400', text: 'text-orange-300', border: 'border-orange-400/30', bg: 'bg-orange-500/10', emoji: <FontAwesomeIcon icon={faOilCan} /> },
                                       ].map(macro => (
                                         <div key={macro.label}>
                                           <div className="flex items-center justify-between mb-1.5">
@@ -1691,7 +1696,7 @@ export default function UserProfile() {
                                     : { background: '#060608', color: '#facc15', border: '1px solid rgba(250,204,21,0.4)', boxShadow: '0 0 10px rgba(250,204,21,0.25)' }
                                   }
                                 >
-                                  {shoppingListCopied ? '✓ Copied!' : 'Copy List'}
+                                  {shoppingListCopied ? <><FontAwesomeIcon icon={faCheck} /> Copied!</> : 'Copy List'}
                                 </button>
                                 <button
                                   onClick={() => setShoppingListOpen(false)}
