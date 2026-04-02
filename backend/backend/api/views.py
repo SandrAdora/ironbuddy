@@ -253,13 +253,10 @@ RULE C — DEFAULT BEHAVIOR:
         try:
             reply = _chat_completion(provider, api_key, main_model, system, messages, max_tokens=2000)
 
-            # ── Server-side guard: strip tags the LLM produced without permission ──
-            # If the user did not explicitly request a workout, remove [SAVE_WORKOUT]
-            # and any accidental workout content the LLM hallucinated.
-            if not is_explicit_workout:
-                reply = _re.sub(r'\s*\[SAVE_WORKOUT\]\s*', '', reply).strip()
-            if not is_explicit_meal:
-                reply = _re.sub(r'\s*\[SAVE_MEAL\]\s*', '', reply).strip()
+            # The system prompt already restricts [SAVE_MEAL] / [SAVE_WORKOUT] to
+            # explicit requests only — trust the LLM's judgment rather than
+            # re-checking with language-limited regex that misses French, Spanish,
+            # Hungarian and varied English phrasings.
 
             # ── Tag-based detection ──
             _has_workout_content = bool(
