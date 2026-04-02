@@ -26,7 +26,8 @@ import { faRobot, faBowlFood, faBook, faVideo, faSliders, faCircleUser, faKey, f
   faFire,
   faCloudMeatball,
   faWheatAlt,
-  faOilCan
+  faOilCan,
+  faRightFromBracket
 } from '@fortawesome/free-solid-svg-icons';
 import CoachChat from './CoachChat';
 import WorkoutPlanView from './WorkoutPlan';
