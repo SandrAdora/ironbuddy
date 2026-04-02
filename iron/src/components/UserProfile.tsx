@@ -27,7 +27,7 @@ import { faRobot, faBowlFood, faBook, faVideo, faSliders, faCircleUser, faKey, f
   faCloudMeatball,
   faWheatAlt,
   faOilCan,
-  faRightFromBracket
+  faArrowRightFromBracket
 } from '@fortawesome/free-solid-svg-icons';
 import CoachChat from './CoachChat';
 import WorkoutPlanView from './WorkoutPlan';
@@ -668,7 +668,7 @@ export default function UserProfile() {
           onClick={() => { logout(); navigate('/'); }}
           className={`shrink-0 flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-xl transition-all duration-200 bg-transparent border-none cursor-pointer ${theme === 'light' ? 'text-gray-600' : 'text-gray-500'}`}
         >
-          <span className="w-8 h-8 flex items-center justify-center rounded-xl text-base" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}><FontAwesomeIcon icon={faRightFromBracket} /></span>
+          <span className="w-8 h-8 flex items-center justify-center rounded-xl text-base" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}><FontAwesomeIcon icon={faArrowRightFromBracket} /></span>
           <span className="text-[9px] font-bold uppercase tracking-tight leading-none mt-0.5">{t('common.out')}</span>
         </button>
       </nav>
