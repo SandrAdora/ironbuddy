@@ -1160,7 +1160,7 @@ export default function UserProfile() {
                           onMouseEnter={e => (e.currentTarget.style.color = theme === 'light' ? '#b45309' : 'rgba(253,224,71,1)')}
                           onMouseLeave={e => (e.currentTarget.style.color = theme === 'light' ? '#d97706' : 'rgba(253,224,71,0.7)')}
                         >
-                          {aiMealLoading ? <><FontAwesomeIcon icon={faClock} />` ${t('meals.generating')}` </>: <><FontAwesomeIcon icon={faArrowsRotate} />` ${t('meals.regenerate')}`</>}
+                          {aiMealLoading ? <><FontAwesomeIcon icon={faClock} />` ${t('meals.generating')}` </>: <><FontAwesomeIcon icon={faArrowsRotate} /> ${t('meals.regenerate')}</>}
                         </button>
                       </div>
                     </div>
