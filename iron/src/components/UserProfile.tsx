@@ -27,7 +27,8 @@ import { faRobot, faBowlFood, faBook, faVideo, faSliders, faCircleUser, faKey, f
   faCloudMeatball,
   faWheatAlt,
   faOilCan,
-  faArrowRightFromBracket
+  faArrowRightFromBracket,
+  faClipboardList
 } from '@fortawesome/free-solid-svg-icons';
 import CoachChat from './CoachChat';
 import WorkoutPlanView from './WorkoutPlan';
@@ -760,7 +761,7 @@ export default function UserProfile() {
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
                     <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.today_label')}</p>
-                    <h2 className="text-lg font-black uppercase italic mt-0.5">{t('dashboard.today_workout')}</h2>
+                    <h2 className="text-lg font-black uppercase italic mt-0.5 flex items-center gap-2"><FontAwesomeIcon icon={faDumbbell} className="text-[--color-iron-gold] opacity-80" />{t('dashboard.today_workout')}</h2>
                   </div>
                   {trainedToday && (
                     <span className="text-[10px] font-black bg-green-500/15 text-green-400 px-2.5 py-1 rounded-full border border-green-500/30 shrink-0">{t('dashboard.done_today')}</span>
@@ -817,7 +818,7 @@ export default function UserProfile() {
                 >
                   <div className="mb-4">
                     <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.this_week_label')}</p>
-                    <h2 className="text-lg font-black uppercase italic mt-0.5" style={{ color: theme === 'light' ? '#271e11' : '#f9fafb' }}>{t('dashboard.weekly_goal')}</h2>
+                    <h2 className="text-lg font-black uppercase italic mt-0.5 flex items-center gap-2" style={{ color: theme === 'light' ? '#271e11' : '#f9fafb' }}><FontAwesomeIcon icon={faBullseye} className="text-[--color-iron-gold] opacity-80" />{t('dashboard.weekly_goal')}</h2>
                   </div>
                   <div className="flex items-center gap-5">
                     <svg viewBox="0 0 110 110" className="w-24 h-24 shrink-0">
@@ -860,7 +861,7 @@ export default function UserProfile() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.history_label')}</p>
-                      <h2 className="text-lg font-black uppercase italic mt-0.5">{t('dashboard.recent_activity')}</h2>
+                      <h2 className="text-lg font-black uppercase italic mt-0.5 flex items-center gap-2"><FontAwesomeIcon icon={faClipboardList} className="text-[--color-iron-gold] opacity-80" />{t('dashboard.recent_activity')}</h2>
                     </div>
                     <button
                       onClick={() => setActive('progress')}
