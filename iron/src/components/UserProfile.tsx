@@ -2300,11 +2300,11 @@ export default function UserProfile() {
 
                       {/* Deactivate */}
                       <div className="space-y-2">
-                        <p className="text-white font-bold text-sm">{t('danger.deactivate')}</p>
-                        <p className="text-gray-400 text-xs">{t('danger.deactivate_desc')}</p>
+                        <p className="text-black dark:text-white font-bold text-sm">{t('danger.deactivate')}</p>
+                        <p className="text-gray-600 dark:text-gray-400 text-xs">{t('danger.deactivate_desc')}</p>
                         {dangerAction !== 'deactivate' ? (
                           <button onClick={() => { setDangerAction('deactivate'); setDangerError(''); setDangerPassword(''); }}
-                            className="px-3 py-1.5 sm:px-5 sm:py-2 bg-orange-500/20 border border-orange-400/30 text-orange-300 font-black rounded-xl uppercase text-xs hover:bg-orange-500/30 transition-all">
+                            className="px-3 py-1.5 sm:px-5 sm:py-2 bg-orange-500/20 border border-orange-400/30 text-orange-700 dark:text-orange-300 font-black rounded-xl uppercase text-xs hover:bg-orange-500/30 transition-all">
                             {t('danger.deactivate_btn')}
                           </button>
                         ) : (
@@ -2324,7 +2324,7 @@ export default function UserProfile() {
                               }} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-orange-500 text-black font-black rounded-xl uppercase text-xs hover:bg-orange-400 active:scale-95 transition-all disabled:opacity-50">
                                 {dangerLoading ? t('common.processing') : t('danger.confirm_deactivate')}
                               </button>
-                              <button onClick={() => setDangerAction(null)} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all">{t('danger.cancel')}</button>
+                              <button onClick={() => setDangerAction(null)} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-gray-600 dark:text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-black dark:hover:text-white transition-all">{t('danger.cancel')}</button>
                             </div>
                           </div>
                         )}
@@ -2334,11 +2334,11 @@ export default function UserProfile() {
 
                       {/* Delete */}
                       <div className="space-y-2">
-                        <p className="text-white font-bold text-sm">{t('danger.delete')}</p>
-                        <p className="text-gray-400 text-xs">{t('danger.delete_desc')}</p>
+                        <p className="text-black dark:text-white font-bold text-sm">{t('danger.delete')}</p>
+                        <p className="text-gray-600 dark:text-gray-400 text-xs">{t('danger.delete_desc')}</p>
                         {dangerAction !== 'delete' ? (
                           <button onClick={() => { setDangerAction('delete'); setDangerError(''); setDangerPassword(''); }}
-                            className="px-3 py-1.5 sm:px-5 sm:py-2 bg-red-500/20 border border-red-400/30 text-red-300 font-black rounded-xl uppercase text-xs hover:bg-red-500/30 transition-all">
+                            className="px-3 py-1.5 sm:px-5 sm:py-2 bg-red-500/20 border border-red-400/30 text-red-700 dark:text-red-300 font-black rounded-xl uppercase text-xs hover:bg-red-500/30 transition-all">
                             {t('danger.delete_btn')}
                           </button>
                         ) : (
@@ -2358,7 +2358,7 @@ export default function UserProfile() {
                               }} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-red-600 text-white font-black rounded-xl uppercase text-xs hover:bg-red-500 active:scale-95 transition-all disabled:opacity-50">
                                 {dangerLoading ? t('common.processing') : t('danger.confirm_delete')}
                               </button>
-                              <button onClick={() => setDangerAction(null)} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all">{t('danger.cancel')}</button>
+                              <button onClick={() => setDangerAction(null)} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-gray-600 dark:text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-black dark:hover:text-white transition-all">{t('danger.cancel')}</button>
                             </div>
                           </div>
                         )}
