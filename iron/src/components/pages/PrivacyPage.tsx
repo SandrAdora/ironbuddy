@@ -19,7 +19,9 @@ export default function PrivacyPage() {
           {[
             {
               title: '1. What We Collect',
-              body: 'We collect the information you provide when creating an account: your name, email address, and fitness profile (including age, gender, weight, height, fitness goals, and equipment). We also collect usage data such as workout sessions, weight logs, body measurements, and messages sent through the community chat.',
+              body: 'We collect the information you provide when creating an account: your name, email address, and fitness profile (including age, gender, weight, height, fitness goals, and equipment). These details are for the AI - Chatbot to generate personalised workout and meal plans.' 
+              + 'We do not collect usage data such as workout sessions, weight logs, body measurements, and messages sent through the community chat. they are stored locally on your device.' 
+              + 'We only store your email and password in our database for authentication purposes. Your fitness profile is used solely for generating AI responses and is not shared with third parties except the AI providers when you interact with the AI Coach.',
             },
             {
               title: '2. How We Use Your Data',
