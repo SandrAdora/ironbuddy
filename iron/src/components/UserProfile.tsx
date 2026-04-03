@@ -27,8 +27,7 @@ import { faRobot, faBowlFood, faBook, faVideo, faSliders, faCircleUser, faKey, f
   faCloudMeatball,
   faWheatAlt,
   faOilCan,
-  faArrowRightFromBracket,
-  faClipboardList
+  faArrowRightFromBracket
 } from '@fortawesome/free-solid-svg-icons';
 import CoachChat from './CoachChat';
 import WorkoutPlanView from './WorkoutPlan';
@@ -761,7 +760,7 @@ export default function UserProfile() {
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
                     <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.today_label')}</p>
-                    <h2 className="text-lg font-black uppercase italic mt-0.5 flex items-center gap-2"><FontAwesomeIcon icon={faDumbbell} className="text-[--color-iron-gold] opacity-80" />{t('dashboard.today_workout')}</h2>
+                    <h2 className="text-lg font-black uppercase italic mt-0.5">{t('dashboard.today_workout')}</h2>
                   </div>
                   {trainedToday && (
                     <span className="text-[10px] font-black bg-green-500/15 text-green-400 px-2.5 py-1 rounded-full border border-green-500/30 shrink-0">{t('dashboard.done_today')}</span>
@@ -818,7 +817,7 @@ export default function UserProfile() {
                 >
                   <div className="mb-4">
                     <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.this_week_label')}</p>
-                    <h2 className="text-lg font-black uppercase italic mt-0.5 flex items-center gap-2" style={{ color: theme === 'light' ? '#271e11' : '#f9fafb' }}><FontAwesomeIcon icon={faBullseye} className="text-[--color-iron-gold] opacity-80" />{t('dashboard.weekly_goal')}</h2>
+                    <h2 className="text-lg font-black uppercase italic mt-0.5" style={{ color: theme === 'light' ? '#271e11' : '#f9fafb' }}>{t('dashboard.weekly_goal')}</h2>
                   </div>
                   <div className="flex items-center gap-5">
                     <svg viewBox="0 0 110 110" className="w-24 h-24 shrink-0">
@@ -861,7 +860,7 @@ export default function UserProfile() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="text-[--color-iron-gold] text-xs font-black tracking-[0.3em] uppercase opacity-70">{t('dashboard.history_label')}</p>
-                      <h2 className="text-lg font-black uppercase italic mt-0.5 flex items-center gap-2"><FontAwesomeIcon icon={faClipboardList} className="text-[--color-iron-gold] opacity-80" />{t('dashboard.recent_activity')}</h2>
+                      <h2 className="text-lg font-black uppercase italic mt-0.5">{t('dashboard.recent_activity')}</h2>
                     </div>
                     <button
                       onClick={() => setActive('progress')}
@@ -1162,7 +1161,7 @@ export default function UserProfile() {
                           onMouseEnter={e => (e.currentTarget.style.color = theme === 'light' ? '#b45309' : 'rgba(253,224,71,1)')}
                           onMouseLeave={e => (e.currentTarget.style.color = theme === 'light' ? '#d97706' : 'rgba(253,224,71,0.7)')}
                         >
-                          {aiMealLoading ? <><FontAwesomeIcon icon={faClock} /> {t('meals.generating')}</>: <><FontAwesomeIcon icon={faArrowsRotate} /> {t('meals.regenerate')}</>}
+                          {aiMealLoading ? <><FontAwesomeIcon icon={faClock} />` ${t('meals.generating')}` </>: <><FontAwesomeIcon icon={faArrowsRotate} /> {t('meals.regenerate')}</>}
                         </button>
                       </div>
                     </div>
@@ -2300,11 +2299,11 @@ export default function UserProfile() {
 
                       {/* Deactivate */}
                       <div className="space-y-2">
-                        <p className="text-black dark:text-white font-bold text-sm">{t('danger.deactivate')}</p>
-                        <p className="text-gray-600 dark:text-gray-400 text-xs">{t('danger.deactivate_desc')}</p>
+                        <p className="text-white font-bold text-sm">{t('danger.deactivate')}</p>
+                        <p className="text-gray-400 text-xs">{t('danger.deactivate_desc')}</p>
                         {dangerAction !== 'deactivate' ? (
                           <button onClick={() => { setDangerAction('deactivate'); setDangerError(''); setDangerPassword(''); }}
-                            className="px-3 py-1.5 sm:px-5 sm:py-2 bg-orange-500/20 border border-orange-400/30 text-orange-700 dark:text-orange-300 font-black rounded-xl uppercase text-xs hover:bg-orange-500/30 transition-all">
+                            className="px-3 py-1.5 sm:px-5 sm:py-2 bg-orange-500/20 border border-orange-400/30 text-orange-300 font-black rounded-xl uppercase text-xs hover:bg-orange-500/30 transition-all">
                             {t('danger.deactivate_btn')}
                           </button>
                         ) : (
@@ -2321,10 +2320,10 @@ export default function UserProfile() {
                                 } catch (err: unknown) {
                                   setDangerError(err instanceof Error ? err.message : 'Failed');
                                 } finally { setDangerLoading(false); }
-                              }} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-orange-500 text-black font-black rounded-xl uppercase text-xs hover:bg-orange-400 active:scale-95 transition-all disabled:opacity-50">
+                              }} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-orange-700 text-black font-black rounded-xl uppercase text-xs hover:bg-orange-400 active:scale-95 transition-all disabled:opacity-50">
                                 {dangerLoading ? t('common.processing') : t('danger.confirm_deactivate')}
                               </button>
-                              <button onClick={() => setDangerAction(null)} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-gray-600 dark:text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-black dark:hover:text-white transition-all">{t('danger.cancel')}</button>
+                              <button onClick={() => setDangerAction(null)} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-white/5 border border-white/10 text-black font-bold rounded-xl uppercase text-xs hover:text-white transition-all">{t('danger.cancel')}</button>
                             </div>
                           </div>
                         )}
@@ -2334,11 +2333,11 @@ export default function UserProfile() {
 
                       {/* Delete */}
                       <div className="space-y-2">
-                        <p className="text-black dark:text-white font-bold text-sm">{t('danger.delete')}</p>
-                        <p className="text-gray-600 dark:text-gray-400 text-xs">{t('danger.delete_desc')}</p>
+                        <p className="text-white font-bold text-sm">{t('danger.delete')}</p>
+                        <p className="text-gray-400 text-xs">{t('danger.delete_desc')}</p>
                         {dangerAction !== 'delete' ? (
                           <button onClick={() => { setDangerAction('delete'); setDangerError(''); setDangerPassword(''); }}
-                            className="px-3 py-1.5 sm:px-5 sm:py-2 bg-red-500/20 border border-red-400/30 text-red-700 dark:text-red-300 font-black rounded-xl uppercase text-xs hover:bg-red-500/30 transition-all">
+                            className="px-3 py-1.5 sm:px-5 sm:py-2 bg-red-900/20 border border-red-400/30 text-black font-black rounded-xl uppercase text-xs hover:bg-red-500/30 transition-all">
                             {t('danger.delete_btn')}
                           </button>
                         ) : (
@@ -2358,7 +2357,7 @@ export default function UserProfile() {
                               }} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-red-600 text-white font-black rounded-xl uppercase text-xs hover:bg-red-500 active:scale-95 transition-all disabled:opacity-50">
                                 {dangerLoading ? t('common.processing') : t('danger.confirm_delete')}
                               </button>
-                              <button onClick={() => setDangerAction(null)} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-gray-600 dark:text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-black dark:hover:text-white transition-all">{t('danger.cancel')}</button>
+                              <button onClick={() => setDangerAction(null)} className="px-3 py-1.5 sm:px-5 sm:py-2 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl uppercase text-xs hover:text-white transition-all">{t('danger.cancel')}</button>
                             </div>
                           </div>
                         )}
