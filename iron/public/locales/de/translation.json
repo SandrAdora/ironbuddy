@@ -370,9 +370,9 @@
       "community": "Athleten-Community & Direktchat"
     },
     "stats": {
-      "athletes": "Athleten",
-      "plans": "KI-Pläne",
-      "rating": "Bewertung"
+      "ai": "KI-gestützt",
+      "availability": "Immer verfügbar",
+      "free": "Kostenlos"
     },
     "signin": {
       "portal": "Athleten-Portal",

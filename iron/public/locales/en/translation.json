@@ -370,9 +370,9 @@
       "community": "Athlete community & direct chat"
     },
     "stats": {
-      "athletes": "Athletes",
-      "plans": "AI Plans",
-      "rating": "Rating"
+      "ai": "AI Powered",
+      "availability": "Always Available",
+      "free": "Free"
     },
     "signin": {
       "portal": "Athlete Portal",

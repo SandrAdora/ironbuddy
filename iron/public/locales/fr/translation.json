@@ -370,9 +370,9 @@
       "community": "Communauté d'athlètes & messagerie directe"
     },
     "stats": {
-      "athletes": "Athlètes",
-      "plans": "Plans IA",
-      "rating": "Note"
+      "ai": "Propulsé par IA",
+      "availability": "Toujours disponible",
+      "free": "Gratuit"
     },
     "signin": {
       "portal": "Portail Athlète",

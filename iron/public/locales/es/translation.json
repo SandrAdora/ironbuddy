@@ -370,9 +370,9 @@
       "community": "Comunidad de atletas y chat directo"
     },
     "stats": {
-      "athletes": "Atletas",
-      "plans": "Planes IA",
-      "rating": "Puntuación"
+      "ai": "Impulsado por IA",
+      "availability": "Siempre disponible",
+      "free": "Gratis"
     },
     "signin": {
       "portal": "Portal del Atleta",

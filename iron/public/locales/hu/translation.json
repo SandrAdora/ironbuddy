@@ -347,9 +347,9 @@
       "community": "Sportolói közösség és közvetlen üzenetváltás"
     },
     "stats": {
-      "athletes": "Sportolók",
-      "plans": "MI tervek",
-      "rating": "Értékelés"
+      "ai": "MI-alapú",
+      "availability": "Mindig elérhető",
+      "free": "Ingyenes"
     },
     "signin": {
       "portal": "Sportoló Portál",

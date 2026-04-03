@@ -69,9 +69,9 @@ export default function Home() {
   ];
 
   const STATS = [
-    { value: '10K+', label: t('home.stats.athletes') },
-    { value: '500+', label: t('home.stats.plans') },
-    { value: '4.9★', label: t('home.stats.rating') },
+    { value: 'AI', label: t('home.stats.ai') },
+    { value: '24/7', label: t('home.stats.availability') },
+    { value: '100%', label: t('home.stats.free') },
   ];
 
   const FEATURE_CARDS = [
