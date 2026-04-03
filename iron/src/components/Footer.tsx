@@ -18,7 +18,7 @@ export default function Footer() {
         <div className="flex items-center gap-3 text-xs text-gray-600">
           <p>© 2026 IronBuddy. All rights reserved.</p>
           <span className="text-gray-700">·</span>
-          <p>Created by <span className="text-gray-500 font-semibold">Sandra E.</span></p>
+          <p>Created by <span className="text-gray-500 font-semibold">Sandra Edigin</span></p>
         </div>
       </div>
     </footer>
