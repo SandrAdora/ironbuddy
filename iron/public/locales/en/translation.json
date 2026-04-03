@@ -16,7 +16,7 @@
   "settings": {
     "title": "Settings",
     "sub": "Account & Security",
-    "save": "💾 Save Settings",
+    "save": "Save Settings",
     "saving": "Saving…",
     "saved": "✓ Saved",
     "tabs": {
@@ -89,7 +89,7 @@
     "save_workout": "Save to My Workouts",
     "save_meal": "Save to My Meals",
     "add_recipe": "Add to My Recipes",
-    "welcome": "Hey {{name}}! 💪 I'm IRON, your personal AI coach. I know your goal is **{{goal}}** and you're at **{{level}}** level. Ask me anything — workouts, nutrition, recovery, you name it!",
+    "welcome": "Hey {{name}}! 🦾 I'm IRON, your personal AI coach. I know your goal is **{{goal}}** and you're at **{{level}}** level. Ask me anything — workouts, nutrition, recovery, you name it!",
     "quick_workout": "Give me a {{goal}} workout",
     "quick_eat": "What should I eat today?",
     "quick_recover": "How do I recover faster?",
@@ -103,9 +103,9 @@
     "saved_to_tab": "✓ Saved to {{tab}}!",
     "saved_to_tab_and_recipes": "✓ Saved to {{tab}} & My Recipes!",
     "saving": "Saving…",
-    "save_to_tab": "💾 Save to {{tab}}",
+    "save_to_tab": " Save to {{tab}}",
     "added_to_recipes": "✓ Added to Recipes",
-    "add_to_my_recipes": "👨‍🍳 Add to My Recipes",
+    "add_to_my_recipes": " Add to My Recipes",
     "not_now": "Not Now",
     "error_generic": "Something went wrong. Try again."
   },
@@ -141,7 +141,7 @@
     "days": "days",
     "goal": "Goal",
     "bmi": "BMI",
-    "start_workout": "🏋️ Start a Workout",
+    "start_workout": " Start a Workout",
     "ai_plan": "AI Workout Plan",
     "ai_plan_desc": "Generated for your goal",
     "my_workouts": "My Workouts",
@@ -161,7 +161,7 @@
     "weekly_goal": "Weekly Goal",
     "of_goal": "of {{count}}",
     "workouts_this_week": "workouts this week",
-    "goal_reached": "🎉 Goal reached!",
+    "goal_reached": " Goal reached!",
     "more_to_go": "{{count}} more to go",
     "change_goal": "✎ Change goal",
     "history_label": "History",
@@ -181,10 +181,10 @@
     "weekly_goal": "Weekly Goal",
     "of_goal": "of {{count}}",
     "workouts_this_week": "workouts this week",
-    "goal_reached": "🎉 Goal reached!",
+    "goal_reached": " Goal reached!",
     "change_goal": "✎ Change goal",
     "body_label": "Body",
-    "bmi_stats": "📊 BMI & Body Stats",
+    "bmi_stats": " BMI & Body Stats",
     "bmi_missing": "Add your height and weight in your profile to see BMI.",
     "weight_label": "Weight",
     "height_label": "Height",
@@ -244,8 +244,8 @@
     "servings": "Servings",
     "ingredients": "🛒 Ingredients",
     "add_ingredient": "Add ingredient…",
-    "save_meal": "💾 Save to My Meals",
-    "add_recipe": "👨‍🍳 Add to My Recipes",
+    "save_meal": "🖫  Save to My Meals",
+    "add_recipe": " Add to My Recipes",
     "saved_meal": "✓ Saved to My Meals",
     "saved_recipe": "✓ Saved to My Recipes",
     "weekly_plan": "Weekly Plan",
@@ -254,8 +254,8 @@
     "days_ago": "Generated {{count}} days ago",
     "no_plan": "No plan yet",
     "no_plan_desc": "Click Regenerate to generate your personalised weekly meal plan.",
-    "how_to_prepare": "👨‍🍳 How to prepare",
-    "ingredient_prefs": "🧂 Ingredient Preferences",
+    "how_to_prepare": " How to prepare",
+    "ingredient_prefs": " Ingredient Preferences",
     "ingredient_prefs_desc": "Add ingredients you love or dislike — the AI will use these when generating your meal plan.",
     "preferred": "✅ Preferred",
     "disliked": "❌ Disliked / Avoid",
@@ -348,7 +348,7 @@
     "delete": "Delete Account",
     "delete_desc": "Permanently delete your account and all data. This cannot be undone.",
     "delete_btn": "Delete Account",
-    "confirm_delete": "🗑️ Permanently Delete",
+    "confirm_delete": " Permanently Delete",
     "password_label": "Confirm your password",
     "password_placeholder": "Enter password",
     "cancel": "Cancel"
@@ -413,7 +413,7 @@
       "title1": "Ready to Train",
       "title2": "Smarter?",
       "desc": "Join thousands of athletes already using IronBuddy to hit their goals. Free to get started — no credit card required.",
-      "btn": "Create Free Account →"
+      "btn": "Create A Free Account →"
     },
     "forgot": {
       "title": "Reset Password",
@@ -489,7 +489,7 @@
     "cta2": {
       "title": "Ready to Start Training?",
       "desc": "Join IronBuddy today and get a personalised AI workout plan, meal plan, and coach — all in one place.",
-      "btn": "Create Free Account"
+      "btn": "Create A Free Account →"
     }
   },
   "contact": {
