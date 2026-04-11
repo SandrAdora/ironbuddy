@@ -53,11 +53,11 @@ Post-workout recommendations including:
 ## 🛠 Tech Stack
 
 - **Frontend:** React (Vite)
-- **Styling:** Tailwind CSS v4 (Dark Gym Theme)
+- **Styling:** Tailwind CSS v4 (Dark/light Gym Theme)
 - **State Management:** React Context API & LocalStorage
-- **AI Integration:** OpenAI API / LangChain
+- **AI Integration:** Groq API / Antropic
 - **Visuals:** Chart.js (Progress) & YouTube API (Exercises)
-- **Deployment:** Netlify
+- **Deployment:** Render
 
 ---
 
@@ -78,7 +78,10 @@ IronBuddy implements a **Safety-First Wrapper** around AI responses:
    cd ironbuddy
    ```
 
+## Docker installation
 
-
+```bash
+   ...
+   ```
 # Disclaimer
 IronBuddy is an AI-powered tool and does not replace professional medical advice. Always consult a physician before starting a new training or supplement program.
