@@ -53,6 +53,7 @@ Post-workout recommendations including:
 ## 🛠 Tech Stack
 
 - **Frontend:** React (Vite)
+- **Backend** Django
 - **Styling:** Tailwind CSS v4 (Dark/light Gym Theme)
 - **State Management:** React Context API & LocalStorage
 - **AI Integration:** Groq API / Antropic
